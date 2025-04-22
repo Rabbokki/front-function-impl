@@ -1,8 +1,7 @@
-import "./App.css"
-import { NavBar } from "./components/Nav-bar"
-import { CommunityContent } from "./components/Community-content"
+import { NavBar } from "../../src/components/Nav-bar"
+import { CommunityContent } from "../../src/components/Community-content"
 
-function App() {
+export default function CommunityPage() {
   return (
     <main className="min-h-screen bg-[#e8f4fc]">
       <NavBar />
@@ -13,5 +12,3 @@ function App() {
     </main>
   )
 }
-
-export default App
