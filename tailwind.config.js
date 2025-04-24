@@ -49,7 +49,7 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
         traveling: {
-          bg: "#f7ecd9",
+          bg: "#ffffff",
           text: "#2d3436",
           green: "#8ca896",
           coral: "#e8b4a9",
