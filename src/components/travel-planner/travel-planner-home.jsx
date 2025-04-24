@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-// import Image from "next/image"
 import { Search } from "lucide-react"
 import { Input } from "../../modules/Input"
 import { Card, CardContent } from "../../modules/Card"
@@ -112,12 +111,11 @@ export function TravelPlannerHome() {
             <Link key={destination.id} href={`/travel-planner/${destination.id}/step1`}>
               <Card className="overflow-hidden transition-transform hover:scale-105">
                 <div className="relative h-48">
-                  <Image
-                    src={destination.image || "/placeholder.svg"}
-                    alt={destination.name}
-                    fill
-                    className="object-cover"
-                  />
+                <img
+                  src={destination.image || "/placeholder.svg"}
+                  alt={destination.name}
+                  className="w-full h-full object-cover"
+                />
                   {destination.isNew && <Badge className="absolute right-2 top-2 bg-red-500 text-white">NEW</Badge>}
                   <Badge className="absolute left-2 top-2 bg-traveling-purple/80 text-white">
                     {destination.country}
@@ -137,3 +135,4 @@ export function TravelPlannerHome() {
     </div>
   )
 }
+export default TravelPlannerHome;

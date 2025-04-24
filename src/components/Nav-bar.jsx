@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import {TravelPlannerPage} from "../pages/travel-planner/TravelMain"
 
 export function NavBar() {
   return (
