@@ -1,11 +1,11 @@
 
 import { useState } from "react"
 import { Search, MessageSquare, ThumbsUp, Eye, Clock, User, Users } from "lucide-react"
-import { Button } from"../modules/Button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../modules/Tabs"
-import { Input } from "../modules/Input"
-import { Card, CardFooter, CardHeader, CardTitle } from "../modules/Card"
-import { Badge } from "../modules/Badge"
+import { Button } from"../../modules/Button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs"
+import { Input } from "../../modules/Input"
+import { Card, CardFooter, CardHeader, CardTitle } from "../../modules/Card"
+import { Badge } from "../../modules/Badge"
 
 export function CommunityContent() {
   const [activeTab, setActiveTab] = useState("tips")

@@ -1,6 +1,6 @@
 import "./App.css"
 import { NavBar } from "./components/Nav-bar"
-import { CommunityContent } from "./components/Community-content"
+import { CommunityContent } from "../src/components/community/Community-content"
 
 function App() {
   return (
