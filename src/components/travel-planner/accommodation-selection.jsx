@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Star, ArrowRight, Heart } from 'lucide-react';
-import { Button } from '../../src//button';
-import { Input } from '../ui/input';
-import { Card } from '../ui/card';
-import { Badge } from '../ui/badge';
+import { Button } from '../../modules/Button';
+import { Input } from '../../modules/Input';
+import { Card } from '../../modules/Card';
+import { Badge } from '../../modules/Badge';
 import MapComponent from './map-component';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';

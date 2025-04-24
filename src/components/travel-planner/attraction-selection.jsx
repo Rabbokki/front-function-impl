@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { Search, MapPin, Star, Plus, ArrowRight } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
+import { Button } from '../../modules/Button';
+import { Input } from '../../modules/Input';
+import { Card, CardContent } from '../../modules/Card';
+import { Badge } from '../../modules/Badge';
+import { Link } from 'react-router-dom';
 import {
   Tabs,
   TabsContent,
