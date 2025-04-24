@@ -1,8 +1,8 @@
 import React from "react";
-import { NavBar } from "../../components/nav-bar";
-import { SignupForm } from "../../components/signup-form";
+import { NavBar } from "../../components/Nav-bar";
+import { SignupForm } from "../../components/join/SignupForm";
 
-export default function Signup() {
+export default function SignupPage() {
   return (
     <main className="min-h-screen bg-traveling-bg">
       <NavBar />

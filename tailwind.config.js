@@ -51,6 +51,11 @@ module.exports = {
         traveling: {
           bg: "#ffffff",
           text: "#ff9a9e",
+          pink: "#ff9a9e",
+          purple: "#a78bfa",
+          blue: "#93c5fd",
+          yellow: "#fcd34d",
+          mint: "#6ee7b7",
           green: "#8ca896",
           coral: "#e8b4a9",
           beige: "#f0e4c9",

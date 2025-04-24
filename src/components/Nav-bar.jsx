@@ -19,6 +19,8 @@ export function NavBar() {
             <li><Link to="/travel-planner" className="text-lg font-medium text-traveling-text hover:opacity-70">여행만들기</Link></li>
             <li><Link to="/community" className="text-lg font-medium text-traveling-text hover:opacity-70">커뮤니티</Link></li>
             <li><Link to="/mypage" className="text-lg font-medium text-traveling-text hover:opacity-70">마이페이지</Link></li>
+            <li><Link to="/login" className="text-lg font-medium text-traveling-text hover:opacity-70">로그인</Link></li>
+            <li><Link to="/signup" className="text-lg font-medium text-traveling-text hover:opacity-70">회원가입</Link></li>
           </ul>
         </nav>
       </div>
