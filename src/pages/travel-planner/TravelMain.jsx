@@ -1,5 +1,5 @@
 import React from 'react';
-import NavBar from '../../src/components/Nav-bar';
+import NavBar from '../../components/Nav-bar';
 import TravelPlannerHome from './TravelPlannerHome';
 
 function TravelPlannerPage() {

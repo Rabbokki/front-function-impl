@@ -1,15 +1,13 @@
-"use client"
-
 import React, { useState } from "react"
 import { Link } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock, User, Calendar } from "lucide-react"
-import { Button } from "../../src/modules/Button"
-import { Input } from "../../src/modules/Input"
-import { Label } from "../../src/modules/Label"
-import { Checkbox } from "../../src/modules/Checkbox"
-import { Card } from "../../src/modules/Card"
-import { Separator } from "../../src/modules/Separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../src/modules/Select"
+import { Button } from "../../modules/Button"
+import { Input } from "../../modules/Input"
+import { Label } from "../../modules/Label"
+import { Checkbox } from "../../modules/Checkbox"
+import { Card } from "../../modules/Card"
+import { Separator } from "../../modules/Separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../modules/Select"
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false)

@@ -1,17 +1,18 @@
-import "./App.css"
-import { NavBar } from "./components/Nav-bar"
-import { CommunityContent } from "../src/components/community/Community-content"
+import { Routes, Route } from "react-router-dom"
+import CommunityPage  from "../src/pages/community/Community"
+import LoginPage  from "../src/pages/login/Login"
+import SignupPage  from "../src/pages/signup/Signup"
 
 function App() {
   return (
     <main className="min-h-screen bg-[#e8f4fc]">
-      <NavBar />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="mb-6 text-3xl font-bold text-[#1e3a8a]">커뮤니티</h1>
-        <CommunityContent />
-      </div>
+      <Routes>
+        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+      </Routes>
     </main>
   )
 }
 
-export default App
+export default App;

@@ -1,5 +1,6 @@
-import { NavBar } from "../../src/components/Nav-bar";
-import { LoginForm } from "../../src/components/LoginForm";
+import React from 'react';
+import { NavBar } from "../../components/Nav-bar";
+import LoginForm from '../../components/join/LoginForm';
 
 export default function LoginPage() {
   return React.createElement(
