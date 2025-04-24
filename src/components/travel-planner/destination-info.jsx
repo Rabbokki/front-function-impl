@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { PlaneIcon, ArrowRight, ExternalLink, Building } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Card } from '../../ui/card';
+import { Button } from '../../modules/Button';
+import { Card } from '../../modules/Card';
 
 export function DestinationInfo({ destination }) {
   const [selectedDates, setSelectedDates] = useState([]);

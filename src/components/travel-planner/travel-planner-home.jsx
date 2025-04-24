@@ -1,12 +1,10 @@
-"use client"
-
 import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
+import { Link } from "react-router-dom"
+// import Image from "next/image"
 import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Input } from "../../modules/Input"
+import { Card, CardContent } from "../../modules/Card"
+import { Badge } from "../../modules/Badge"
 
 export function TravelPlannerHome() {
   const [searchQuery, setSearchQuery] = useState("")

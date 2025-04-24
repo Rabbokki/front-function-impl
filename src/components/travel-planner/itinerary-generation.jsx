@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Clock, MapPin, ArrowRight, Download, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '../../modules/Button';
+import { Card, CardContent } from '../../modules/Card';
 
 export function ItineraryGeneration({ destination }) {
   const [isGenerating, setIsGenerating] = useState(false);

@@ -2,12 +2,21 @@ import React from 'react';
 import NavBar from '../../components/Nav-bar';
 import DestinationInfo from './DestinationInfo';
 import StepIndicator from './StepIndicator';
-import { useParams, Navigate } from 'react-router-dom'; // React 라우팅 처리용
+import { useParams, Navigate } from 'react-router-dom';
 
-const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
+const supportedCities = [
+  'osaka',
+  'tokyo',
+  'fukuoka',
+  'paris',
+  'rome',
+  'venice',
+  'bangkok',
+  'singapore',
+];
 
 function Step1() {
-  const { destination } = useParams(); // react-router-dom의 useParams 훅 사용
+  const { destination } = useParams();
 
   if (!supportedCities.includes(destination)) {
     return <Navigate to="/not-found" replace />;
