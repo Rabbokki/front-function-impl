@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import {TravelPlannerPage} from "../pages/travel-planner/TravelMain"
 
 export function NavBar() {
   return (
@@ -16,7 +17,7 @@ export function NavBar() {
         <nav className="hidden md:block">
           <ul className="flex space-x-8">
             <li><Link to="/flight-accommodation" className="text-lg font-medium text-traveling-text hover:opacity-70">항공/숙소</Link></li>
-            <li><Link to="/travel-planner" className="text-lg font-medium text-traveling-text hover:opacity-70">여행만들기</Link></li>
+            <Link to="/travel-planner" className="text-lg font-medium text-traveling-text hover:opacity-70">여행만들기</Link>
             <li><Link to="/community" className="text-lg font-medium text-traveling-text hover:opacity-70">커뮤니티</Link></li>
             <li><Link to="/mypage" className="text-lg font-medium text-traveling-text hover:opacity-70">마이페이지</Link></li>
           </ul>
