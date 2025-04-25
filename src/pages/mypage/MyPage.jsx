@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavBar } from "../../components/Nav-bar";
-import { MyPageContent } from '../../components/account/MyPageContent';
+import MyPageContent from '../../components/account/MyPageContent';
 
 export default function MyPage() {
   return (
