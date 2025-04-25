@@ -4,7 +4,7 @@ import { Button } from '../../modules/Button';
 import { Input } from '../../modules/Input';
 import { Card } from '../../modules/Card';
 import { Badge } from '../../modules/Badge';
-import MapComponent from './map-component';
+import MapComponent from './Map-component';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 

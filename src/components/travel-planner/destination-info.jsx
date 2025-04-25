@@ -1,12 +1,12 @@
 import { useState } from 'react';
-// import Image from 'next/image';
+import { Link } from 'react-router-dom';
 import { PlaneIcon, ArrowRight, ExternalLink, Building } from 'lucide-react';
-import { Button } from '../../modules/Button';
+import { Button } from "../../modules/Button";
 import { Card } from '../../modules/Card';
 
 export function DestinationInfo({ destination }) {
   const [selectedDates, setSelectedDates] = useState([]);
-  const [currentMonth, setCurrentMonth] = useState(4);
+  const [currentMonth, setCurrentMonth] = useState(4); // 4월
   const [currentYear, setCurrentYear] = useState(2025);
 
   // 도시별 데이터
@@ -41,7 +41,7 @@ export function DestinationInfo({ destination }) {
       voltage: '110V',
       adapter: '없음',
       image: '/images/destinations/tokyo.png',
-      airport: 'tyoa', // 스카이스캐너 공항 코드
+      airport: 'tyoa',
     },
     fukuoka: {
       name: '후쿠오카',
@@ -57,7 +57,7 @@ export function DestinationInfo({ destination }) {
       voltage: '110V',
       adapter: '없음',
       image: '/images/destinations/fukuoka.png',
-      airport: 'fuka', // 스카이스캐너 공항 코드
+      airport: 'fuka',
     },
     jeju: {
       name: '제주',
@@ -87,7 +87,7 @@ export function DestinationInfo({ destination }) {
       voltage: '230V',
       adapter: '필요',
       image: '/images/destinations/paris.png',
-      airport: 'pari', // 스카이스캐너 공항 코드
+      airport: 'pari',
     },
     rome: {
       name: '로마',
@@ -103,7 +103,7 @@ export function DestinationInfo({ destination }) {
       voltage: '230V',
       adapter: '필요',
       image: '/images/destinations/rome.png',
-      airport: 'rome', // 스카이스캐너 공항 코드
+      airport: 'rome',
     },
     venice: {
       name: '베니스',
@@ -119,7 +119,7 @@ export function DestinationInfo({ destination }) {
       voltage: '230V',
       adapter: '필요',
       image: '/images/destinations/venice.png',
-      airport: 'veni', // 스카이스캐너 공항 코드
+      airport: 'veni',
     },
     bangkok: {
       name: '방콕',
@@ -135,7 +135,7 @@ export function DestinationInfo({ destination }) {
       voltage: '220V',
       adapter: '필요',
       image: '/images/destinations/bangkok.png',
-      airport: 'bkkt', // 스카이스캐너 공항 코드
+      airport: 'bkkt',
     },
     singapore: {
       name: '싱가포르',
@@ -151,7 +151,7 @@ export function DestinationInfo({ destination }) {
       voltage: '230V',
       adapter: '필요',
       image: '/images/destinations/singapore.png',
-      airport: 'sins', // 스카이스캐너 공항 코드
+      airport: 'sins',
     },
   };
 
@@ -161,9 +161,7 @@ export function DestinationInfo({ destination }) {
   const skyscannerUrl = `https://www.skyscanner.co.kr/transport/flights/sela/${city.airport}`;
 
   // 부킹닷컴 URL 생성
-  const bookingUrl = `https://www.booking.com/searchresults.ko.html?ss=${encodeURIComponent(
-    city.name
-  )}`;
+  const bookingUrl = `https://www.booking.com/searchresults.ko.html?ss=${encodeURIComponent(city.name)}`;
 
   // 달력 생성 함수
   const generateCalendar = (year, month) => {
@@ -181,353 +179,328 @@ export function DestinationInfo({ destination }) {
         year,
       });
     }
+
+    // 현재 달의 날짜
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push({ date: i, currentMonth: true, month, year });
+      days.push({
+        date: i,
+        currentMonth: true,
+        month,
+        year,
+      });
     }
-    for (let i = 1; days.length < 42; i++) {
-      days.push({ date: i, currentMonth: false, month: month + 1, year });
+
+    // 다음 달의 날짜
+    const remainingDays = 42 - days.length;
+    for (let i = 1; i <= remainingDays; i++) {
+      days.push({
+        date: i,
+        currentMonth: false,
+        month: month + 1,
+        year: month === 11 ? year + 1 : year,
+      });
     }
+
     return days;
   };
 
-  // 현재 달의 날짜
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push({
-      date: i,
-      currentMonth: true,
-      month,
-      year,
-    });
-  }
+  const days = generateCalendar(currentYear, currentMonth);
+  const nextMonthDays = generateCalendar(
+    currentMonth === 11 ? currentYear + 1 : currentYear,
+    (currentMonth + 1) % 12
+  );
 
-  // 다음 달의 날짜
-  const remainingDays = 42 - days.length;
-  for (let i = 1; i <= remainingDays; i++) {
-    days.push({
-      date: i,
-      currentMonth: false,
-      month: month + 1,
-      year: month === 11 ? year + 1 : year,
-    });
-  }
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  const months = [
+    '1월',
+    '2월',
+    '3월',
+    '4월',
+    '5월',
+    '6월',
+    '7월',
+    '8월',
+    '9월',
+    '10월',
+    '11월',
+    '12월',
+  ];
 
-  return days;
-}
+  const handleDateClick = (year, month, date) => {
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
 
-const days = generateCalendar(currentYear, currentMonth);
-const nextMonthDays = generateCalendar(
-  currentMonth === 11 ? currentYear + 1 : currentYear,
-  (currentMonth + 1) % 12
-);
-
-const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-const months = [
-  '1월',
-  '2월',
-  '3월',
-  '4월',
-  '5월',
-  '6월',
-  '7월',
-  '8월',
-  '9월',
-  '10월',
-  '11월',
-  '12월',
-];
-
-const handleDateClick = (year, month, date) => {
-  const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(
-    date
-  ).padStart(2, '0')}`;
-
-  if (selectedDates.length === 0) {
-    setSelectedDates([dateString]);
-  } else if (selectedDates.length === 1) {
-    const firstDate = new Date(selectedDates[0]);
-    const secondDate = new Date(dateString);
-    const start = firstDate < secondDate ? firstDate : secondDate;
-    const end = firstDate < secondDate ? secondDate : firstDate;
-    const range = [];
-    const cur = new Date(start);
-    while (cur <= end) {
-      range.push(cur.toISOString().split('T')[0]);
-      cur.setDate(cur.getDate() + 1);
+    if (selectedDates.length === 0) {
+      setSelectedDates([dateString]);
+    } else if (selectedDates.length === 1) {
+      const firstDate = new Date(selectedDates[0]);
+      const secondDate = new Date(dateString);
+      const start = firstDate < secondDate ? firstDate : secondDate;
+      const end = firstDate < secondDate ? secondDate : firstDate;
+      const range = [];
+      const cur = new Date(start);
+      while (cur <= end) {
+        range.push(cur.toISOString().split('T')[0]);
+        cur.setDate(cur.getDate() + 1);
+      }
+      setSelectedDates(range);
+    } else {
+      setSelectedDates([dateString]);
     }
-    setSelectedDates(range);
-  } else {
-    setSelectedDates([dateString]);
-  }
-};
+  };
 
-const handlePrevMonth = () => {
-  if (currentMonth === 0) {
-    setCurrentMonth(11);
-    setCurrentYear(currentYear - 1);
-  } else {
-    setCurrentMonth(currentMonth - 1);
-  }
-};
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
 
-const handleNextMonth = () => {
-  if (currentMonth === 11) {
-    setCurrentMonth(0);
-    setCurrentYear(currentYear + 1);
-  } else {
-    setCurrentMonth(currentMonth + 1);
-  }
-};
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
 
-const formatDateRange = () => {
-  if (selectedDates.length === 0) return '';
-  const sorted = [...selectedDates].sort();
-  const start = new Date(sorted[0]);
-  const end = new Date(sorted[sorted.length - 1]);
-  const format = (d) =>
-    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(
-      d.getDate()
-    ).padStart(2, '0')}`;
-  return `${format(start)} - ${format(end)} (${sorted.length}일)`;
-};
+  const formatDateRange = () => {
+    if (selectedDates.length === 0) return '';
+    const sorted = [...selectedDates].sort();
+    const start = new Date(sorted[0]);
+    const end = new Date(sorted[sorted.length - 1]);
+    const format = (d) =>
+      `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+    return `${format(start)} - ${format(end)} (${sorted.length}일)`;
+  };
 
-return (
-  <div className="space-y-6">
-    <Card className="bg-white p-6 shadow-md">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="relative h-64 overflow-hidden rounded-lg md:h-full">
-          <Image
-            src={city.image || '/placeholder.svg'}
-            alt={city.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-        </div>
-        <div className="flex flex-col justify-between">
-          <div>
-            <div className="mb-2 flex items-center">
-              <span className="mr-2 rounded bg-traveling-purple/20 px-2 py-1 text-xs font-medium text-traveling-purple">
-                {city.country}
-              </span>
-            </div>
-            <h1 className="mb-1 text-3xl font-bold text-traveling-text">
-              {city.name}
-            </h1>
-            <h2 className="mb-4 text-sm font-medium text-traveling-text/70">
-              {city.nameEn}
-            </h2>
-            <p className="mb-6 text-traveling-text/80">{city.description}</p>
+  return (
+    <div className="space-y-6">
+      <Card className="bg-white p-6 shadow-md">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="relative h-64 overflow-hidden rounded-lg md:h-full">
+            <img
+              src={city.image || '/placeholder.svg'}
+              alt={city.name}
+              className="w-full h-full object-cover"
+            />
           </div>
-
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-traveling-text">
-              빠른 예약
-            </h3>
-            <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
-              <Button
-                className="flex items-center justify-center bg-traveling-purple text-white hover:bg-traveling-purple/90"
-                onClick={() => window.open(skyscannerUrl, '_blank')}
-              >
-                <PlaneIcon className="mr-2 h-4 w-4" />
-                항공권 검색
-                <ExternalLink className="ml-2 h-3 w-3" />
-              </Button>
-              <Button
-                className="flex items-center justify-center bg-traveling-blue text-white hover:bg-traveling-blue/90"
-                onClick={() => window.open(bookingUrl, '_blank')}
-              >
-                <Building className="mr-2 h-4 w-4" />
-                숙소 검색
-                <ExternalLink className="ml-2 h-3 w-3" />
-              </Button>
+          <div className="flex flex-col justify-between">
+            <div>
+              <div className="mb-2 flex items-center">
+                <span className="mr-2 rounded bg-traveling-purple/20 px-2 py-1 text-xs font-medium text-traveling-purple">
+                  {city.country}
+                </span>
+              </div>
+              <h1 className="mb-1 text-3xl font-bold text-traveling-text">
+                {city.name}
+              </h1>
+              <h2 className="mb-4 text-sm font-medium text-traveling-text/70">
+                {city.nameEn}
+              </h2>
+              <p className="mb-6 text-traveling-text/80">{city.description}</p>
             </div>
-            <p className="text-xs text-gray-500">* 외부 사이트로 연결됩니다</p>
-          </div>
-        </div>
-      </div>
 
-      <div className="mt-8">
-        <h2 className="mb-4 text-center text-2xl font-bold text-traveling-text">
-          여행 기간이 어떻게 되시나요?
-        </h2>
-        <p className="mb-4 text-center text-sm text-traveling-text/70">
-          * 여행 일자는 최대 10일까지 선택 가능합니다.
-        </p>
-        <p className="mb-6 text-center text-sm text-traveling-text/70">
-          현재 여행 기간:{' '}
-          {formatDateRange() ||
-            '(여행지 도착 날짜, 여행지 출발 날짜)로 입력해 주세요.'}
-        </p>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* 첫 번째 달력 */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <button
-                onClick={handlePrevMonth}
-                className="text-traveling-text hover:text-traveling-purple"
-              >
-                &lt;
-              </button>
-              <h3 className="text-lg font-bold text-traveling-text">
-                {currentYear}년 {months[currentMonth]}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-traveling-text">
+                빠른 예약
               </h3>
-              <button
-                onClick={handleNextMonth}
-                className="text-traveling-text hover:text-traveling-purple"
-              >
-                &gt;
-              </button>
-            </div>
-
-            <div className="grid grid-cols-7">
-              {weekdays.map((day, index) => (
-                <div
-                  key={index}
-                  className={`p-2 text-center text-sm font-medium ${
-                    index === 0
-                      ? 'text-red-500'
-                      : index === 6
-                      ? 'text-blue-500'
-                      : 'text-traveling-text'
-                  }`}
+              <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
+                <Button
+                  className="flex items-center justify-center bg-traveling-purple text-white hover:bg-traveling-purple/90"
+                  onClick={() => window.open(skyscannerUrl, '_blank')}
                 >
-                  {day}
-                </div>
-              ))}
+                  <PlaneIcon className="mr-2 h-4 w-4" />
+                  항공권 검색
+                  <ExternalLink className="ml-2 h-3 w-3" />
+                </Button>
+                <Button
+                  className="flex items-center justify-center bg-traveling-blue text-white hover:bg-traveling-blue/90"
+                  onClick={() => window.open(bookingUrl, '_blank')}
+                >
+                  <Building className="mr-2 h-4 w-4" />
+                  숙소 검색
+                  <ExternalLink className="ml-2 h-3 w-3" />
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">* 외부 사이트로 연결됩니다</p>
+            </div>
+          </div>
+        </div>
 
-              {days.map((day, index) => {
-                const dateString = `${day.year}-${String(
-                  day.month + 1
-                ).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
-                const isSelected = selectedDates.includes(dateString);
-                const isToday =
-                  new Date().toISOString().split('T')[0] === dateString;
+        <div className="mt-8">
+          <h2 className="mb-4 text-center text-2xl font-bold text-traveling-text">
+            여행 기간이 어떻게 되시나요?
+          </h2>
+          <p className="mb-4 text-center text-sm text-traveling-text/70">
+            * 여행 일자는 최대 10일까지 선택 가능합니다.
+          </p>
+          <p className="mb-6 text-center text-sm text-traveling-text/70">
+            현재 여행 기간:{' '}
+            {formatDateRange() ||
+              '(여행지 도착 날짜, 여행지 출발 날짜)로 입력해 주세요.'}
+          </p>
 
-                return (
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* 첫 번째 달력 */}
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <button
+                  onClick={handlePrevMonth}
+                  className="text-traveling-text hover:text-traveling-purple"
+                >
+                  &lt;
+                </button>
+                <h3 className="text-lg font-bold text-traveling-text">
+                  {currentYear}년 {months[currentMonth]}
+                </h3>
+                <button
+                  onClick={handleNextMonth}
+                  className="text-traveling-text hover:text-traveling-purple"
+                >
+                  &gt;
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7">
+                {weekdays.map((day, index) => (
                   <div
                     key={index}
-                    className={`p-2 text-center ${
-                      !day.currentMonth
-                        ? 'text-gray-300'
-                        : index % 7 === 0
+                    className={`p-2 text-center text-sm font-medium ${
+                      index === 0
                         ? 'text-red-500'
-                        : index % 7 === 6
-                        ? 'text-blue-500'
-                        : 'text-traveling-text'
+                        : index === 6
+                          ? 'text-blue-500'
+                          : 'text-traveling-text'
                     }`}
                   >
-                    <button
-                      onClick={() =>
-                        day.currentMonth &&
-                        handleDateClick(day.year, day.month, day.date)
-                      }
-                      className={`h-8 w-8 rounded-full ${
-                        isSelected
-                          ? 'bg-traveling-purple text-white'
-                          : isToday
-                          ? 'border border-traveling-purple'
-                          : ''
-                      }`}
-                      disabled={!day.currentMonth}
-                    >
-                      {day.date}
-                    </button>
+                    {day}
                   </div>
-                );
-              })}
+                ))}
+
+                {days.map((day, index) => {
+                  const dateString = `${day.year}-${String(day.month + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
+                  const isSelected = selectedDates.includes(dateString);
+                  const isToday = new Date().toISOString().split('T')[0] === dateString;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`p-2 text-center ${
+                        !day.currentMonth
+                          ? 'text-gray-300'
+                          : index % 7 === 0
+                            ? 'text-red-500'
+                            : index % 7 === 6
+                              ? 'text-blue-500'
+                              : 'text-traveling-text'
+                      }`}
+                    >
+                      <button
+                        onClick={() =>
+                          day.currentMonth && handleDateClick(day.year, day.month, day.date)
+                        }
+                        className={`h-8 w-8 rounded-full ${
+                          isSelected
+                            ? 'bg-traveling-purple text-white'
+                            : isToday
+                              ? 'border border-traveling-purple'
+                              : ''
+                        }`}
+                        disabled={!day.currentMonth}
+                      >
+                        {day.date}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* 두 번째 달력 */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <button className="invisible">&lt;</button>
-              <h3 className="text-lg font-bold text-traveling-text">
-                {currentMonth === 11 ? currentYear + 1 : currentYear}년{' '}
-                {months[(currentMonth + 1) % 12]}
-              </h3>
-              <button className="invisible">&gt;</button>
-            </div>
+            {/* 두 번째 달력 */}
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <button className="invisible">&lt;</button>
+                <h3 className="text-lg font-bold text-traveling-text">
+                  {currentMonth === 11 ? currentYear + 1 : currentYear}년{' '}
+                  {months[(currentMonth + 1) % 12]}
+                </h3>
+                <button className="invisible">&gt;</button>
+              </div>
 
-            <div className="grid grid-cols-7">
-              {weekdays.map((day, index) => (
-                <div
-                  key={index}
-                  className={`p-2 text-center text-sm font-medium ${
-                    index === 0
-                      ? 'text-red-500'
-                      : index === 6
-                      ? 'text-blue-500'
-                      : 'text-traveling-text'
-                  }`}
-                >
-                  {day}
-                </div>
-              ))}
-
-              {nextMonthDays.map((day, index) => {
-                const dateString = `${day.year}-${String(
-                  day.month + 1
-                ).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
-                const isSelected = selectedDates.includes(dateString);
-                const isToday =
-                  new Date().toISOString().split('T')[0] === dateString;
-
-                return (
+              <div className="grid grid-cols-7">
+                {weekdays.map((day, index) => (
                   <div
                     key={index}
-                    className={`p-2 text-center ${
-                      !day.currentMonth
-                        ? 'text-gray-300'
-                        : index % 7 === 0
+                    className={`p-2 text-center text-sm font-medium ${
+                      index === 0
                         ? 'text-red-500'
-                        : index % 7 === 6
-                        ? 'text-blue-500'
-                        : 'text-traveling-text'
+                        : index === 6
+                          ? 'text-blue-500'
+                          : 'text-traveling-text'
                     }`}
                   >
-                    <button
-                      onClick={() =>
-                        day.currentMonth &&
-                        handleDateClick(day.year, day.month, day.date)
-                      }
-                      className={`h-8 w-8 rounded-full ${
-                        isSelected
-                          ? 'bg-traveling-purple text-white'
-                          : isToday
-                          ? 'border border-traveling-purple'
-                          : ''
-                      }`}
-                      disabled={!day.currentMonth}
-                    >
-                      {day.date}
-                    </button>
+                    {day}
                   </div>
-                );
-              })}
+                ))}
+
+                {nextMonthDays.map((day, index) => {
+                  const dateString = `${day.year}-${String(day.month + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
+                  const isSelected = selectedDates.includes(dateString);
+                  const isToday = new Date().toISOString().split('T')[0] === dateString;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`p-2 text-center ${
+                        !day.currentMonth
+                          ? 'text-gray-300'
+                          : index % 7 === 0
+                            ? 'text-red-500'
+                            : index % 7 === 6
+                              ? 'text-blue-500'
+                              : 'text-traveling-text'
+                      }`}
+                    >
+                      <button
+                        onClick={() =>
+                          day.currentMonth && handleDateClick(day.year, day.month, day.date)
+                        }
+                        className={`h-8 w-8 rounded-full ${
+                          isSelected
+                            ? 'bg-traveling-purple text-white'
+                            : isToday
+                              ? 'border border-traveling-purple'
+                              : ''
+                        }`}
+                        disabled={!day.currentMonth}
+                      >
+                        {day.date}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 flex justify-end">
-          <Link
-            href={
-              selectedDates.length > 0
-                ? `/travel-planner/${destination}/step2`
-                : '#'
-            }
-          >
-            <Button
-              className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
-              disabled={selectedDates.length === 0}
+          <div className="mt-8 flex justify-end">
+            <Link
+              to={selectedDates.length > 0 ? `/travel-planner/${destination}/step2` : '#'}
             >
-              다음 단계로
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+              <Button
+                className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+                disabled={selectedDates.length === 0}
+              >
+                다음 단계로
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
-    </Card>
-  </div>
-);
+      </Card>
+    </div>
+  );
+}
