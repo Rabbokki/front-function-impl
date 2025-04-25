@@ -1,7 +1,7 @@
 import React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
-import { cn } from "../../src/lib/Utils"
+import { cn } from "../lib/Utils"
 
 function Breadcrumb({ ...props }) {
   return <nav aria-label="breadcrumb" {...props} />
