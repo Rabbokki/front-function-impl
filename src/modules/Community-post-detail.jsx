@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, ThumbsUp, MessageSquare, Share2, Clock, Eye } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "./Button"
+import { Avatar, AvatarFallback, AvatarImage } from "./Avatar"
+import { Separator } from "./Separator"
+import { Badge } from "./Badge"
+import { Textarea } from "./Textarea"
 import { useRouter } from "next/navigation"
 
 export function CommunityPostDetail({ postId }) {
