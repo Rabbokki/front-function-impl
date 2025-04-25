@@ -10,7 +10,7 @@ import { Input } from '../../modules/Input';
 import { Label } from '../../modules/Label';
 import { Textarea } from '../../modules/Textarea';
 
-export function MyPageContent() {
+function MyPageContent() {
   const [activeTab, setActiveTab] = useState("my-trips")
 
   const myTrips = [
@@ -411,3 +411,5 @@ export function MyPageContent() {
       </div>
     )
 }
+
+export default MyPageContent;
