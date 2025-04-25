@@ -14,7 +14,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) =>{
     e.preventDefault();
     // Actual implementation for login logic goes here
     console.log("로그인 시도:", { email, password, rememberMe });
@@ -125,7 +125,7 @@ function LoginForm() {
           </div>
   
           <div className="mt-6 grid grid-cols-2 gap-4">
-            
+
           {/* Facebook Button */}
           <Button
             type="button"
