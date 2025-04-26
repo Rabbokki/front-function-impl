@@ -11,7 +11,7 @@ import { Separator } from "./Separator";
 import { toast } from "../hooks/Use-toast";
 
 export function SettingsContent() {
-  const history = useHistory(); // Changed to useHistory
+  const history = useHistory();
   const [showPassword, setShowPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
