@@ -14,6 +14,7 @@ export default function MapComponent({
   const [googleMarkers, setGoogleMarkers] = useState({});
 
   useEffect(() => {
+    console.log('API Key:', process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
     const initMap = async () => {
       const loader = new Loader({
         apiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
@@ -23,7 +24,8 @@ export default function MapComponent({
 
       try {
         const google = await loader.load();
-
+        console.log('Google Maps loaded successfully');
+        
         if (mapRef.current) {
           const mapInstance = new google.maps.Map(mapRef.current, {
             center,

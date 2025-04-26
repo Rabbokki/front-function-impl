@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import {NavBar} from "../../../components/Nav-bar";
 import StepIndicator from "../../../components/travel-planner/Step-indicator";
-import ItineraryGeneration from "../../../components/travel-planner/Itinerary-generation";
+import {ItineraryGeneration} from "../../../components/travel-planner/Itinerary-generation";
 
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
 

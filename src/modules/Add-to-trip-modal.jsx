@@ -8,9 +8,9 @@ import { Card, CardContent } from "./Card"
 import { Badge } from "./Badge"
 import { Input } from "./Input"
 import { Label } from "./Label"
-import { DatePickerWithRange } from "@/components/ui/date-range-picker"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/hooks/use-toast"
+import { DatePickerWithRange } from "./Date-range-picker"
+import { Textarea } from "./Textarea"
+import { toast } from "../hooks/Use-toast"
 
 export function AddToTripModal({ isOpen, onClose, placeName, placeType, placeLocation }) {
   const [activeTab, setActiveTab] = useState("existing")

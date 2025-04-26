@@ -1,6 +1,6 @@
 import React from 'react';
 import {NavBar} from "../../../components/Nav-bar";
-import DestinationInfo from "../../../components/travel-planner/Destination-info";
+import {DestinationInfo} from "../../../components/travel-planner/Destination-info";
 import StepIndicator from "../../../components/travel-planner/Step-indicator";
 import { useParams, Navigate } from 'react-router-dom';
 

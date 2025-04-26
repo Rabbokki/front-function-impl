@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Card } from '../../modules/Card';
+import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
 
 export default function TransportationSelection({ destination }) {
   const [selectedTransportation, setSelectedTransportation] = useState(null);
+  const navigate = useNavigate(); // 내비게이션 훅 추가
 
   // 도시별 데이터
   const cityData = {
@@ -24,9 +26,36 @@ export default function TransportationSelection({ destination }) {
       name: '제주',
       nameEn: 'JEJU',
     },
+    paris: {
+      name: '파리',
+      nameEn: 'PARIS',
+    },
+    rome: {
+      name: '로마',
+      nameEn: 'ROME',
+    },
+    venice: {
+      name: '베니스',
+      nameEn: 'VENICE',
+    },
+    bangkok: {
+      name: '방콕',
+      nameEn: 'BANGKOK',
+    },
+    singapore: {
+      name: '싱가포르',
+      nameEn: 'SINGAPORE',
+    },
   };
 
   const city = cityData[destination];
+
+  // 다음 단계로 이동 핸들러
+  const handleNext = () => {
+    if (selectedTransportation) {
+      navigate(`/travel-planner/${destination}/step5`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -126,7 +155,7 @@ export default function TransportationSelection({ destination }) {
 
         <div className="mt-8 flex justify-end">
           <Link
-            href={
+            to={
               selectedTransportation
                 ? `/travel-planner/${destination}/step5`
                 : '#'
@@ -135,6 +164,7 @@ export default function TransportationSelection({ destination }) {
             <Button
               className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
               disabled={!selectedTransportation}
+              onClick={handleNext} // 클릭 이벤트 추가
             >
               다음 단계로
               <ArrowRight className="ml-2 h-4 w-4" />
