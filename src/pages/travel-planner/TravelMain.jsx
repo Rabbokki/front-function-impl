@@ -2,8 +2,6 @@ import React from 'react';
 import {NavBar} from '../../components/Nav-bar';
 import TravelPlannerHome from "../../components/travel-planner/Travel-planner-home";
 
-// import NavBar from '../../components/Nav-bar';
-// import TravelPlannerHome from './TravelPlannerHome';
 
 function TravelPlannerPage() {
   return (

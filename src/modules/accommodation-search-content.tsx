@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import { Calendar, Search, MapPin, Filter, Star, Wifi, Coffee, Utensils, Dumbbell, Bath, Heart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "./Button"
+import { Input } from "./Input"
+import { Label } from "./Label"
+import { Card, CardContent } from "./Card"
+import { Slider } from "./Slider"
+import { Checkbox } from "./Checkbox"
+import { Badge } from "./Badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select"
 
 export function AccommodationSearchContent() {
   const [showResults, setShowResults] = useState(false)
