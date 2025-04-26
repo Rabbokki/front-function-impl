@@ -1,27 +1,22 @@
-import React, { useState } from 'react';
-import { Calendar, Check } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './Dialog';
-import { Button } from './Button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './Tabs';
-import { Card, CardContent } from './Card';
-import { Badge } from './Badge';
-import { Input } from './Input';
-import { Label } from './Label';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { Textarea } from '../modules/Textarea';
-import { toast } from '@/hooks/use-toast';
+import React, { useState } from "react"
+import { Calendar, Check } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./Dialog"
+import { Button } from "./Button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs"
+import { Card, CardContent } from "./Card"
+import { Badge } from "./Badge"
+import { Input } from "./Input"
+import { Label } from "./Label"
+import { DatePickerWithRange } from "./Date-range-picker"
+import { Textarea } from "./Textarea"
+import { toast } from "../hooks/Use-toast"
 
-export function AddToTripModal({
-  isOpen,
-  onClose,
-  placeName,
-  placeType,
-  placeLocation,
-}) {
-  const [activeTab, setActiveTab] = useState('existing');
-  const [selectedTripId, setSelectedTripId] = useState(null);
-  const [isAddingToDay, setIsAddingToDay] = useState(false);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(null);
+
+export function AddToTripModal({ isOpen, onClose, placeName, placeType, placeLocation }) {
+  const [activeTab, setActiveTab] = useState("existing")
+  const [selectedTripId, setSelectedTripId] = useState(null)
+  const [isAddingToDay, setIsAddingToDay] = useState(false)
+  const [selectedDayIndex, setSelectedDayIndex] = useState(null)
   const [newTripData, setNewTripData] = useState({
     title: '',
     date: {

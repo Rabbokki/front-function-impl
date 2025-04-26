@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Clock, MapPin, ArrowRight, Download, Share2 } from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Card, CardContent } from '../../modules/Card';
+import { Link } from 'react-router-dom';
 
 export function ItineraryGeneration({ destination }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -763,11 +764,10 @@ export function ItineraryGeneration({ destination }) {
                     >
                       <div className="flex flex-col md:flex-row">
                         <div className="relative h-24 w-full md:h-auto md:w-1/5">
-                          <Image
+                          <img
                             src={place.image || '/placeholder.svg'}
                             alt={place.name}
-                            fill
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                           />
                         </div>
                         <CardContent className="flex flex-1 flex-col p-4">
@@ -797,7 +797,7 @@ export function ItineraryGeneration({ destination }) {
         </div>
 
         <div className="mt-8 flex justify-end">
-          <Link href="/">
+          <Link to="/">
             <Button className="bg-traveling-purple text-white hover:bg-traveling-purple/90">
               완료
               <ArrowRight className="ml-2 h-4 w-4" />

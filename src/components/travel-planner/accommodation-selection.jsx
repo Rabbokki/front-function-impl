@@ -4,11 +4,11 @@ import { Button } from '../../modules/Button';
 import { Input } from '../../modules/Input';
 import { Card } from '../../modules/Card';
 import { Badge } from '../../modules/Badge';
-import MapComponent from './map-component';
+import MapComponent from './Map-component';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
-function AccommodationSelection({ destination }) {
+export default function AccommodationSelection({ destination }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([0, 500000]);
   const [selectedHotels, setSelectedHotels] = useState({
@@ -706,7 +706,7 @@ function AccommodationSelection({ destination }) {
 
   const handleNext = () => {
     if (isAllDaysSelected()) {
-      navigate(`/planner/${destination}/step4`);
+      navigate(`/travel-planner/${destination}/step4`);
     }
   };
 
@@ -917,7 +917,7 @@ function AccommodationSelection({ destination }) {
             {/* 다음 단계로 버튼 부분 수정 */}
             <div className="mt-8 flex justify-end">
               <Link
-                to={isAllDaysSelected() ? `/planner/${destination}/step4` : '#'}
+                to={isAllDaysSelected() ? `/travel-planner/${destination}/step4` : '#'}
               >
                 <Button
                   className="bg-traveling-purple text-white hover:bg-traveling-purple/90"

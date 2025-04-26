@@ -91,7 +91,9 @@ export function TravelPlannerHome() {
   return (
     <div className="space-y-8">
       <div className="rounded-xl bg-white p-6 shadow-md">
-        <h2 className="mb-6 text-center text-2xl font-bold text-traveling-text">어디로 여행을 떠나시나요?</h2>
+        <h2 className="mb-6 text-center text-2xl font-bold text-traveling-text">
+          어디로 여행을 떠나시나요?
+        </h2>
 
         <div className="mx-auto mb-8 max-w-2xl">
           <div className="relative">
@@ -108,23 +110,34 @@ export function TravelPlannerHome() {
 
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {filteredDestinations.map((destination) => (
-            <Link key={destination.id} href={`/travel-planner/${destination.id}/step1`}>
+            <Link
+              key={destination.id}
+              to={`/travel-planner/${destination.id}/step1`}
+            >
               <Card className="overflow-hidden transition-transform hover:scale-105">
                 <div className="relative h-48">
-                <img
-                  src={destination.image || "/placeholder.svg"}
-                  alt={destination.name}
-                  className="w-full h-full object-cover"
-                />
-                  {destination.isNew && <Badge className="absolute right-2 top-2 bg-red-500 text-white">NEW</Badge>}
+                  <img
+                    src={destination.image || "/placeholder.svg"}
+                    alt={destination.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {destination.isNew && (
+                    <Badge className="absolute right-2 top-2 bg-red-500 text-white">
+                      NEW
+                    </Badge>
+                  )}
                   <Badge className="absolute left-2 top-2 bg-traveling-purple/80 text-white">
                     {destination.country}
                   </Badge>
                 </div>
                 <CardContent className="p-4">
                   <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-traveling-text">{destination.name}</h3>
-                    <p className="text-sm text-traveling-text/70">{destination.nameKr}</p>
+                    <h3 className="text-xl font-bold text-traveling-text">
+                      {destination.name}
+                    </h3>
+                    <p className="text-sm text-traveling-text/70">
+                      {destination.nameKr}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -133,6 +146,6 @@ export function TravelPlannerHome() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 export default TravelPlannerHome;

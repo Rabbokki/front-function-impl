@@ -1,13 +1,18 @@
-import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home'; // Home.jsx 파일 경로 확인 필수
-import TravelPlannerPage from './pages/travel-planner/TravelMain';
-import MyPage from './pages/mypage/MyPage';
-import CommunityPage from '../src/pages/community/Community';
-import LoginPage from '../src/pages/login/Login';
-import SignupPage from '../src/pages/signup/Signup';
+
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import TravelPlannerPage from "./pages/travel-planner/TravelMain";
+import MyPage from "./pages/mypage/MyPage";
+import CommunityPage from "./pages/community/Community";
+import LoginPage from "./pages/login/Login";
+import SignupPage from "./pages/signup/Signup";
 import AdminPage from '../src/pages/admin/Page';
 import WritePage from '../src/pages/community/write/Page'
-
+import Step1 from "./pages/travel-planner/destination/Step1";
+import Step2 from "./pages/travel-planner/destination/Step2";
+import Step3 from "./pages/travel-planner/destination/Step3";
+import Step4 from "./pages/travel-planner/destination/Step4";
+import Step5 from "./pages/travel-planner/destination/Step5";
 
 function App() {
   return (
@@ -21,6 +26,12 @@ function App() {
         <Route path="/travel-planner" element={<TravelPlannerPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/community/write" element={<WritePage />} />
+        <Route path="/travel-planner/:destination/step1" element={<Step1 />} />
+        <Route path="/travel-planner/:destination/step2" element={<Step2 />} />
+        <Route path="/travel-planner/:destination/step3" element={<Step3 />} />
+        <Route path="/travel-planner/:destination/step4" element={<Step4 />} />
+        <Route path="/travel-planner/:destination/step5" element={<Step5 />} />
+        <Route path="/not-found" element={<div>404 Not Found</div>} /> {/* 임시 404 페이지 */}
       </Routes>
     </>
   );

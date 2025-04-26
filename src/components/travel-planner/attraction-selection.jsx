@@ -1,18 +1,17 @@
 import { useState } from 'react';
-// import Image from 'next/image';
 import { Search, MapPin, Star, Plus, ArrowRight } from 'lucide-react';
-import { Button } from '../../modules/Button';
-import { Input } from '../../modules/Input';
-import { Card, CardContent } from '../../modules/Card';
-import { Badge } from '../../modules/Badge';
+import { Button } from "../../modules/Button";
+import { Input } from "../../modules/Input";
+import { Card, CardContent } from "../../modules/Card";
+import { Badge } from "../../modules/Badge"
 import { Link } from 'react-router-dom';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui/tabs';
-import { MapComponent } from './map-component';
+} from "../../modules/Tabs";
+import MapComponent from './Map-component'; // 기본 내보내기로 임포트
 
 export function AttractionSelection({ destination }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,8 +58,7 @@ export function AttractionSelection({ destination }) {
           id: 'umeda-wheel',
           name: '우메다 공중정원',
           category: '명소',
-          address:
-            'Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88',
+          address: 'Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88',
           rating: 4.4,
           likes: 4824,
           image: '/images/attractions/umeda-wheel.jpg',
@@ -198,8 +196,7 @@ export function AttractionSelection({ destination }) {
           id: 'eiffel-tower',
           name: '에펠탑',
           category: '명소',
-          address:
-            'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
+          address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
           rating: 4.7,
           likes: 9876,
           image: '/paris-eiffel-tower.png',
@@ -219,8 +216,7 @@ export function AttractionSelection({ destination }) {
           id: 'notre-dame',
           name: '노트르담 대성당',
           category: '명소',
-          address:
-            '6 Parvis Notre-Dame - Pl. Jean-Paul II, 75004 Paris, France',
+          address: '6 Parvis Notre-Dame - Pl. Jean-Paul II, 75004 Paris, France',
           rating: 4.7,
           likes: 7654,
           image: '/paris-notre-dame.png',
@@ -368,8 +364,7 @@ export function AttractionSelection({ destination }) {
           id: 'grand-palace',
           name: '왕궁',
           category: '명소',
-          address:
-            'Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand',
+          address: 'Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand',
           rating: 4.7,
           likes: 8765,
           image: '/bangkok-grand-palace.png',
@@ -379,8 +374,7 @@ export function AttractionSelection({ destination }) {
           id: 'wat-arun',
           name: '왓 아룬',
           category: '명소',
-          address:
-            '158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand',
+          address: '158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand',
           rating: 4.6,
           likes: 7654,
           image: '/bangkok-wat-arun.png',
@@ -400,8 +394,7 @@ export function AttractionSelection({ destination }) {
           id: 'wat-pho',
           name: '왓 포',
           category: '명소',
-          address:
-            '2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand',
+          address: '2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand',
           rating: 4.7,
           likes: 5432,
           image: '/bangkok-wat-pho.png',
@@ -411,8 +404,7 @@ export function AttractionSelection({ destination }) {
           id: 'khao-san-road',
           name: '카오산 로드',
           category: '명소',
-          address:
-            'Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand',
+          address: 'Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand',
           rating: 4.5,
           likes: 4321,
           image: '/bangkok-khao-san-road.png',
@@ -478,7 +470,7 @@ export function AttractionSelection({ destination }) {
     },
   };
 
-  const cityData = attractionsData[destination];
+  const cityData = attractionsData[destination] || attractionsData.osaka; // 기본값으로 오사카 설정
   const filteredAttractions = cityData.attractions.filter(
     (attraction) =>
       attraction.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -595,11 +587,10 @@ export function AttractionSelection({ destination }) {
                     >
                       <div className="flex flex-col md:flex-row">
                         <div className="relative h-40 w-full md:h-auto md:w-1/3">
-                          <Image
+                          <img
                             src={attraction.image || '/placeholder.svg'}
                             alt={attraction.name}
-                            fill
-                            className="object-cover"
+                            className="w-full h-full object-cover"
                           />
                         </div>
                         <CardContent className="flex flex-1 flex-col p-4">
@@ -744,11 +735,7 @@ export function AttractionSelection({ destination }) {
 
             <div className="mt-8 flex justify-end">
               <Link
-                href={
-                  selectedAttractions.length > 0
-                    ? `/travel-planner/${destination}/step3`
-                    : '#'
-                }
+                to={selectedAttractions.length > 0 ? `/travel-planner/${destination}/step3` : '#'}
               >
                 <Button
                   className="bg-traveling-purple text-white hover:bg-traveling-purple/90"

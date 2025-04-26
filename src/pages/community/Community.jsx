@@ -1,6 +1,6 @@
-import { NavBar } from '../../components/Nav-bar'
-import { CommunityContent } from '../../modules/Community-content'
 
+import { NavBar } from '../../components/Nav-bar';
+import { CommunityContent } from "../../modules/Community-content";
 
 export default function CommunityPage() {
   return (
