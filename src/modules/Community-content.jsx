@@ -236,7 +236,7 @@ export function CommunityContent() {
           />
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4dabf7]" />
         </div>
-        <Link href="/community/write">
+        <Link to="/community/write">
           <Button className="ml-4 bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]">
             글쓰기
           </Button>
