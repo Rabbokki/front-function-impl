@@ -7,6 +7,9 @@ import { Label } from '../../modules/Label';
 import { Checkbox } from '../../modules/Checkbox';
 import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import "../../styles/traveling-datepicker.css";
 import {
   Select,
   SelectContent,
@@ -22,17 +25,22 @@ export function SignupForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
-  const [birthYear, setBirthYear] = useState('');
+  const [birthDate, setBirthDate] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const formattedBirthDate = birthDate
+      ? birthDate.toISOString().split('T')[0] // yyyy-MM-dd 형태로 변환
+      : null;
+
     console.log('회원가입 시도:', {
       email,
       password,
       name,
-      birthYear,
+      birthDate: formattedBirthDate,
       agreeTerms,
       agreeMarketing,
     });
@@ -173,27 +181,26 @@ export function SignupForm() {
             </div>
           </div>
 
-          {/* 출생연도 */}
+          {/* 생년월일 */}
           <div className="mb-4">
             <Label
-              htmlFor="birth-year"
+              htmlFor="birth-date"
               className="mb-2 block text-traveling-text"
             >
-              출생연도
+              생년월일
             </Label>
             <div className="relative">
-              <Select value={birthYear} onValueChange={setBirthYear}>
-                <SelectTrigger className="bg-traveling-background pl-10 border-traveling-text/30">
-                  <SelectValue placeholder="출생연도를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}년
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DatePicker
+                selected={birthDate}
+                onChange={(date) => setBirthDate(date)}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="생년월일을 선택하세요"
+                showYearDropdown
+                showMonthDropdown
+                dropdownMode="select"
+                className="w-full rounded-md border border-traveling-text/30 bg-traveling-background p-2 pl-10 outline-none focus:outline-none"
+                wrapperClassName="w-full"
+              />
               <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-traveling-text/50" />
             </div>
           </div>
