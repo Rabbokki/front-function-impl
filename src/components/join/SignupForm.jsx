@@ -9,7 +9,11 @@ import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import "../../styles/traveling-datepicker.css";
+import '../../styles/traveling-datepicker.css';
+import { useDispatch } from 'react-redux';
+import { registerAccount } from '../../hooks/reducer/account/accountThunk';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Select,
   SelectContent,
@@ -19,6 +23,9 @@ import {
 } from '../../modules/Select';
 
 export function SignupForm() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -29,21 +36,28 @@ export function SignupForm() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const formattedBirthDate = birthDate
-      ? birthDate.toISOString().split('T')[0] // yyyy-MM-dd 형태로 변환
+      ? birthDate.toISOString().split('T')[0]
       : null;
 
-    console.log('회원가입 시도:', {
+    const signupData = {
       email,
       password,
-      name,
-      birthDate: formattedBirthDate,
-      agreeTerms,
-      agreeMarketing,
-    });
+      nickname: name,
+      birthday: formattedBirthDate,
+    };
+
+    try {
+      await dispatch(registerAccount(signupData)).unwrap();
+      alert('회원가입 성공!');
+      navigate("/login");  // 성공하면 로그인 페이지로 이동 
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+      alert('회원가입 실패: ' + error);
+    }
   };
 
   const currentYear = new Date().getFullYear();

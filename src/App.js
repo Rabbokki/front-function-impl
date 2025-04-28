@@ -1,23 +1,28 @@
 
-import { Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Provider } from "react-redux";          
+import { store } from "./hooks/store";           
+
 import Home from "./pages/Home";
 import TravelPlannerPage from "./pages/travel-planner/TravelMain";
-import MyPage from "./pages/mypage/MyPage";
-import CommunityPage from "./pages/community/Community";
-import LoginPage from "./pages/login/Login";
-import SignupPage from "./pages/signup/Signup";
-import AdminPage from '../src/pages/admin/Page';
-import WritePage from '../src/pages/community/write/Page'
 import Step1 from "./pages/travel-planner/destination/Step1";
 import Step2 from "./pages/travel-planner/destination/Step2";
 import Step3 from "./pages/travel-planner/destination/Step3";
 import Step4 from "./pages/travel-planner/destination/Step4";
 import Step5 from "./pages/travel-planner/destination/Step5";
+import MyPage from "./pages/mypage/MyPage";
+import CommunityPage from "./pages/community/Community";
+import WritePage from "./pages/community/write/Page";
+import LoginPage from "./pages/login/Login";
+import SignupPage from "./pages/signup/Signup";
+import AdminPage from "./pages/admin/Page";
 
 function App() {
   return (
-    <>
-      <Routes>
+    <Provider store={store}>
+        <BrowserRouter>
+        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/community" element={<CommunityPage />} />
@@ -33,7 +38,8 @@ function App() {
         <Route path="/travel-planner/:destination/step5" element={<Step5 />} />
         <Route path="/not-found" element={<div>404 Not Found</div>} /> {/* 임시 404 페이지 */}
       </Routes>
-    </>
+      </BrowserRouter>
+    </Provider>
   );
 }
 
