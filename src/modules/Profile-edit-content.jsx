@@ -12,20 +12,95 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "./Separator"
 import { toast } from "../hooks/Use-toast"
 
-export function ProfileEditContent() {
-  const navigate = useNavigate();
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../../modules/Card';
+import { Input } from '../../modules/Input';
+import { Label } from '../../modules/Label';
+import { Textarea } from '../../modules/Textarea';
+import { Button } from '../../modules/Button';
+import { Avatar, AvatarFallback, AvatarImage } from '../../modules/Avatar';
 
-  const [profileData, setProfileData] = useState({
-    nickname: "행복한여행자",
-    email: "traveler@example.com",
-    bio: "여행 좋아하는 30대 직장인입니다. 맛집 탐방과 사진 찍는 것을 좋아해요.",
-    gender: "남성",
-    birthYear: "1990",
-    occupation: "회사원",
-    website: "",
-    instagram: "",
-    profileImage: "/diverse-professional-profiles.png",
-  })
+export function ProfileEditContent({ userInfo }) {
+  return (
+    <Card className="bg-[#f8f9fa]">
+      <CardHeader>
+        <CardTitle className="text-xl text-[#1e3a8a]">프로필 정보</CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        <div className="flex flex-col space-y-1">
+          <Label htmlFor="nickname" className="text-[#1e3a8a]">
+            닉네임
+          </Label>
+          <Input
+            id="nickname"
+            value={userInfo.nickname}
+            readOnly
+            className="bg-[#e7f5ff]/30"
+          />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <Label htmlFor="email" className="text-[#1e3a8a]">
+            이메일
+          </Label>
+          <Input
+            id="email"
+            value={userInfo.email}
+            readOnly
+            className="bg-[#e7f5ff]/30"
+          />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <Label htmlFor="bio" className="text-[#1e3a8a]">
+            자기소개
+          </Label>
+          <Textarea
+            id="bio"
+            defaultValue="여행 좋아하는 30대 직장인입니다. 맛집 탐방과 사진 찍는 것을 좋아해요."
+            className="min-h-[100px] bg-[#e7f5ff]/30"
+          />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <Label htmlFor="profile-image" className="text-[#1e3a8a]">
+            프로필 이미지
+          </Label>
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-16 w-16 border-2 border-[#4dabf7]">
+              <AvatarImage
+                src="/placeholder.svg?height=64&width=64"
+                alt="프로필 이미지"
+              />
+              <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a]">
+                여행자
+              </AvatarFallback>
+            </Avatar>
+            <Button
+              variant="outline"
+              className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
+            >
+              이미지 변경
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex justify-end space-x-2 bg-[#e7f5ff]/30 p-4">
+        <Button
+          variant="outline"
+          className="border-[#adb5bd] text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
+        >
+          취소
+        </Button>
+        <Button className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]">
+          저장하기
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
 
   const [preferences, setPreferences] = useState([
     { id: 1, name: "맛집", selected: true },

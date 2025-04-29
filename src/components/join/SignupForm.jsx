@@ -32,6 +32,7 @@ export function SignupForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [birthDate, setBirthDate] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
@@ -45,15 +46,16 @@ export function SignupForm() {
 
     const signupData = {
       email,
-      password,
-      nickname: name,
+      name,       
+      nickname,   
       birthday: formattedBirthDate,
+      password,
     };
 
     try {
       await dispatch(registerAccount(signupData)).unwrap();
       alert('회원가입 성공!');
-      navigate("/login");  // 성공하면 로그인 페이지로 이동 
+      navigate('/login'); // 성공하면 로그인 페이지로 이동
     } catch (error) {
       console.error('회원가입 실패:', error);
       alert('회원가입 실패: ' + error);
@@ -189,6 +191,28 @@ export function SignupForm() {
                 className="bg-traveling-background pl-10 border-traveling-text/30"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-traveling-text/50" />
+            </div>
+          </div>
+
+          {/* 닉네임 */}
+          <div className="mb-4">
+            <Label
+              htmlFor="nickname"
+              className="mb-2 block text-traveling-text"
+            >
+              닉네임
+            </Label>
+            <div className="relative">
+              <Input
+                id="nickname"
+                type="text"
+                placeholder="닉네임을 입력하세요"
+                className="bg-traveling-background pl-10 border-traveling-text/30"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
                 required
               />
               <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-traveling-text/50" />

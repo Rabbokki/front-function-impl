@@ -16,6 +16,7 @@ import WritePage from './pages/community/write/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
+import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
   return (
@@ -23,7 +24,14 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/mypage" element={<MyPage />} />
+          <Route
+            path="/mypage"
+            element={
+              <PrivateRoute>
+                <MyPage />
+              </PrivateRoute>
+            }
+          />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
