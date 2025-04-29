@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// 회원가입 요청 thunk
+// 회원가입 요청 
 export const registerAccount = createAsyncThunk(
   'account/register',
   async (signupData, { rejectWithValue }) => {
@@ -14,7 +14,7 @@ export const registerAccount = createAsyncThunk(
   }
 );
 
-// 로그인 요청 추가 ✨
+// 로그인 요청
 export const loginAccount = createAsyncThunk(
   'account/login',
   async (loginData, { rejectWithValue }) => {
@@ -26,3 +26,11 @@ export const loginAccount = createAsyncThunk(
     }
   }
 );
+
+// 로그아웃 요청
+
+export const logoutAccount = () => (dispatch) => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  // 필요한 경우 여기서 상태 초기화도 dispatch
+};

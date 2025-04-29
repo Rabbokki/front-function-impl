@@ -7,16 +7,41 @@ import { Label } from '../../modules/Label';
 import { Checkbox } from '../../modules/Checkbox';
 import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { loginAccount } from '../../hooks/reducer/account/accountThunk';
 
 function LoginForm() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('로그인 시도:', { email, password, rememberMe });
+
+    const loginData = {
+      email,
+      password,
+    };
+
+    try {
+      const resultAction = await dispatch(loginAccount(loginData)).unwrap();
+      console.log('로그인 성공:', resultAction);
+
+      localStorage.setItem('accessToken', resultAction.accessToken);
+      localStorage.setItem('refreshToken', resultAction.refreshToken);
+
+      alert('로그인 성공!');
+
+      navigate('/'); // 로그인 성공하면 홈으로 이동
+    } catch (error) {
+      console.error('로그인 실패:', error);
+      alert('로그인 실패: ' + (error?.message || '서버 오류'));
+    }
   };
 
   return (
