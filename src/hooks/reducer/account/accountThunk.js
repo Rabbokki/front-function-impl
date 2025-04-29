@@ -13,3 +13,16 @@ export const registerAccount = createAsyncThunk(
     }
   }
 );
+
+// 로그인 요청 추가 ✨
+export const loginAccount = createAsyncThunk(
+  'account/login',
+  async (loginData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/accounts/login', loginData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
