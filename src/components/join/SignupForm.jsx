@@ -7,6 +7,13 @@ import { Label } from '../../modules/Label';
 import { Checkbox } from '../../modules/Checkbox';
 import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '../../styles/traveling-datepicker.css';
+import { useDispatch } from 'react-redux';
+import { registerAccount } from '../../hooks/reducer/account/accountThunk';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Select,
   SelectContent,
@@ -16,26 +23,41 @@ import {
 } from '../../modules/Select';
 
 export function SignupForm() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
-  const [birthYear, setBirthYear] = useState('');
+  const [birthDate, setBirthDate] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('회원가입 시도:', {
+
+    const formattedBirthDate = birthDate
+      ? birthDate.toISOString().split('T')[0]
+      : null;
+
+    const signupData = {
       email,
       password,
-      name,
-      birthYear,
-      agreeTerms,
-      agreeMarketing,
-    });
+      nickname: name,
+      birthday: formattedBirthDate,
+    };
+
+    try {
+      await dispatch(registerAccount(signupData)).unwrap();
+      alert('회원가입 성공!');
+      navigate("/login");  // 성공하면 로그인 페이지로 이동 
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+      alert('회원가입 실패: ' + error);
+    }
   };
 
   const currentYear = new Date().getFullYear();
@@ -173,27 +195,26 @@ export function SignupForm() {
             </div>
           </div>
 
-          {/* 출생연도 */}
+          {/* 생년월일 */}
           <div className="mb-4">
             <Label
-              htmlFor="birth-year"
+              htmlFor="birth-date"
               className="mb-2 block text-traveling-text"
             >
-              출생연도
+              생년월일
             </Label>
             <div className="relative">
-              <Select value={birthYear} onValueChange={setBirthYear}>
-                <SelectTrigger className="bg-traveling-background pl-10 border-traveling-text/30">
-                  <SelectValue placeholder="출생연도를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}년
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DatePicker
+                selected={birthDate}
+                onChange={(date) => setBirthDate(date)}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="생년월일을 선택하세요"
+                showYearDropdown
+                showMonthDropdown
+                dropdownMode="select"
+                className="w-full rounded-md border border-traveling-text/30 bg-traveling-background p-2 pl-10 outline-none focus:outline-none"
+                wrapperClassName="w-full"
+              />
               <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-traveling-text/50" />
             </div>
           </div>
