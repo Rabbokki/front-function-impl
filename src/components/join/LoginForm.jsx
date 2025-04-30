@@ -28,18 +28,21 @@ function LoginForm() {
       password,
     };
 
-  
-
     try {
       const resultAction = await dispatch(loginAccount(loginData)).unwrap();
       console.log('로그인 성공:', resultAction);
 
-      localStorage.setItem('accessToken', resultAction.accessToken);
-      localStorage.setItem('refreshToken', resultAction.refreshToken);
+      // 로그인 성공 후
+      if (rememberMe) {
+        localStorage.setItem('accessToken', resultAction.accessToken);
+        localStorage.setItem('refreshToken', resultAction.refreshToken);
+      } else {
+        sessionStorage.setItem('accessToken', resultAction.accessToken);
+        sessionStorage.setItem('refreshToken', resultAction.refreshToken);
+      }
 
       alert('로그인 성공!');
-
-      navigate('/'); // 로그인 성공하면 홈으로 이동
+      navigate('/');
     } catch (error) {
       console.error('로그인 실패:', error);
       alert('로그인 실패: ' + (error?.message || '서버 오류'));

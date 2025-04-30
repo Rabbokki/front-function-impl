@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import axios from "axios"
+import axiosInstance from '../../../api/axiosInstance';
 import {
   ArrowLeft, ThumbsUp, MessageSquare, Share2, Clock, Eye,
 } from "lucide-react"
@@ -42,7 +42,7 @@ export function CommunityPostDetail() {
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return
     try {
-      const res = await axios.post(`/api/comments`, {
+      const res = await axiosInstance.post(`/api/comments`, {
         postId,
         content: newComment
       })
@@ -57,7 +57,7 @@ export function CommunityPostDetail() {
   const handleLike = async () => {
     setLiked(!liked)
     try {
-      const res = await axios.post(`/api/posts/${postId}/like`) // 좋아요 처리 요청
+      const res = await axiosInstance.post(`/api/posts/${postId}/like`) // 좋아요 처리 요청
       setPost({
         ...post,
         likeCount: liked ? post.likeCount - 1 : post.likeCount + 1 // 좋아요 수 업데이트

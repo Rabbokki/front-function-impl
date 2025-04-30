@@ -41,11 +41,11 @@ function MyPageContent() {
       try {
         const res = await axiosInstance.get('/api/accounts/mypage');
         console.log('회원정보', res.data);
-
-        // ✅ 여기 추가
         setUserInfo({
           email: res.data.email,
           nickname: res.data.nickname,
+          level: res.data.level,
+          levelExp: res.data.levelExp,
         });
       } catch (error) {
         console.error('회원정보 요청 실패:', error);
@@ -163,9 +163,9 @@ function MyPageContent() {
             src="/placeholder.svg?height=96&width=96"
             alt="프로필 이미지"
           />
-          <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a]">
+          {/* <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a]">
             여행자
-          </AvatarFallback>
+          </AvatarFallback> */}
         </Avatar>
 
         <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
@@ -193,6 +193,13 @@ function MyPageContent() {
             </div>
           </div>
         </div>
+
+        {/* <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
+          <h2 className="text-2xl font-bold text-[#1e3a8a]">
+            {userInfo.nickname}
+          </h2>
+          <p className="text-[#495057]">{userInfo.email}</p>
+        </div> */}
       </div>
 
       <Tabs

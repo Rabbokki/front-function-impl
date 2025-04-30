@@ -36,31 +36,58 @@ export function SignupForm() {
   const [birthDate, setBirthDate] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    // 이메일 형식 유효성 검사
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+  
+    // 비밀번호 유효성 검사: 8자 이상, 영문, 숫자, 특수문자 포함
+    if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(password)) {
+      alert('비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 포함해야 합니다.');
+      return;
+    }
+  
+    // 비밀번호 확인 일치 검사
+    if (password !== confirmPassword) {
+      alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+  
+    // 약관 동의 확인 (필수)
+    if (!agreeTerms) {
+      alert('이용약관 및 개인정보처리방침에 동의하셔야 합니다.');
+      return;
+    }
+  
     const formattedBirthDate = birthDate
       ? birthDate.toISOString().split('T')[0]
       : null;
-
+  
     const signupData = {
       email,
-      name,       
-      nickname,   
+      name,
+      nickname,
       birthday: formattedBirthDate,
       password,
+      agreeTerms,      // ✅ 백엔드로 함께 전송
+      agreeMarketing,  // ✅ 선택 항목도 전송
     };
-
+  
     try {
-      // await dispatch(registerAccount(signupData)).unwrap();
+      await dispatch(registerAccount(signupData)).unwrap();
       alert('회원가입 성공!');
-      navigate('/login'); // 성공하면 로그인 페이지로 이동
+      navigate('/login');
     } catch (error) {
       console.error('회원가입 실패:', error);
-      alert('회원가입 실패: ' + error);
+      alert('회원가입 실패: ' + error.message || error);
     }
   };
+  
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => currentYear - i);
