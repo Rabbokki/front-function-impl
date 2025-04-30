@@ -1,0 +1,80 @@
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+// 백엔드 API 기본 주소
+const API_BASE_URL = '/api/posts';
+
+// 게시글 생성
+export const createPost = createAsyncThunk(
+  'post/create',
+  async ({ dto, postImg }, thunkAPI) => {
+    try {
+      const formData = new FormData();
+      formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+      postImg?.forEach((file) => formData.append('postImg', file));
+
+      const response = await axios.post(`${API_BASE_URL}/create`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
+      });
+      return response.data; // 게시글 생성 완료 후 반환된 데이터
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || '게시글 생성 실패';
+      return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+    }
+  }
+);
+
+// 전체 게시글 조회
+export const getAllPosts = createAsyncThunk('post/getAll', async (_, thunkAPI) => {
+  try {
+    const response = await axios.get(API_BASE_URL);
+    return response.data; // 게시글 목록 반환
+  } catch (error) {
+    const errorMessage = error.response?.data || '게시글 조회 실패';
+    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+  }
+});
+
+// 단일 게시글 조회
+export const getPostById = createAsyncThunk('post/getById', async (id, thunkAPI) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/find/${id}`);
+    return response.data; // 단일 게시글 반환
+  } catch (error) {
+    const errorMessage = error.response?.data || '게시글 상세 조회 실패';
+    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+  }
+});
+
+// 게시글 수정
+export const updatePost = createAsyncThunk(
+  'post/update',
+  async ({ id, dto, postImg }, thunkAPI) => {
+    try {
+      const formData = new FormData();
+      formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+      postImg?.forEach((file) => formData.append('postImg', file));
+
+      const response = await axios.patch(`${API_BASE_URL}/update/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
+      });
+      return response.data; // 수정된 게시글 데이터 반환
+    } catch (error) {
+      const errorMessage = error.response?.data || '게시글 수정 실패';
+      return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+    }
+  }
+);
+
+// 게시글 삭제
+export const deletePost = createAsyncThunk('post/delete', async (id, thunkAPI) => {
+  try {
+    await axios.delete(`${API_BASE_URL}/delete/${id}`, { withCredentials: true });
+    return id; // 삭제된 게시글 ID 반환
+  } catch (error) {
+    const errorMessage = error.response?.data || '게시글 삭제 실패';
+    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+  }
+});
