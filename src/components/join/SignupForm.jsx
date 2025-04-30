@@ -51,7 +51,7 @@ export function SignupForm() {
     };
 
     try {
-      await dispatch(registerAccount(signupData)).unwrap();
+      // await dispatch(registerAccount(signupData)).unwrap();
       alert('회원가입 성공!');
       navigate("/login");  // 성공하면 로그인 페이지로 이동 
     } catch (error) {
