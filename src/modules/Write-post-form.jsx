@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+
+import { createPost } from '../hooks/reducer/post/postThunk';
+
 import { Button } from '../../src/modules/Button';
 import { Input } from '../../src/modules/Input';
 import { Textarea } from '../../src/modules/Textarea';
@@ -11,12 +15,13 @@ import {
   SelectValue,
 } from '../../src/modules/Select';
 import { Card } from '../../src/modules/Card';
+
 import { X, ImageIcon } from 'lucide-react';
-
-
 
 export function WritePostForm() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [postTitle, setPostTitle] = useState('');
   const [postContent, setPostContent] = useState('');
   const [postCategory, setPostCategory] = useState('tips');
@@ -66,10 +71,41 @@ export function WritePostForm() {
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('게시글이 등록되었습니다!');
-    navigate('/community');
+
+    const formData = new FormData();
+    images.forEach(image => {
+      formData.append("img", image.file)
+    })
+
+    const newPost = {
+      title: postTitle,
+      content: postContent,
+      category: postCategory,
+      tag: postTags
+    }
+
+    formData.append("dto", new Blob([JSON.stringify(newPost)], {type: "application/json"}))
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      console.log("Blob content:", reader.result); // This will show the JSON you packed
+    };
+    reader.readAsText(formData.get("dto"));
+
+    try {
+      const result = await dispatch(createPost(formData)).unwrap();
+      console.log("성공: ", result)
+      alert('게시글이 등록되었습니다!');
+      navigate('/community'); // 성공하면 커뮤니티 페이지로 이동
+    } catch (error) {
+      console.error('게시글이 등록 실패:', error);
+      alert('게시글이 등록 실패: ' + error);
+    }
+    
   };
 
   

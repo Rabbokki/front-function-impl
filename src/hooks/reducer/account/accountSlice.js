@@ -1,5 +1,3 @@
-// src/hooks/reducer/account/accountSlice.js
-
 import { createSlice } from '@reduxjs/toolkit';
 import { registerAccount } from './accountThunk';
 
