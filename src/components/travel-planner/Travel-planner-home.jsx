@@ -5,7 +5,10 @@ import { Input } from "../../modules/Input"
 import { Card, CardContent } from "../../modules/Card"
 import { Badge } from "../../modules/Badge"
 
-export function TravelPlannerHome() {
+export function 
+
+
+TravelPlannerHome() {
   const [searchQuery, setSearchQuery] = useState("")
 
   // 다양한 나라의 도시들 추가
