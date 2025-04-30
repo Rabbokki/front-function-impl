@@ -76,7 +76,7 @@ export function WritePostForm() {
 
     const formData = new FormData();
     images.forEach(image => {
-      formData.append("postImage", image)
+      formData.append("img", image.file)
     })
 
     const newPost = {
@@ -87,6 +87,14 @@ export function WritePostForm() {
     }
 
     formData.append("dto", new Blob([JSON.stringify(newPost)], {type: "application/json"}))
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      console.log("Blob content:", reader.result); // This will show the JSON you packed
+    };
+    reader.readAsText(formData.get("dto"));
 
     try {
       const result = await dispatch(createPost(formData)).unwrap();

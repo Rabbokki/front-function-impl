@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../../api/axiosInstance';
+import axios from '../../../api/axiosInstance';
 
 // 백엔드 API 기본 주소
 const API_BASE_URL = '/api/posts';
@@ -7,23 +8,27 @@ const API_BASE_URL = '/api/posts';
 // 게시글 생성
 export const createPost = createAsyncThunk(
   'post/create',
-  async ({ dto, postImg }, thunkAPI) => {
+  async ({ formData, accessToken }, thunkAPI) => {
     try {
       const formData = new FormData();
       formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
       postImg?.forEach((file) => formData.append('postImg', file));
 
       const response = await axiosInstance.post(`${API_BASE_URL}/create`, formData, {
+  
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
-      return response.data; // 게시글 생성 완료 후 반환된 데이터
+      
+      console.log("response.data from postThunk.js: ", response.data);
+      return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.error || '게시글 생성 실패';
-      return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+      return thunkAPI.rejectWithValue(errorMessage);
     }
   }
 );
+
 
 // 전체 게시글 조회
 export const getAllPosts = createAsyncThunk('post/getAll', async (_, thunkAPI) => {
