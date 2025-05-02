@@ -36,7 +36,7 @@ function App() {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/attractions" element={<AttractionsPage />} />
+          <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
