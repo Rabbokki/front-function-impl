@@ -105,7 +105,6 @@ export function WritePostForm() {
       console.error('게시글이 등록 실패:', error);
       alert('게시글이 등록 실패: ' + error);
     }
-    
   };
 
   
