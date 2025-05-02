@@ -1,6 +1,5 @@
 import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { Link } from 'react-router-dom';
 import { Search, MapPin, Star, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,11 +174,10 @@ function AttractionsContent() {
           {filteredAttractions.map((attraction) => (
             <Card key={attraction.id} className="overflow-hidden transition-all hover:shadow-md">
               <div className="relative h-48 w-full">
-                <Image
+                <img
                   src={attraction.image || "/placeholder.svg"}
                   alt={attraction.name}
-                  fill
-                  className="object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
               <CardContent className="p-4">
