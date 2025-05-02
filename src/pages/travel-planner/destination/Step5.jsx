@@ -1,26 +1,44 @@
-import { NavBar } from "@/components/nav-bar";
-import { ItineraryGeneration } from "@/components/travel-planner/itinerary-generation";
-import { StepIndicator } from "@/components/travel-planner/step-indicator";
-import { notFound } from "next/navigation";
+import { useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { NavBar } from "../../../components/Nav-bar";
+import { ItineraryGeneration } from "../../../components/travel-planner/Itinerary-generation";
+import StepIndicator from "../../../components/travel-planner/Step-indicator";
 
-// 지원하는 도시 목록에 새로운 도시들 추가
-const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
+// 지원하는 도시 목록
+const supportedCities = [
+  "osaka",
+  "tokyo",
+  "fukuoka",
+  "paris",
+  "rome",
+  "venice",
+  "bangkok",
+  "singapore",
+];
 
-export default function Step5Page({ params, searchParams }) {
-  // 지원하지 않는 도시인 경우 404 페이지로 리다이렉트
-  if (!supportedCities.includes(params.destination)) {
-    notFound();
-  }
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
-  // AI 모드 여부 확인
-  const isAiMode = searchParams.ai === "true";
+export default function Step5Page() {
+  const navigate = useNavigate();
+  const { destination } = useParams();
+  const query = useQuery();
+
+  const isAiMode = query.get("ai") === "true";
+
+  useEffect(() => {
+    if (!supportedCities.includes(destination)) {
+      navigate("/404"); // 404 리다이렉션
+    }
+  }, [destination, navigate]);
 
   return (
     <main className="min-h-screen bg-traveling-bg">
       <NavBar />
       <div className="container mx-auto px-4 py-8">
-        <StepIndicator currentStep={5} destination={params.destination} />
-        <ItineraryGeneration destination={params.destination} isAiMode={isAiMode} />
+        <StepIndicator currentStep={5} destination={destination} />
+        <ItineraryGeneration destination={destination} isAiMode={isAiMode} />
       </div>
     </main>
   );
