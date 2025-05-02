@@ -5,7 +5,7 @@ import { Button } from "../modules/Button";
 import { Input } from "../modules/Input";
 import { Card, CardContent } from "../modules/Card";
 import { Badge } from "../modules/Badge";
-import { ReviewForm } from "./travel-planner/review-form";
+import { ReviewForm } from "../components/travel-planner/Review-form";
 
 function AttractionsContent() {
   const [searchQuery, setSearchQuery] = useState("");

@@ -8,7 +8,7 @@ const API_BASE_URL = '/api/posts';
 // 게시글 생성
 export const createPost = createAsyncThunk(
   'post/create',
-  async ({ formData, accessToken }, thunkAPI) => {
+  async ({ dto, postImg }, thunkAPI) => {
     try {
       const formData = new FormData();
       formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
@@ -18,7 +18,7 @@ export const createPost = createAsyncThunk(
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
-      
+
       console.log("response.data from postThunk.js: ", response.data);
       return response.data;
     } catch (error) {

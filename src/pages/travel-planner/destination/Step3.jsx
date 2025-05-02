@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavBar } from "../../../components/Nav-bar";
 import { useNavigate, useParams } from "react-router-dom";
 import AccommodationSelection from "../../../components/travel-planner/Accommodation-selection";

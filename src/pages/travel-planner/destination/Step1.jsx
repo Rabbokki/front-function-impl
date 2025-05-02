@@ -11,6 +11,7 @@ const supportedCities = [
 ];
 
 function Step1() {
+  const params = useParams();
   const { destination } = useParams();
   const [flights, setFlights] = useState([]);
   const [isRealTime, setIsRealTime] = useState(false);
