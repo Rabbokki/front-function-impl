@@ -1,27 +1,24 @@
-import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
-import {NavBar} from "../../../components/Nav-bar";
-import StepIndicator from "../../../components/travel-planner/Step-indicator";
-import {AttractionSelection} from "../../../components/travel-planner/Attraction-selection"
+import { NavBar } from "@/components/nav-bar";
+import { AttractionSelection } from "@/components/travel-planner/attraction-selection";
+import { StepIndicator } from "@/components/travel-planner/step-indicator";
+import { notFound } from "next/navigation";
 
+// 지원하는 도시 목록에 새로운 도시들 추가
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
 
-function Step2() {
-  const { destination } = useParams();
-
-  if (!supportedCities.includes(destination)) {
-    return <Navigate to="/not-found" replace />;
+export default function Step2Page({ params }) {
+  // 지원하지 않는 도시인 경우 404 페이지로 리다이렉트
+  if (!supportedCities.includes(params.destination)) {
+    notFound();
   }
 
   return (
     <main className="min-h-screen bg-traveling-bg">
       <NavBar />
       <div className="container mx-auto px-4 py-8">
-        <StepIndicator currentStep={2} destination={destination} />
-        <AttractionSelection destination={destination} />
+        <StepIndicator currentStep={2} destination={params.destination} />
+        <AttractionSelection destination={params.destination} />
       </div>
     </main>
   );
 }
-
-export default Step2;

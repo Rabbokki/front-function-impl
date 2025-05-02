@@ -59,37 +59,19 @@ function Step1() {
 
   if (!supportedCities.includes(destination)) {
     return <Navigate to="/not-found" replace />;
+
   }
 
   return (
     <main className="min-h-screen bg-traveling-bg">
       <NavBar />
       <div className="container mx-auto px-4 py-8">
-        <StepIndicator currentStep={1} destination={destination} />
-        <DestinationInfo destination={destination} />
-        <div className="flex gap-4">
-          <Button onClick={() => handleFlightSearch(false)} className="bg-traveling-purple text-white mt-4">
-            항공편 검색
-          </Button>
-          <Button onClick={handleRefresh} className="bg-gray-500 text-white mt-4">
-            최신 가격 조회
-          </Button>
-        </div>
-        {error && (
-          <div className="text-red-500 mt-4">
-            오류: {error}
-          </div>
-        )}
-        <div className="flight-list mt-4">
-          {flights.map((flight, index) => (
-            <div key={index} className="flight-item p-4 border rounded mb-2">
-              <p>가격: {flight.price}</p>
-            </div>
-          ))}
-        </div>
+        <StepIndicator currentStep={1} destination={params.destination} />
+        <DestinationInfo destination={params.destination} />
       </div>
     </main>
   );
 }
 
 export default Step1;
+
