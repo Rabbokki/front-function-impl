@@ -15,7 +15,6 @@ export const createPost = createAsyncThunk(
       postImg?.forEach((file) => formData.append('postImg', file));
 
       const response = await axiosInstance.post(`${API_BASE_URL}/create`, formData, {
-  
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
