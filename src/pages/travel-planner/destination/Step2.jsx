@@ -4,6 +4,7 @@ import { NavBar } from "../../../components/Nav-bar";
 import { AttractionSelection } from "../../../components/travel-planner/Attraction-selection";
 import  StepIndicator  from "../../../components/travel-planner/Step-indicator";
 
+
 // 지원하는 도시 목록
 const supportedCities = [
   "osaka",

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AccommodationSelection from "../../../components/travel-planner/Accommodation-selection";
 import StepIndicator from "../../../components/travel-planner/Step-indicator";
 
+
 // 지원하는 도시 목록에 새로운 도시들 추가
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
 

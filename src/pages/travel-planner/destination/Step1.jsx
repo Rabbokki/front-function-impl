@@ -5,6 +5,7 @@ import StepIndicator from "../../../components/travel-planner/Step-indicator";
 import { useParams, Navigate } from 'react-router-dom';
 import { Button } from "../../../modules/Button";
 
+
 const supportedCities = [
   'osaka', 'tokyo', 'fukuoka', 'paris', 'rome', 'venice', 'bangkok', 'singapore',
 ];
