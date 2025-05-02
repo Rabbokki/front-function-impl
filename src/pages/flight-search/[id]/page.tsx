@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { NavBar } from "../../../components/Nav-bar";
-import { FlightDetailContent } from "../../../components/flight-search/"
+import FlightDetailContent  from "../../../components/flight-search/Flight-detail-content";
 
 const FlightDetailPage = () => {
   const { id } = useParams();
