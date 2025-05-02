@@ -5,6 +5,7 @@ import { AttractionSelection } from "../../../components/travel-planner/Attracti
 import  StepIndicator  from "../../../components/travel-planner/Step-indicator";
 
 
+
 // 지원하는 도시 목록
 const supportedCities = [
   "osaka",
