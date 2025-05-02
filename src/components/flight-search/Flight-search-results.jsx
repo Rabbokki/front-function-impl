@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Calendar, Clock, Filter, Luggage, Plane, Users, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Badge } from "@/components/ui/badge"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Calendar, Clock, Filter, Luggage, Plane, Users, X } from "lucide-react";
+import { Button } from "../../modules/Button";
+import { Card, CardContent } from "../../modules/Card";
+import { Slider } from "../../modules/Slider";
+import { Badge } from "../../modules/Badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../modules/Accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../modules/Select";
+import { Checkbox } from "../../modules/Checkbox";
+import { Label } from "../../modules/Label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
 
 // 항공권 데이터 (실제로는 API에서 가져올 것)
 const flightData = [
@@ -132,91 +132,69 @@ const airlines = [
   { id: "ZE", name: "이스타항공" },
 ]
 
-export function FlightSearchResults({
-  searchParams,
-}: {
-  searchParams: { from?: string; to?: string; date?: string; return?: string; passengers?: string }
-}) {
-  const router = useRouter()
-  const [sortBy, setSortBy] = useState("price")
-  const [filteredFlights, setFilteredFlights] = useState(flightData)
-  const [priceRange, setPriceRange] = useState([200000, 400000])
-  const [selectedAirlines, setSelectedAirlines] = useState<string[]>([])
-  const [departureTime, setDepartureTime] = useState<string[]>([])
-  const [showFilters, setShowFilters] = useState(false)
+const FlightSearchResults = ({ searchParams }) => {
+  const navigate = useNavigate();
+  const [sortBy, setSortBy] = useState("price");
+  const [filteredFlights, setFilteredFlights] = useState(flightData);
+  const [priceRange, setPriceRange] = useState([200000, 400000]);
+  const [selectedAirlines, setSelectedAirlines] = useState([]);
+  const [departureTime, setDepartureTime] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
-  // 필터 적용
   useEffect(() => {
-    let filtered = [...flightData]
-
-    // 가격 필터
-    filtered = filtered.filter((flight) => flight.price >= priceRange[0] && flight.price <= priceRange[1])
-
-    // 항공사 필터
+    let filtered = [...flightData];
+    filtered = filtered.filter((flight) => flight.price >= priceRange[0] && flight.price <= priceRange[1]);
     if (selectedAirlines.length > 0) {
       filtered = filtered.filter((flight) =>
-        selectedAirlines.includes(airlines.find((a) => a.name === flight.airline)?.id || ""),
-      )
+        selectedAirlines.includes(airlines.find((a) => a.name === flight.airline)?.id || "")
+      );
     }
-
-    // 출발 시간 필터
     if (departureTime.length > 0) {
       filtered = filtered.filter((flight) => {
-        const hour = Number.parseInt(flight.departure.split(":")[0])
-        if (departureTime.includes("morning") && hour >= 6 && hour < 12) return true
-        if (departureTime.includes("afternoon") && hour >= 12 && hour < 18) return true
-        if (departureTime.includes("evening") && hour >= 18) return true
-        if (departureTime.includes("night") && (hour < 6 || hour >= 21)) return true
-        return departureTime.length === 0
-      })
+        const hour = parseInt(flight.departure.split(":"[0]));
+        if (departureTime.includes("morning") && hour >= 6 && hour < 12) return true;
+        if (departureTime.includes("afternoon") && hour >= 12 && hour < 18) return true;
+        if (departureTime.includes("evening") && hour >= 18 && hour < 21) return true;
+        if (departureTime.includes("night") && (hour < 6 || hour >= 21)) return true;
+        return false;
+      });
     }
-
-    // 정렬
-    const sorted = [...filtered]
+    const sorted = [...filtered];
     if (sortBy === "price") {
-      sorted.sort((a, b) => a.price - b.price)
+      sorted.sort((a, b) => a.price - b.price);
     } else if (sortBy === "duration") {
-      sorted.sort((a, b) => {
-        const durationA = Number.parseInt(a.duration.split("시간")[0])
-        const durationB = Number.parseInt(b.duration.split("시간")[0])
-        return durationA - durationB
-      })
+      sorted.sort((a, b) => parseInt(a.duration) - parseInt(b.duration));
     } else if (sortBy === "departure") {
       sorted.sort((a, b) => {
-        const hourA = Number.parseInt(a.departure.split(":")[0])
-        const minA = Number.parseInt(a.departure.split(":")[1])
-        const hourB = Number.parseInt(b.departure.split(":")[0])
-        const minB = Number.parseInt(b.departure.split(":")[1])
-        return hourA * 60 + minA - (hourB * 60 + minB)
-      })
+        const [ha, ma] = a.departure.split(":").map(Number);
+        const [hb, mb] = b.departure.split(":").map(Number);
+        return ha * 60 + ma - (hb * 60 + mb);
+      });
     }
+    setFilteredFlights(sorted);
+  }, [sortBy, priceRange, selectedAirlines, departureTime]);
 
-    setFilteredFlights(sorted)
-  }, [sortBy, priceRange, selectedAirlines, departureTime])
-
-  const formatPrice = (price: number) => {
+  const formatPrice = (price) => {
     return new Intl.NumberFormat("ko-KR", {
       style: "currency",
       currency: "KRW",
       maximumFractionDigits: 0,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
-  const handleAirlineChange = (airlineId: string) => {
-    setSelectedAirlines((prev) =>
-      prev.includes(airlineId) ? prev.filter((id) => id !== airlineId) : [...prev, airlineId],
-    )
-  }
+  const handleAirlineChange = (id) => {
+    setSelectedAirlines((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
+  };
 
-  const handleDepartureTimeChange = (time: string) => {
-    setDepartureTime((prev) => (prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time]))
-  }
+  const handleDepartureTimeChange = (time) => {
+    setDepartureTime((prev) => (prev.includes(time) ? prev.filter((v) => v !== time) : [...prev, time]));
+  };
 
   const resetFilters = () => {
-    setPriceRange([200000, 400000])
-    setSelectedAirlines([])
-    setDepartureTime([])
-  }
+    setPriceRange([200000, 400000]);
+    setSelectedAirlines([]);
+    setDepartureTime([]);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -602,3 +580,4 @@ export function FlightSearchResults({
     </div>
   )
 }
+export default FlightSearchResults;
