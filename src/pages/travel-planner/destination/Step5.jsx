@@ -1,6 +1,6 @@
-import { NavBar } from "@/components/nav-bar";
-import { ItineraryGeneration } from "@/components/travel-planner/itinerary-generation";
-import { StepIndicator } from "@/components/travel-planner/step-indicator";
+import { NavBar } from "../../../components/Nav-bar";
+import { ItineraryGeneration } from "../../../components/travel-planner/Itinerary-generation";
+import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
 import { notFound } from "next/navigation";
 
 // 지원하는 도시 목록에 새로운 도시들 추가
