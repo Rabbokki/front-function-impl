@@ -45,6 +45,9 @@ export function NavBar() {
               <Link to="/travel-planner" className="text-lg font-medium text-traveling-text hover:opacity-70">여행만들기</Link>
             </li>
             <li>
+              <Link to="/attraction-content" className="text-lg font-medium text-traveling-text hover:opacity-70">추천 명소</Link>
+            </li>
+            <li>
               <Link to="/community" className="text-lg font-medium text-traveling-text hover:opacity-70">커뮤니티</Link>
             </li>
             <li>

@@ -192,6 +192,30 @@ function MyPageContent() {
               <span className="ml-2 text-xs text-[#495057]">65%</span>
             </div>
           </div>
+
+          <div className="mt-4 flex space-x-2">
+            <Link href="/mypage/settings">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-traveling-blue text-traveling-text hover:bg-traveling-light-blue"
+              >
+                <Settings className="mr-1 h-4 w-4" />
+                설정
+              </Button>
+            </Link>
+            <Link href="/mypage/profile-edit">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-traveling-blue text-traveling-text hover:bg-traveling-light-blue"
+              >
+                <PenLine className="mr-1 h-4 w-4" />
+                프로필 수정
+              </Button>
+            </Link>
+          </div>
+          
         </div>
 
         {/* <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
