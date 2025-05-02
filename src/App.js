@@ -11,6 +11,7 @@ import Step3 from './pages/travel-planner/destination/Step3';
 import Step4 from './pages/travel-planner/destination/Step4';
 import Step5 from './pages/travel-planner/destination/Step5';
 import MyPage from './pages/mypage/MyPage';
+import AttractionsPage from './pages/attractions/Attractions';
 import CommunityPage from './pages/community/Community';
 import WritePage from './pages/community/write/Page';
 import LoginPage from './pages/login/Login';
@@ -35,6 +36,7 @@ function App() {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/attractions" element={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
