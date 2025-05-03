@@ -1,3 +1,4 @@
+import { useParams, Navigate } from "react-router-dom";
 import { NavBar } from "../../../components/Nav-bar";
 import { AttractionSelection } from "../../../components/travel-planner/Attraction-selection";
 import StepIndicator  from "../../../components/travel-planner/Step-indicator";
@@ -9,7 +10,7 @@ const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice",
 export default function Step2Page({ params }) {
   // 지원하지 않는 도시인 경우 404 페이지로 리다이렉트
   if (!supportedCities.includes(params.destination)) {
-    notFound();
+    return <Navigate to="/404" replace />;
   }
 
   return (

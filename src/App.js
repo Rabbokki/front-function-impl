@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
-
 import Home from './pages/Home';
 import TravelPlannerPage from './pages/travel-planner/TravelMain';
 import Step1 from './pages/travel-planner/destination/Step1';
@@ -17,6 +16,8 @@ import WritePage from './pages/community/write/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
+import FlightSearchPage from "./pages/flight-search/Page";
+import FlightSearchContent from "./components/flight-search/Flight-search-content";
 import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
@@ -33,6 +34,8 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/flight-search" element={<FlightSearchPage />} />
+          <Route path="/flight-search/results" element={<FlightSearchContent />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

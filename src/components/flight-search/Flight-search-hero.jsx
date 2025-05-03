@@ -16,9 +16,18 @@ const FlightSearchHero = () => {
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState(1);
+  const [tripType, setTripType] = useState("roundtrip");
 
   const handleSearch = () => {
-    navigate(`/flight-search/results?from=${departure}&to=${arrival}`);
+    const query = new URLSearchParams({
+      from: encodeURIComponent(departure),
+      to: encodeURIComponent(arrival),
+      departureDate,
+      returnDate,
+      passengers: passengers.toString(),
+      tripType,
+    }).toString();
+    navigate(`/flight-search/results?${query}`);
   };
 
   return (
@@ -60,7 +69,11 @@ const FlightSearchHero = () => {
                 </div>
                 <TabsContent value="flight" className="p-6">
                   <div className="mb-6">
-                    <RadioGroup defaultValue="roundtrip" className="flex space-x-4">
+                    <RadioGroup
+                      defaultValue="roundtrip"
+                      className="flex space-x-4"
+                      onValueChange={setTripType}
+                    >
                       {[
                         { id: "roundtrip", label: "왕복" },
                         { id: "oneway", label: "편도" },
@@ -75,7 +88,9 @@ const FlightSearchHero = () => {
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="departure" className="mb-2 block">출발지</Label>
+                      <Label htmlFor="departure" className="mb-2 block">
+                        출발지
+                      </Label>
                       <div className="relative">
                         <Input
                           id="departure"
@@ -88,7 +103,9 @@ const FlightSearchHero = () => {
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="arrival" className="mb-2 block">도착지</Label>
+                      <Label htmlFor="arrival" className="mb-2 block">
+                        도착지
+                      </Label>
                       <div className="relative">
                         <Input
                           id="arrival"
@@ -103,7 +120,9 @@ const FlightSearchHero = () => {
                   </div>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="departure-date" className="mb-2 block">출발일</Label>
+                      <Label htmlFor="departure-date" className="mb-2 block">
+                        출발일
+                      </Label>
                       <div className="relative">
                         <Input
                           id="departure-date"
@@ -116,7 +135,9 @@ const FlightSearchHero = () => {
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="return-date" className="mb-2 block">귀국일</Label>
+                      <Label htmlFor="return-date" className="mb-2 block">
+                        귀국일
+                      </Label>
                       <div className="relative">
                         <Input
                           id="return-date"
@@ -130,7 +151,9 @@ const FlightSearchHero = () => {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <Label htmlFor="passengers" className="mb-2 block">탑승객</Label>
+                    <Label htmlFor="passengers" className="mb-2 block">
+                      탑승객
+                    </Label>
                     <div className="relative">
                       <Input
                         id="passengers"
