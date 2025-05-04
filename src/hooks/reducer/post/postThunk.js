@@ -1,6 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../../api/axiosInstance';
-import axios from '../../../api/axiosInstance';
 
 // 백엔드 API 기본 주소
 const API_BASE_URL = '/api/posts';
@@ -8,12 +7,9 @@ const API_BASE_URL = '/api/posts';
 // 게시글 생성
 export const createPost = createAsyncThunk(
   'post/create',
-  async ({ dto, postImg }, thunkAPI) => {
+  async (formData, thunkAPI) => {
     try {
-      const formData = new FormData();
-      formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
-      postImg?.forEach((file) => formData.append('postImg', file));
-
+      // Send the already built FormData directly to the backend
       const response = await axiosInstance.post(`${API_BASE_URL}/create`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,

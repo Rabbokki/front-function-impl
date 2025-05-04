@@ -279,60 +279,9 @@ export function DestinationInfo({ destination }) {
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="relative h-64 overflow-hidden rounded-lg md:h-full">
-            <img
-              src={city.image || '/placeholder.svg'}
-              alt={city.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex flex-col justify-between">
-            <div>
-              <div className="mb-2 flex items-center">
-                <span className="mr-2 rounded bg-traveling-purple/20 px-2 py-1 text-xs font-medium text-traveling-purple">
-                  {city.country}
-                </span>
-              </div>
-              <h1 className="mb-1 text-3xl font-bold text-traveling-text">
-                {city.name}
-              </h1>
-              <h2 className="mb-4 text-sm font-medium text-traveling-text/70">
-                {city.nameEn}
-              </h2>
-              <p className="mb-6 text-traveling-text/80">{city.description}</p>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-traveling-text">
-                빠른 예약
-              </h3>
-              <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
-                <Button
-                  className="flex items-center justify-center bg-traveling-purple text-white hover:bg-traveling-purple/90"
-                  onClick={() => window.open(skyscannerUrl, '_blank')}
-                >
-                  <PlaneIcon className="mr-2 h-4 w-4" />
-                  항공권 검색
-                  <ExternalLink className="ml-2 h-3 w-3" />
-                </Button>
-                <Button
-                  className="flex items-center justify-center bg-traveling-blue text-white hover:bg-traveling-blue/90"
-                  onClick={() => window.open(bookingUrl, '_blank')}
-                >
-                  <Building className="mr-2 h-4 w-4" />
-                  숙소 검색
-                  <ExternalLink className="ml-2 h-3 w-3" />
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">* 외부 사이트로 연결됩니다</p>
-            </div>
-          </div>
-        </div>
-
         <div className="mt-8">
           <h2 className="mb-4 text-center text-2xl font-bold text-traveling-text">
-            여행 기간이 어떻게 되시나요?
+          {city.name} 여행 기간이 어떻게 되시나요?
           </h2>
           <p className="mb-4 text-center text-sm text-traveling-text/70">
             * 여행 일자는 최대 10일까지 선택 가능합니다.

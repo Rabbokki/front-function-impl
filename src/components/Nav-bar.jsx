@@ -33,7 +33,7 @@ export function NavBar() {
         <Link to="/" className="flex items-center gap-2">
           <div className="relative h-10 w-10">
             <svg viewBox="0 0 40 40" className="h-full w-full">
-              <path d="..." fill="#8ca896" />
+              <path d="M10 10 L20 20 L30 10 Z" fill="#8ca896" />
             </svg>
           </div>
           <span className="text-2xl font-bold text-traveling-text">트래블링</span>

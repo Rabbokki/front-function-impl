@@ -76,25 +76,22 @@ export function WritePostForm() {
 
     const formData = new FormData();
     images.forEach(image => {
-      formData.append("img", image.file)
+      formData.append("postImg", image.file)
     })
 
     const newPost = {
-      title: postTitle,
-      content: postContent,
-      category: postCategory,
-      tag: postTags
-    }
+      title: postTitle ?? '',
+      content: postContent ?? '',
+      category: postCategory?.toUpperCase() ?? '',
+      tags: postTags ? postTags.split(',').map(tag => tag.trim()) : [],
+      imgUrl: images.length > 0 ? images.map(image => image.file.name) : []
+    };
+    console.log("Final DTO:", JSON.stringify(newPost, null, 2));
 
     formData.append("dto", new Blob([JSON.stringify(newPost)], {type: "application/json"}))
     for (let [key, value] of formData.entries()) {
       console.log(key, value);
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      console.log("Blob content:", reader.result); // This will show the JSON you packed
-    };
-    reader.readAsText(formData.get("dto"));
 
     try {
       const result = await dispatch(createPost(formData)).unwrap();
@@ -128,9 +125,9 @@ export function WritePostForm() {
                 <SelectValue placeholder="게시판을 선택하세요" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tips">꿀팁 게시판</SelectItem>
-                <SelectItem value="free">자유게시판</SelectItem>
-                <SelectItem value="mate">여행메이트</SelectItem>
+                <SelectItem value="TIPS">꿀팁 게시판</SelectItem>
+                <SelectItem value="FREE">자유게시판</SelectItem>
+                <SelectItem value="MATE">여행메이트</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -206,8 +203,7 @@ export function WritePostForm() {
                       <img
                         src={img.preview || '/placeholder.svg'}
                         alt="Uploaded image"
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                       <button
                         type="button"

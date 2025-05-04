@@ -1,27 +1,44 @@
-
-import { useState } from "react"
-import { Search, MessageSquare, ThumbsUp, Eye, Clock, User, Users } from "lucide-react"
-import { Button } from"../../modules/Button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs"
-import { Input } from "../../modules/Input"
-import { Card, CardFooter, CardHeader, CardTitle } from "../../modules/Card"
-import { Badge } from "../../modules/Badge"
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllPosts } from "../../redux/slices/postThunk";  // Ensure correct import path
+import { Search, MessageSquare, ThumbsUp, Eye, Clock, User, Users } from "lucide-react";
+import { Button } from "../../modules/Button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
+import { Input } from "../../modules/Input";
+import { Card, CardFooter, CardHeader, CardTitle } from "../../modules/Card";
+import { Badge } from "../../modules/Badge";
 
 export function CommunityContent() {
-  const [activeTab, setActiveTab] = useState("tips")
+  const [activeTab, setActiveTab] = useState("tips");
+  const dispatch = useDispatch();
 
-  const tipPosts = [/* 생략 */]
-  const freePosts = [/* 생략 */]
-  const travelMatePosts = [/* 생략 */]
+  const posts = useSelector((state) => state.posts.posts);
+  const loading = useSelector((state) => state.posts.loading);
+  const error = useSelector((state) => state.posts.error);
+
+  // Fetch posts when the component mounts
+  useEffect(() => {
+    dispatch(getAllPosts());
+  }, [dispatch]);
+
+  useEffect(() => {
+    console.log(posts);  // Check the posts data
+  }, [posts]);
+
+  console.log("bitch");
 
   const getPostsByTab = () => {
     switch (activeTab) {
-      case "tips": return tipPosts
-      case "free": return freePosts
-      case "mate": return travelMatePosts
-      default: return tipPosts
+      case "TIPS":
+        return posts.filter(post => post.type === "TIPS"); // Filter by tab type if needed
+      case "FREE":
+        return posts.filter(post => post.type === "FREE");
+      case "MATE":
+        return posts.filter(post => post.type === "MATE");
+      default:
+        return posts.filter(post => post.type === "TIPS");
     }
-  }
+  };
 
   const renderPosts = () =>
     getPostsByTab().map((post) => (
@@ -59,7 +76,7 @@ export function CommunityContent() {
           </div>
         </CardFooter>
       </Card>
-    ))
+    ));
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-md">
@@ -78,7 +95,15 @@ export function CommunityContent() {
           <TabsTrigger value="mate" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">여행메이트</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab}>
-          <div className="space-y-4">{renderPosts()}</div>
+          <div className="space-y-4">
+            {loading ? (
+              <p>Loading...</p>
+            ) : error ? (
+              <p>{error}</p>
+            ) : (
+              renderPosts()
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -97,5 +122,5 @@ export function CommunityContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }

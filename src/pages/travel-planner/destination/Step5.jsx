@@ -8,9 +8,9 @@ const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice",
 
 export default function Step5Page({ params, searchParams }) {
   // 지원하지 않는 도시인 경우 404 페이지로 리다이렉트
-  if (!supportedCities.includes(params.destination)) {
-    notFound();
-  }
+  // if (!supportedCities.includes(params.destination)) {
+  //   notFound();
+  // }
 
   // AI 모드 여부 확인
   const isAiMode = searchParams.ai === "true";
