@@ -17,7 +17,11 @@ import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
 import FlightSearchPage from "./pages/flight-search/Page";
+import FlightDetailContent from "./components/flight-search/Flight-detail-content";
 import FlightSearchContent from "./components/flight-search/Flight-search-content";
+import FlightSearchHero from "./components/flight-search/Flight-search-hero";
+import FlightSearchResultsPage from "./pages/flight-search/results/Page.jsx";
+import FlightDetailPage from "./pages/flight-search/[id]/Page.jsx";
 import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
@@ -35,7 +39,10 @@ function App() {
             }
           />
           <Route path="/flight-search" element={<FlightSearchPage />} />
-          <Route path="/flight-search/results" element={<FlightSearchContent />} />
+          <Route path="/flight-detail/:id" element={<FlightDetailPage />} />
+          <Route path="/flight-search/content" element={<FlightSearchContent />} />
+          <Route path="/flight-search/hero" element={<FlightSearchHero />} />
+          <Route path="/flight-search/results" element={<FlightSearchResultsPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

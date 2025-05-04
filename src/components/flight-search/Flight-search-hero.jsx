@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { Calendar, Users, MapPin, Plane, Info } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card, CardContent } from "../../modules/Card";
@@ -8,26 +9,47 @@ import { Input } from "../../modules/Input";
 import { Label } from "../../modules/Label";
 import { RadioGroup, RadioGroupItem } from "../../modules/Radio-group";
 import { Badge } from "../../modules/Badge";
+import { setSearchParams, clearError } from "../../hooks/reducer/flight/flightSlice";
+import { searchFlights } from "../../hooks/reducer/flight/flightThunk";
 
 const FlightSearchHero = () => {
   const navigate = useNavigate();
-  const [departure, setDeparture] = useState("서울 (SEL)");
-  const [arrival, setArrival] = useState("");
-  const [departureDate, setDepartureDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [passengers, setPassengers] = useState(1);
-  const [tripType, setTripType] = useState("roundtrip");
+  const dispatch = useDispatch();
+  const { searchParams, loading, error } = useSelector((state) => state.flight);
 
-  const handleSearch = () => {
-    const query = new URLSearchParams({
-      from: encodeURIComponent(departure),
-      to: encodeURIComponent(arrival),
-      departureDate,
-      returnDate,
-      passengers: passengers.toString(),
-      tripType,
-    }).toString();
-    navigate(`/flight-search/results?${query}`);
+  const handleSearch = async () => {
+    // 입력 유효성 검사
+    if (!searchParams.from) {
+      alert("출발지를 입력해주세요.");
+      return;
+    }
+    if (!searchParams.to) {
+      alert("도착지를 입력해주세요.");
+      return;
+    }
+    if (!searchParams.date) {
+      alert("출발일을 입력해주세요.");
+      return;
+    }
+    if (searchParams.tripType === "roundtrip" && !searchParams.return) {
+      alert("왕복 여행의 경우 귀국일을 입력해주세요.");
+      return;
+    }
+
+    try {
+      await dispatch(searchFlights(searchParams)).unwrap();
+      const query = new URLSearchParams({
+        from: encodeURIComponent(searchParams.from),
+        to: encodeURIComponent(searchParams.to),
+        date: searchParams.date,
+        return: searchParams.return,
+        passengers: searchParams.passengers.toString(),
+        tripType: searchParams.tripType,
+      }).toString();
+      navigate(`/flight-search/results?${query}`);
+    } catch (err) {
+      alert(`검색 중 오류가 발생했습니다: ${err}`);
+    }
   };
 
   return (
@@ -57,7 +79,7 @@ const FlightSearchHero = () => {
                       value="fund"
                       className="rounded-full px-6 py-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white"
                     >
-                      펀드
+                      편도
                     </TabsTrigger>
                   </TabsList>
                   <div className="flex items-center">
@@ -68,11 +90,22 @@ const FlightSearchHero = () => {
                   </div>
                 </div>
                 <TabsContent value="flight" className="p-6">
+                  {error && (
+                    <div className="mb-4 rounded-md bg-red-100 p-4 text-red-700">
+                      {error}
+                      <button
+                        onClick={() => dispatch(clearError())}
+                        className="ml-2 text-sm underline"
+                      >
+                        닫기
+                      </button>
+                    </div>
+                  )}
                   <div className="mb-6">
                     <RadioGroup
                       defaultValue="roundtrip"
                       className="flex space-x-4"
-                      onValueChange={setTripType}
+                      onValueChange={(value) => dispatch(setSearchParams({ tripType: value }))}
                     >
                       {[
                         { id: "roundtrip", label: "왕복" },
@@ -92,13 +125,13 @@ const FlightSearchHero = () => {
                         출발지
                       </Label>
                       <div className="relative">
-                        <Input
-                          id="departure"
-                          value={departure}
-                          onChange={(e) => setDeparture(e.target.value)}
-                          className="bg-gray-50 pl-10"
-                          placeholder="도시 또는 공항"
-                        />
+                      <Input
+                        id="departure"
+                        value={searchParams.from}
+                        onChange={(e) => dispatch(setSearchParams({ from: e.target.value }))}
+                        className="bg-gray-50 pl-10"
+                        placeholder="도시 또는 공항 (예: 서울 SEL)"
+                      />
                         <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       </div>
                     </div>
@@ -109,8 +142,8 @@ const FlightSearchHero = () => {
                       <div className="relative">
                         <Input
                           id="arrival"
-                          value={arrival}
-                          onChange={(e) => setArrival(e.target.value)}
+                          value={searchParams.to}
+                          onChange={(e) => dispatch(setSearchParams({ to: e.target.value }))}
                           className="bg-gray-50 pl-10"
                           placeholder="도시 또는 공항"
                         />
@@ -127,8 +160,8 @@ const FlightSearchHero = () => {
                         <Input
                           id="departure-date"
                           type="date"
-                          value={departureDate}
-                          onChange={(e) => setDepartureDate(e.target.value)}
+                          value={searchParams.date}
+                          onChange={(e) => dispatch(setSearchParams({ date: e.target.value }))}
                           className="bg-gray-50"
                         />
                         <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -142,9 +175,10 @@ const FlightSearchHero = () => {
                         <Input
                           id="return-date"
                           type="date"
-                          value={returnDate}
-                          onChange={(e) => setReturnDate(e.target.value)}
+                          value={searchParams.return}
+                          onChange={(e) => dispatch(setSearchParams({ return: e.target.value }))}
                           className="bg-gray-50"
+                          disabled={searchParams.tripType === "oneway"}
                         />
                         <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       </div>
@@ -159,8 +193,10 @@ const FlightSearchHero = () => {
                         id="passengers"
                         type="number"
                         min="1"
-                        value={passengers}
-                        onChange={(e) => setPassengers(Number.parseInt(e.target.value))}
+                        value={searchParams.passengers}
+                        onChange={(e) =>
+                          dispatch(setSearchParams({ passengers: Number.parseInt(e.target.value) }))
+                        }
                         className="bg-gray-50 pl-10"
                       />
                       <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -168,9 +204,10 @@ const FlightSearchHero = () => {
                   </div>
                   <Button
                     onClick={handleSearch}
-                    className="mt-6 w-full rounded-md bg-orange-500 py-6 text-lg font-medium text-white hover:bg-orange-600"
+                    disabled={loading}
+                    className="mt-6 w-full rounded-md bg-orange-500 py-6 text-lg font-medium text-white hover:bg-orange-600 disabled:opacity-50"
                   >
-                    검색
+                    {loading ? "검색 중..." : "검색"}
                   </Button>
                 </TabsContent>
                 <TabsContent value="fund" className="p-6">

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Calendar, Clock, Filter, Luggage, Plane, Users, X } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Calendar, Clock, Filter, Luggage, Plane, Users, X } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card, CardContent } from "../../modules/Card";
 import { Slider } from "../../modules/Slider";
@@ -12,6 +12,7 @@ import { Label } from "../../modules/Label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
 
 // 항공사 목록 (API 응답에서 동적으로 가져올 수 있음)
+// 항공사 목록
 const airlines = [
   { id: "KE", name: "대한항공" },
   { id: "OZ", name: "아시아나항공" },
@@ -21,6 +22,26 @@ const airlines = [
   { id: "TW", name: "티웨이항공" },
   { id: "BX", name: "에어부산" },
   { id: "ZE", name: "이스타항공" },
+];
+
+// 더미 데이터 (API 대체용)
+const mockFlights = [
+  {
+    carrier: "KE",
+    price: "250000",
+    departureTime: "2025-02-01T08:00:00Z",
+    arrivalTime: "2025-02-01T10:30:00Z",
+    departureAirport: "ICN",
+    arrivalAirport: "NRT",
+  },
+  {
+    carrier: "OZ",
+    price: "300000",
+    departureTime: "2025-02-01T12:00:00Z",
+    arrivalTime: "2025-02-01T14:30:00Z",
+    departureAirport: "ICN",
+    arrivalAirport: "NRT",
+  },
 ];
 
 function FilterPanel({
@@ -285,11 +306,12 @@ export default function FlightSearchResults() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const params = {
-    from: searchParams.get("from") || "인천 (ICN)",
-    to: searchParams.get("to") || "도쿄 (NRT)",
+    from: decodeURIComponent(searchParams.get("from") || "인천 (ICN)"),
+    to: decodeURIComponent(searchParams.get("to") || "도쿄 (NRT)"),
     date: searchParams.get("date") || "2025-02-01",
     return: searchParams.get("return") || "2025-02-08",
     passengers: searchParams.get("passengers") || "1",
+    tripType: searchParams.get("tripType") || "roundtrip",
   };
 
   const [flights, setFlights] = useState([]);
@@ -304,24 +326,22 @@ export default function FlightSearchResults() {
 
   useEffect(() => {
     async function fetchFlights() {
+      // 검색 조건 유효성 검사
+      if (!params.from || !params.to || !params.date) {
+        setError("출발지, 도착지, 출발일을 입력해주세요.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await fetch("/api/flights/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            origin: params.from.split(" ")[0].toLowerCase(),
-            destination: params.to.split(" ")[0].toLowerCase(),
-            departureDate: params.date,
-            realTime: true,
-          }),
-        });
-        const result = await response.json();
+        // 더미 데이터 사용
+        const result = { success: true, data: { flights: mockFlights } };
         if (result.success && result.data.flights) {
           const flightsWithId = result.data.flights.map((flight, index) => ({
             ...flight,
             id: `${index + 1}`,
-            departureAirport: params.from.split(" ")[1].replace(/[()]/g, ""),
-            arrivalAirport: params.to.split(" ")[1].replace(/[()]/g, ""),
+            departureAirport: params.from.split(" ")[1]?.replace(/[()]/g, "") || "ICN",
+            arrivalAirport: params.to.split(" ")[1]?.replace(/[()]/g, "") || "NRT",
           }));
           setFlights(flightsWithId);
           setFilteredFlights(flightsWithId);
@@ -421,7 +441,7 @@ export default function FlightSearchResults() {
       <div className="mb-6 rounded-lg bg-white p-4 shadow-md">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <Badge className="bg-orange-500 text-white">왕복</Badge>
+            <Badge className="bg-orange-500 text-white">{params.tripType === "roundtrip" ? "왕복" : "편도"}</Badge>
             <span className="mx-2 text-sm text-gray-500">|</span>
             <span className="text-sm font-medium text-gray-800">
               {params.from} → {params.to}
@@ -430,7 +450,7 @@ export default function FlightSearchResults() {
             <div className="flex items-center">
               <Calendar className="mr-1 h-4 w-4 text-gray-500" />
               <span className="text-sm text-gray-600">
-                {params.date} ~ {params.return}
+                {params.date} {params.tripType === "roundtrip" && params.return ? `~ ${params.return}` : ""}
               </span>
             </div>
             <span className="mx-2 text-sm text-gray-500">|</span>
