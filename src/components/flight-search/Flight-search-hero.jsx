@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Combobox } from "@headlessui/react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Calendar, Users, MapPin, Plane, Info } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card, CardContent } from "../../modules/Card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../modules/Tabs";
 import { Input } from "../../modules/Input";
 import { Label } from "../../modules/Label";
 import { RadioGroup, RadioGroupItem } from "../../modules/Radio-group";
@@ -17,14 +19,71 @@ const FlightSearchHero = () => {
   const dispatch = useDispatch();
   const { searchParams, loading, error } = useSelector((state) => state.flight);
 
-  const handleSearch = async () => {
-    // 입력 유효성 검사
-    if (!searchParams.from) {
-      alert("출발지를 입력해주세요.");
+  const [fromQuery, setFromQuery] = useState("");
+  const [toQuery, setToQuery] = useState("");
+  const [fromSuggestions, setFromSuggestions] = useState([]);
+  const [toSuggestions, setToSuggestions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [autocompleteError, setAutocompleteError] = useState(null);
+
+  const fetchSuggestions = async (query, field) => {
+    if (query.length < 2) {
+      field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+      setAutocompleteError(null);
       return;
     }
-    if (!searchParams.to) {
-      alert("도착지를 입력해주세요.");
+    setIsLoading(true);
+    try {
+      const response = await axios.get("/api/flights/autocomplete", {
+        params: { term: query },
+      });
+      if (response.data.success) {
+        const suggestions = response.data.data.map((item) => ({
+          label: `${item.detailedName} (${item.iataCode})`,
+          value: item.iataCode,
+          isAirport: item.subType === "AIRPORT",
+        }));
+        field === "from" ? setFromSuggestions(suggestions) : setToSuggestions(suggestions);
+        setAutocompleteError(null);
+      } else {
+        field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+        setAutocompleteError(response.data.error.message || "자동완성 오류가 발생했습니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요.");
+      }
+    } catch (err) {
+      field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+      let errorMessage = "서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.";
+      if (err.response?.status === 400) {
+        errorMessage = err.response.data?.error?.message?.includes("Invalid keyword")
+          ? "유효하지 않은 검색어입니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요."
+          : err.response.data?.error?.message?.includes("Authentication failed")
+            ? "인증 오류가 발생했습니다. 관리자에게 문의해주세요."
+            : err.response.data?.error?.message?.includes("Failed to connect to Amadeus API")
+              ? "Amadeus API 연결에 실패했습니다. 잠시 후 다시 시도해주세요."
+              : "잘못된 요청입니다. 검색어를 확인해주세요.";
+      }
+      setAutocompleteError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchSuggestions(fromQuery, "from"), 300);
+    return () => clearTimeout(timer);
+  }, [fromQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchSuggestions(toQuery, "to"), 300);
+    return () => clearTimeout(timer);
+  }, [toQuery]);
+
+  const handleSearch = async () => {
+    if (!searchParams.from || !/^[A-Z]{3}$/.test(searchParams.from)) {
+      alert("출발지를 드롭다운에서 선택해주세요 (예: CDG).");
+      return;
+    }
+    if (!searchParams.to || !/^[A-Z]{3}$/.test(searchParams.to)) {
+      alert("도착지를 드롭다운에서 선택해주세요 (예: JFK).");
       return;
     }
     if (!searchParams.date) {
@@ -37,18 +96,24 @@ const FlightSearchHero = () => {
     }
 
     try {
-      await dispatch(searchFlights(searchParams)).unwrap();
+      await dispatch(searchFlights({
+        origin: searchParams.from,
+        destination: searchParams.to,
+        departureDate: searchParams.date,
+        realTime: searchParams.tripType === "oneway"
+      })).unwrap();
       const query = new URLSearchParams({
         from: encodeURIComponent(searchParams.from),
         to: encodeURIComponent(searchParams.to),
         date: searchParams.date,
-        return: searchParams.return,
+        return: searchParams.return || "",
         passengers: searchParams.passengers.toString(),
         tripType: searchParams.tripType,
       }).toString();
       navigate(`/flight-search/results?${query}`);
     } catch (err) {
-      alert(`검색 중 오류가 발생했습니다: ${err}`);
+      const errorMessage = err?.message || "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      alert(`검색 오류: ${errorMessage}`);
     }
   };
 
@@ -90,14 +155,18 @@ const FlightSearchHero = () => {
                   </div>
                 </div>
                 <TabsContent value="flight" className="p-6">
-                  {error && (
+                  {(error || autocompleteError) && (
                     <div className="mb-4 rounded-md bg-red-100 p-4 text-red-700">
-                      {error}
+                      {error || autocompleteError}
                       <button
-                        onClick={() => dispatch(clearError())}
+                        onClick={() => {
+                          dispatch(clearError());
+                          setAutocompleteError(null);
+                          fetchSuggestions(fromQuery || toQuery, fromQuery ? "from" : "to");
+                        }}
                         className="ml-2 text-sm underline"
                       >
-                        닫기
+                        재시도
                       </button>
                     </div>
                   )}
@@ -125,14 +194,69 @@ const FlightSearchHero = () => {
                         출발지
                       </Label>
                       <div className="relative">
-                      <Input
-                        id="departure"
-                        value={searchParams.from}
-                        onChange={(e) => dispatch(setSearchParams({ from: e.target.value }))}
-                        className="bg-gray-50 pl-10"
-                        placeholder="도시 또는 공항 (예: 서울 SEL)"
-                      />
-                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Combobox
+                          value={searchParams.fromLabel || ""}
+                          onChange={(suggestion) => {
+                            if (suggestion) {
+                              dispatch(setSearchParams({
+                                from: suggestion.value,
+                                fromLabel: suggestion.label
+                              }));
+                            } else {
+                              dispatch(setSearchParams({
+                                from: "",
+                                fromLabel: ""
+                              }));
+                            }
+                          }}
+                        >
+                          <div className="relative">
+                            <Combobox.Input
+                              id="departure"
+                              className="bg-gray-50 pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              onChange={(e) => {
+                                setFromQuery(e.target.value);
+                              }}
+                              placeholder="도시 또는 공항 (예: Paris 또는 CDG)"
+                              displayValue={() => searchParams.fromLabel || ""}
+                            />
+                            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                          </div>
+                          <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            {isLoading && (
+                              <div className="py-2 px-4 text-gray-500">로딩 중...</div>
+                            )}
+                            {fromSuggestions.length === 0 && !isLoading && fromQuery.length >= 2 && (
+                              <div className="py-2 px-4 text-gray-500">
+                                {autocompleteError || "검색 결과 없음"}
+                                {autocompleteError && (
+                                  <button
+                                    onClick={() => fetchSuggestions(fromQuery, "from")}
+                                    className="ml-2 text-sm underline"
+                                  >
+                                    재시도
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            {fromSuggestions.map((suggestion) => (
+                              <Combobox.Option
+                                key={`${suggestion.value}-${suggestion.isAirport ? 'airport' : 'city'}`}
+                                value={suggestion}
+                                className={({ active }) =>
+                                  `relative cursor-pointer select-none py-2 px-4 ${
+                                    active ? "bg-orange-500 text-white" : "text-gray-900"
+                                  }`
+                                }
+                              >
+                                {suggestion.isAirport ? "✈️" : "🏙️"} {suggestion.label}
+                              </Combobox.Option>
+                            ))}
+                          </Combobox.Options>
+                        </Combobox>
+                        {searchParams.from && !/^[A-Z]{3}$/.test(searchParams.from) && (
+                          <span className="text-red-500 text-sm">드롭다운에서 공항을 선택해주세요</span>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -140,14 +264,69 @@ const FlightSearchHero = () => {
                         도착지
                       </Label>
                       <div className="relative">
-                        <Input
-                          id="arrival"
-                          value={searchParams.to}
-                          onChange={(e) => dispatch(setSearchParams({ to: e.target.value }))}
-                          className="bg-gray-50 pl-10"
-                          placeholder="도시 또는 공항"
-                        />
-                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Combobox
+                          value={searchParams.toLabel || ""}
+                          onChange={(suggestion) => {
+                            if (suggestion) {
+                              dispatch(setSearchParams({
+                                to: suggestion.value,
+                                toLabel: suggestion.label
+                              }));
+                            } else {
+                              dispatch(setSearchParams({
+                                to: "",
+                                toLabel: ""
+                              }));
+                            }
+                          }}
+                        >
+                          <div className="relative">
+                            <Combobox.Input
+                              id="arrival"
+                              className="bg-gray-50 pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              onChange={(e) => {
+                                setToQuery(e.target.value);
+                              }}
+                              placeholder="도시 또는 공항 (예: New York 또는 JFK)"
+                              displayValue={() => searchParams.toLabel || ""}
+                            />
+                            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                          </div>
+                          <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            {isLoading && (
+                              <div className="py-2 px-4 text-gray-500">로딩 중...</div>
+                            )}
+                            {toSuggestions.length === 0 && !isLoading && toQuery.length >= 2 && (
+                              <div className="py-2 px-4 text-gray-500">
+                                {autocompleteError || "검색 결과 없음"}
+                                {autocompleteError && (
+                                  <button
+                                    onClick={() => fetchSuggestions(toQuery, "to")}
+                                    className="ml-2 text-sm underline"
+                                  >
+                                    재시도
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            {toSuggestions.map((suggestion) => (
+                              <Combobox.Option
+                                key={`${suggestion.value}-${suggestion.isAirport ? 'airport' : 'city'}`}
+                                value={suggestion}
+                                className={({ active }) =>
+                                  `relative cursor-pointer select-none py-2 px-4 ${
+                                    active ? "bg-orange-500 text-white" : "text-gray-900"
+                                  }`
+                                }
+                              >
+                                {suggestion.isAirport ? "✈️" : "🏙️"} {suggestion.label}
+                              </Combobox.Option>
+                            ))}
+                          </Combobox.Options>
+                        </Combobox>
+                        {searchParams.to && !/^[A-Z]{3}$/.test(searchParams.to) && (
+                          <span className="text-red-500 text-sm">드롭다운에서 공항을 선택해주세요</span>
+                        )}
                       </div>
                     </div>
                   </div>
