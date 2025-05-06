@@ -25,8 +25,6 @@ export function CommunityContent() {
     console.log(posts);  // Check the posts data
   }, [posts]);
 
-  console.log("bitch");
-
   const getPostsByTab = () => {
     switch (activeTab) {
       case "TIPS":

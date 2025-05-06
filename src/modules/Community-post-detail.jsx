@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import axiosInstance from '../../../api/axiosInstance';
+import { useDispatch, useSelector } from 'react-redux'
+import { getPostById } from '../hooks/reducer/post/postThunk'
+import { addLike, removeLike, getLikeStatus } from '../hooks/reducer/like/likeThunk'
+import axiosInstance from '../api/axiosInstance';
 import {
   ArrowLeft, ThumbsUp, MessageSquare, Share2, Clock, Eye,
 } from "lucide-react"
@@ -11,73 +14,85 @@ import { Badge } from "./Badge"
 import { Textarea } from "./Textarea"
 
 export function CommunityPostDetail() {
-  const { postId } = useParams()
-  const navigate = useNavigate()
-  const [post, setPost] = useState(null)
-  const [comments, setComments] = useState([])
-  const [newComment, setNewComment] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [liked, setLiked] = useState(false)
+  const { id: postId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // 게시글 및 댓글 불러오기
+  const { post, loading } = useSelector((state) => state.posts);
+  const { like } = useSelector((state) => state.likes);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [liked, setLiked] = useState(false);
+
+  // 게시글 불러오기
   useEffect(() => {
-    const fetchPostAndComments = async () => {
-      try {
-        const [postRes, commentRes] = await Promise.all([
-          axios.get(`/api/posts/find/${postId}`),  // 게시글 조회
-          axios.get(`/api/comments/${postId}`)    // 댓글 조회
-        ])
-        setPost(postRes.data) // 게시글 데이터 설정
-        setComments(commentRes.data) // 댓글 데이터 설정
-      } catch (err) {
-        console.error("데이터 조회 실패:", err)
-      } finally {
-        setIsLoading(false)
+    dispatch(getPostById(postId));
+    dispatch(getLikeStatus(postId)).then((res) => {
+      if (res.meta.requestStatus === 'fulfilled') {
+        setLiked(res.payload.isLiked);
       }
+    });
+    fetchComments();
+  }, [dispatch, postId]);
+
+  useEffect(() => {
+    dispatch(addLike(postId));
+    handleLike();
+  }, [dispatch, postId]);
+
+  // 댓글 불러오기
+  const fetchComments = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/comments/${postId}`);
+      setComments(res.data);
+    } catch (err) {
+      console.error("댓글 불러오기 실패:", err);
     }
-    fetchPostAndComments() // 호출
-  }, [postId])
+  };
 
   // 댓글 작성
   const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return
+    if (!newComment.trim()) return;
     try {
       const res = await axiosInstance.post(`/api/comments`, {
         postId,
-        content: newComment
-      })
-      setComments([...comments, res.data]) // 댓글 목록에 새 댓글 추가
-      setNewComment("") // 입력창 비우기
+        content: newComment,
+      });
+      setComments([...comments, res.data]);
+      setNewComment("");
     } catch (err) {
-      console.error("댓글 작성 실패:", err)
+      console.error("댓글 작성 실패:", err);
     }
-  }
+  };
 
   // 좋아요 처리
-  const handleLike = async () => {
-    setLiked(!liked)
-    try {
-      const res = await axiosInstance.post(`/api/posts/${postId}/like`) // 좋아요 처리 요청
-      setPost({
-        ...post,
-        likeCount: liked ? post.likeCount - 1 : post.likeCount + 1 // 좋아요 수 업데이트
-      })
-    } catch (err) {
-      console.error("좋아요 처리 실패:", err)
+  const handleLike = () => {
+    if (liked) {
+      dispatch(removeLike(postId)).then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          setLiked(false);
+        }
+      });
+    } else {
+      dispatch(addLike(postId)).then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          setLiked(true);
+        }
+      });
     }
-  }
+  };
 
-  // 로딩 중일 때 표시
-  if (isLoading) {
+  // 로딩 중일 때
+  if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#4dabf7] border-t-transparent"></div>
       </div>
-    )
+    );
   }
 
   // 게시글이 없는 경우
-  if (!post) {
+  if (!post || !post.title) {
     return (
       <div className="rounded-lg bg-white p-8 shadow-md">
         <h2 className="mb-4 text-2xl font-bold text-[#1e3a8a]">게시글을 찾을 수 없습니다</h2>
@@ -86,7 +101,7 @@ export function CommunityPostDetail() {
           커뮤니티로 돌아가기
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -115,7 +130,7 @@ export function CommunityPostDetail() {
 
       <div className="mb-4">
         <div className="mb-2 flex flex-wrap gap-1">
-          {post.tags.map((tag) => (
+          {post.tags?.map((tag) => (
             <Badge key={tag} className="bg-[#e7f5ff] text-[#1c7ed6] hover:bg-[#d0ebff]">{tag}</Badge>
           ))}
         </div>
@@ -142,7 +157,7 @@ export function CommunityPostDetail() {
       <div className="mb-8">
         <div
           className="prose max-w-none prose-headings:text-[#1e3a8a] prose-a:text-[#4dabf7]"
-          dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, "<br>") }}
+          dangerouslySetInnerHTML={{ __html: post.content?.replace(/\n/g, "<br>") }}
         />
         {post.imgUrl?.length > 0 && (
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -208,5 +223,5 @@ export function CommunityPostDetail() {
         </div>
       </div>
     </div>
-  )
+  );
 }

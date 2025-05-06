@@ -14,6 +14,7 @@ import MyPage from './pages/mypage/MyPage';
 import AttractionsPage from './pages/attractions/Attractions';
 import CommunityPage from './pages/community/Community';
 import WritePage from './pages/community/write/Page';
+import CommunityPostPage from './pages/community/post/[id]/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
@@ -36,10 +37,12 @@ function App() {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/attraction-content" element={<AttractionsPage />} />
+          <Route path="/attraction-content" elem
+          ent={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
+          <Route path="/community/post/:id" element={<CommunityPostPage />} />
           <Route
             path="/travel-planner/:destination/step1"
             element={<Step1 />}
