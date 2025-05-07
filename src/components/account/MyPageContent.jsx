@@ -191,7 +191,7 @@ function MyPageContent() {
           </div>
 
           <div className="mt-4 flex space-x-2">
-            <Link href="/mypage/settings">
+            <Link to="/settings">
               <Button
                 size="sm"
                 variant="outline"
@@ -201,6 +201,7 @@ function MyPageContent() {
                 설정
               </Button>
             </Link>
+            
             <Link to="/profile-edit">
               <Button
                 size="sm"

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
+
 import Home from './pages/Home';
 import TravelPlannerPage from './pages/travel-planner/TravelMain';
 import Step1 from './pages/travel-planner/destination/Step1';
@@ -10,6 +11,7 @@ import Step3 from './pages/travel-planner/destination/Step3';
 import Step4 from './pages/travel-planner/destination/Step4';
 import Step5 from './pages/travel-planner/destination/Step5';
 import MyPage from './pages/mypage/MyPage';
+import ProfileEditPage from './pages/mypage/profile-edit/Page';
 import AttractionsPage from './pages/attractions/Attractions';
 import CommunityPage from './pages/community/Community';
 import WritePage from './pages/community/write/Page';
@@ -18,14 +20,12 @@ import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
 import FlightSearchPage from './pages/flight-search/Page';
-import FlightDetailContent from './components/flight-search/Flight-detail-content';
+import FlightDetailPage from './pages/flight-search/[id]/Page';
 import FlightSearchContent from './components/flight-search/Flight-search-content';
 import FlightSearchHero from './components/flight-search/Flight-search-hero';
-import FlightSearchResultsPage from './pages/flight-search/results/Page.jsx';
-import FlightDetailPage from './pages/flight-search/[id]/Page.jsx';
+import FlightSearchResultsPage from './pages/flight-search/results/Page';
 import { PrivateRoute } from './components/PrivateRoute';
-import ProfileEditPage from './pages/mypage/profile-edit/Page.jsx';
-
+import { SettingsContent } from './modules/Settings-content'
 function App() {
   return (
     <Provider store={store}>
@@ -37,6 +37,22 @@ function App() {
             element={
               <PrivateRoute>
                 <MyPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <PrivateRoute>
+                <SettingsContent />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile-edit"
+            element={
+              <PrivateRoute>
+                <ProfileEditPage />
               </PrivateRoute>
             }
           />
@@ -52,21 +68,13 @@ function App() {
             element={<FlightSearchResultsPage />}
           />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route
-            path="/profile-edit"
-            element={
-              <PrivateRoute>
-                <ProfileEditPage />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/attraction-content" elem ent={<AttractionsPage />} />
-          <Route path="/travel-planner" element={<TravelPlannerPage />} />
-          <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
           <Route path="/community/post/:id" element={<CommunityPostPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/attraction-content" element={<AttractionsPage />} />
+          <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route
             path="/travel-planner/:destination/step1"
             element={<Step1 />}
@@ -87,8 +95,7 @@ function App() {
             path="/travel-planner/:destination/step5"
             element={<Step5 />}
           />
-          <Route path="/not-found" element={<div>404 Not Found</div>} />{' '}
-          {/* 임시 404 페이지 */}
+          <Route path="/not-found" element={<div>404 Not Found</div>} />
         </Routes>
       </BrowserRouter>
     </Provider>
