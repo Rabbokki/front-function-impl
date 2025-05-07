@@ -35,11 +35,6 @@ export function CommunityPostDetail() {
     fetchComments();
   }, [dispatch, postId]);
 
-  useEffect(() => {
-    dispatch(addLike(postId));
-    handleLike();
-  }, [dispatch, postId]);
-
   // 댓글 불러오기
   const fetchComments = async () => {
     try {
@@ -71,12 +66,16 @@ export function CommunityPostDetail() {
       dispatch(removeLike(postId)).then((res) => {
         if (res.meta.requestStatus === 'fulfilled') {
           setLiked(false);
+          // Manually update like count or fetch updated post
+          dispatch(getPostById(postId)); // To get the updated like count
         }
       });
     } else {
       dispatch(addLike(postId)).then((res) => {
         if (res.meta.requestStatus === 'fulfilled') {
           setLiked(true);
+          // Manually update like count or fetch updated post
+          dispatch(getPostById(postId)); // To get the updated like count
         }
       });
     }
