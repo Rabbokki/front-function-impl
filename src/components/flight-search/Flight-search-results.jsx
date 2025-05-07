@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Calendar, Clock, Filter, Luggage, Plane, Users, X } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Calendar, Clock, Filter, Luggage, Plane, Users, X } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card, CardContent } from "../../modules/Card";
 import { Slider } from "../../modules/Slider";
@@ -10,19 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Checkbox } from "../../modules/Checkbox";
 import { Label } from "../../modules/Label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
-
+import axios from "axios";
 // 항공사 목록 (API 응답에서 동적으로 가져올 수 있음)
-const airlines = [
-  { id: "KE", name: "대한항공" },
-  { id: "OZ", name: "아시아나항공" },
-  { id: "7C", name: "제주항공" },
-  { id: "LJ", name: "진에어" },
-  { id: "RS", name: "에어서울" },
-  { id: "TW", name: "티웨이항공" },
-  { id: "BX", name: "에어부산" },
-  { id: "ZE", name: "이스타항공" },
-];
-
 function FilterPanel({
   priceRange,
   setPriceRange,
@@ -33,6 +22,7 @@ function FilterPanel({
   resetFilters,
   isMobile,
   setShowFilters,
+  airlines,
 }) {
   const formatPrice = (price) =>
     new Intl.NumberFormat("ko-KR", {
@@ -80,9 +70,9 @@ function FilterPanel({
                 <span>{formatPrice(priceRange[1])}</span>
               </div>
               <Slider
-                defaultValue={[200000, 400000]}
+                defaultValue={[200000, 1000000]}
                 min={200000}
-                max={400000}
+                max={1000000}
                 step={10000}
                 value={priceRange}
                 onValueChange={setPriceRange}
@@ -141,9 +131,9 @@ function FilterPanel({
                   <span>{formatPrice(priceRange[1])}</span>
                 </div>
                 <Slider
-                  defaultValue={[200000, 400000]}
+                  defaultValue={[200000, 1000000]}
                   min={200000}
-                  max={400000}
+                  max={1000000}
                   step={10000}
                   value={priceRange}
                   onValueChange={setPriceRange}
@@ -204,10 +194,10 @@ function FilterPanel({
 }
 
 function FlightCard({ flight, navigate }) {
-  const formatPrice = (price) =>
-    new Intl.NumberFormat("ko-KR", {
+  const formatPrice = (price, currency) =>
+    new Intl.NumberFormat(currency === "KRW" ? "ko-KR" : "en-US", {
       style: "currency",
-      currency: "KRW",
+      currency: currency,
       maximumFractionDigits: 0,
     }).format(price);
 
@@ -224,7 +214,7 @@ function FlightCard({ flight, navigate }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white">
-                <span className="font-bold">{flight.carrier}</span>
+                <span className="font-bold">{flight.carrierCode}</span>
               </div>
               <div className="ml-3">
                 <h3 className="font-medium text-gray-800">{flight.carrier}</h3>
@@ -248,7 +238,7 @@ function FlightCard({ flight, navigate }) {
               <div className="flex flex-col items-center">
                 <div className="flex items-center text-xs text-gray-500">
                   <Clock className="mr-1 h-3 w-3" />
-                  {`${hours}시간 ${minutes}분`}
+                  {`${hours}시간 ${minutes ? `${minutes}분` : ""}`}
                 </div>
                 <div className="relative my-1 w-20 md:w-32">
                   <div className="absolute top-1/2 h-0.5 w-full -translate-y-1/2 bg-gray-200" />
@@ -264,7 +254,7 @@ function FlightCard({ flight, navigate }) {
             </div>
             <div className="flex flex-col items-end border-t pt-4 md:border-t-0 md:pt-0">
               <div className="text-lg font-bold text-orange-500">
-                {formatPrice(parseFloat(flight.price))}
+                {formatPrice(parseFloat(flight.price), flight.currency)}
               </div>
               <Button
                 className="mt-2 bg-orange-500 text-white hover:bg-orange-600 rounded-md px-4 py-2"
@@ -285,17 +275,19 @@ export default function FlightSearchResults() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const params = {
-    from: searchParams.get("from") || "인천 (ICN)",
-    to: searchParams.get("to") || "도쿄 (NRT)",
+    from: decodeURIComponent(searchParams.get("from") || "인천 (ICN)"),
+    to: decodeURIComponent(searchParams.get("to") || "도쿄 (NRT)"),
     date: searchParams.get("date") || "2025-02-01",
     return: searchParams.get("return") || "2025-02-08",
     passengers: searchParams.get("passengers") || "1",
+    tripType: searchParams.get("tripType") || "roundtrip",
   };
 
   const [flights, setFlights] = useState([]);
   const [filteredFlights, setFilteredFlights] = useState([]);
+  const [airlines, setAirlines] = useState([]);
   const [sortBy, setSortBy] = useState("price");
-  const [priceRange, setPriceRange] = useState([200000, 400000]);
+  const [priceRange, setPriceRange] = useState([200000, 1000000]);
   const [selectedAirlines, setSelectedAirlines] = useState([]);
   const [departureTime, setDepartureTime] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -304,31 +296,39 @@ export default function FlightSearchResults() {
 
   useEffect(() => {
     async function fetchFlights() {
+      // 검색 조건 유효성 검사
+      const fromIata = params.from.match(/\(([^)]+)\)/)?.[1];
+      const toIata = params.to.match(/\(([^)]+)\)/)?.[1];
+      if (!fromIata || !toIata || !params.date) {
+        setError("출발지, 도착지, 출발일을 입력해주세요.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await fetch("/api/flights/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            origin: params.from.split(" ")[0].toLowerCase(),
-            destination: params.to.split(" ")[0].toLowerCase(),
-            departureDate: params.date,
-            realTime: true,
-          }),
+        const response = await axios.post("http://localhost:8080/api/flights/search", {
+          origin: fromIata,
+          destination: toIata,
+          departureDate: params.date,
+          realTime: true,
         });
-        const result = await response.json();
-        if (result.success && result.data.flights) {
-          const flightsWithId = result.data.flights.map((flight, index) => ({
-            ...flight,
-            id: `${index + 1}`,
-            departureAirport: params.from.split(" ")[1].replace(/[()]/g, ""),
-            arrivalAirport: params.to.split(" ")[1].replace(/[()]/g, ""),
-          }));
-          setFlights(flightsWithId);
-          setFilteredFlights(flightsWithId);
+        console.log("API response:", response.data); // 디버깅용
+        if (response.data.success && response.data.flights) {
+          setFlights(response.data.flights);
+          setFilteredFlights(response.data.flights);
+          // 항공사 목록 동적 생성
+          const uniqueAirlines = [
+            ...new Set(response.data.flights.map((flight) => ({
+              id: flight.carrierCode,
+              name: flight.carrier,
+            }))),
+          ];
+          setAirlines(uniqueAirlines);
         } else {
           setError("항공편을 찾을 수 없습니다.");
         }
       } catch (err) {
+        console.error("API error:", err.response?.data); // 디버깅용
         setError("항공편 정보를 가져오는 데 실패했습니다.");
       } finally {
         setLoading(false);
@@ -340,15 +340,16 @@ export default function FlightSearchResults() {
   useEffect(() => {
     let filtered = [...flights];
 
-    // 가격 필터
+    // 가격 필터 (KRW 기준으로 변환 필요 시 로직 추가)
     filtered = filtered.filter((flight) => {
       const price = parseFloat(flight.price);
-      return price >= priceRange[0] && price <= priceRange[1];
+      return price >= priceRange[0] / (flight.currency === "EUR" ? 1500 : 1) &&
+             price <= priceRange[1] / (flight.currency === "EUR" ? 1500 : 1);
     });
 
     // 항공사 필터
     if (selectedAirlines.length > 0) {
-      filtered = filtered.filter((flight) => selectedAirlines.includes(flight.carrier));
+      filtered = filtered.filter((flight) => selectedAirlines.includes(flight.carrierCode));
     }
 
     // 출발 시간 필터
@@ -391,7 +392,7 @@ export default function FlightSearchResults() {
   };
 
   const resetFilters = () => {
-    setPriceRange([200000, 400000]);
+    setPriceRange([200000, 1000000]);
     setSelectedAirlines([]);
     setDepartureTime([]);
   };
@@ -421,7 +422,7 @@ export default function FlightSearchResults() {
       <div className="mb-6 rounded-lg bg-white p-4 shadow-md">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <Badge className="bg-orange-500 text-white">왕복</Badge>
+            <Badge className="bg-orange-500 text-white">{params.tripType === "roundtrip" ? "왕복" : "편도"}</Badge>
             <span className="mx-2 text-sm text-gray-500">|</span>
             <span className="text-sm font-medium text-gray-800">
               {params.from} → {params.to}
@@ -430,7 +431,7 @@ export default function FlightSearchResults() {
             <div className="flex items-center">
               <Calendar className="mr-1 h-4 w-4 text-gray-500" />
               <span className="text-sm text-gray-600">
-                {params.date} ~ {params.return}
+                {params.date} {params.tripType === "roundtrip" && params.return ? `~ ${params.return}` : ""}
               </span>
             </div>
             <span className="mx-2 text-sm text-gray-500">|</span>
@@ -461,6 +462,7 @@ export default function FlightSearchResults() {
             resetFilters={resetFilters}
             isMobile={false}
             setShowFilters={setShowFilters}
+            airlines={airlines}
           />
         </div>
         <div className="md:col-span-3">
@@ -496,6 +498,7 @@ export default function FlightSearchResults() {
               resetFilters={resetFilters}
               isMobile={true}
               setShowFilters={setShowFilters}
+              airlines={airlines}
             />
           )}
           <div className="mb-4 hidden items-center justify-between rounded-lg bg-white p-4 shadow-md md:flex">

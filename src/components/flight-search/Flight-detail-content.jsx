@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "../../modules/Card";
 import { Button } from "../../modules/Button";
 import { Badge } from "../../modules/Badge";
@@ -7,6 +7,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
 import { Label } from "../../modules/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../modules/Select";
 import { ArrowLeft, ArrowRight, Plane, Users, Luggage, Calendar } from "lucide-react";
+
+// 더미 데이터 (FlightSearchResults와 동일)
+const mockFlights = [
+  {
+    carrier: "KE",
+    price: "250000",
+    departureTime: "2025-02-01T08:00:00Z",
+    arrivalTime: "2025-02-01T10:30:00Z",
+    departureAirport: "ICN",
+    arrivalAirport: "NRT",
+  },
+  {
+    carrier: "OZ",
+    price: "300000",
+    departureTime: "2025-02-01T12:00:00Z",
+    arrivalTime: "2025-02-01T14:30:00Z",
+    departureAirport: "ICN",
+    arrivalAirport: "NRT",
+  },
+];
 
 function FlightInfoSection({ flight, formatPrice }) {
   return (
@@ -456,8 +476,9 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, formatPrice, handl
   );
 }
 
-export default function FlightDetailContent({ flightId }) {
+export default function FlightDetailContent() {
   const navigate = useNavigate();
+  const { id } = useParams(); // URL에서 flightId 가져오기
   const [flight, setFlight] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [passengerCount, setPassengerCount] = useState(1);
@@ -467,27 +488,36 @@ export default function FlightDetailContent({ flightId }) {
   useEffect(() => {
     async function fetchFlight() {
       try {
-        const response = await fetch(`/api/flights/search`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            origin: "seoul",
-            destination: "tokyo",
-            departureDate: "2025-02-01",
-            realTime: true,
-          }),
-        });
-        const result = await response.json();
-        if (result.success && result.data.flights.length > 0) {
-          const fetchedFlight = result.data.flights[0];
+        // 더미 데이터 환경에서는 mockFlights에서 id로 조회
+        const selectedFlight = mockFlights.find((flight, index) => `${index + 1}` === id);
+        if (selectedFlight) {
           setFlight({
-            ...fetchedFlight,
-            departureAirport: "ICN",
-            arrivalAirport: "NRT",
+            ...selectedFlight,
+            id,
+            departureAirport: selectedFlight.departureAirport || "ICN",
+            arrivalAirport: selectedFlight.arrivalAirport || "NRT",
           });
         } else {
           setError("항공편을 찾을 수 없습니다.");
         }
+
+        // 실제 API 호출 (주석 처리)
+        /*
+        const response = await fetch(`/api/flights/${id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const result = await response.json();
+        if (result.success && result.data.flight) {
+          setFlight({
+            ...result.data.flight,
+            departureAirport: result.data.flight.departureAirport || "ICN",
+            arrivalAirport: result.data.flight.arrivalAirport || "NRT",
+          });
+        } else {
+          setError("항공편을 찾을 수 없습니다.");
+        }
+        */
       } catch (err) {
         setError("항공편 정보를 가져오는 데 실패했습니다.");
       } finally {
@@ -495,7 +525,7 @@ export default function FlightDetailContent({ flightId }) {
       }
     }
     fetchFlight();
-  }, [flightId]);
+  }, [id]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("ko-KR", {
@@ -519,7 +549,7 @@ export default function FlightDetailContent({ flightId }) {
         <h2 className="text-2xl font-bold text-traveling-text">항공권을 찾을 수 없습니다</h2>
         <p className="mt-2 text-traveling-text/70">{error || "요청하신 항공권 정보를 찾을 수 없습니다."}</p>
         <Button className="mt-6 rounded-full btn-flight" onClick={() => navigate("/flight-search")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4"/>
           항공권 검색으로 돌아가기
         </Button>
       </div>
@@ -530,10 +560,10 @@ export default function FlightDetailContent({ flightId }) {
     <div className="space-y-6">
       <Button
         variant="outline"
-        className="mb-4 border-traveling-text/30 text-traveling-text"
+        className="mb-4 border-traveling-text-black/30 text-black"
         onClick={() => navigate("/flight-search")}
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
+        <ArrowLeft className="mr-2 h-4 w-4 text-black" />
         항공권 검색으로 돌아가기
       </Button>
       <Card className="overflow-hidden bg-white shadow-md">

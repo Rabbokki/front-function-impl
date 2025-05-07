@@ -1,3 +1,4 @@
+import { useParams, Navigate } from "react-router-dom";
 import { NavBar } from "../../../components/Nav-bar";
 import TransportationSelection from "../../../components/travel-planner/Transportation-selection";
 import StepIndicator  from "../../../components/travel-planner/Step-indicator";
@@ -11,6 +12,9 @@ export default function Step4Page({ params }) {
   // if (!supportedCities.includes(params.destination)) {
   //   notFound();
   // }
+  if (!supportedCities.includes(params.destination)) {
+    return <Navigate to="/404" replace />;
+  }
 
   return (
     <main className="min-h-screen bg-traveling-bg">

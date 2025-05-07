@@ -3,13 +3,9 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '../lib/Utils';
-import { Button } from '../modules/Button';
-import { Calendar } from '../modules/Calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Button } from './Button';
+import { Calendar } from './Calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 
 export function DatePickerWithRange({ date, onDateChange, className, id }) {
   return (
@@ -20,7 +16,7 @@ export function DatePickerWithRange({ date, onDateChange, className, id }) {
             id={id}
             variant="outline"
             className={cn(
-              'w-full justify-start text-left font-normal',
+              'w-full justify-start text-left font-normal bg-traveling-light-blue border-traveling-text/30 text-traveling-text',
               !date && 'text-muted-foreground'
             )}
           >

@@ -9,8 +9,8 @@ const FlightDetailPage = () => {
   return (
     <main className="min-h-screen bg-traveling-background">
       <NavBar />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="mb-6 text-3xl font-bold text-traveling-text">항공권 상세 정보</h1>
+      <div className="container mx-auto px-4 py-8 bg-gray-100 rounded-lg">
+        <h1 className="mb-6 text-3xl font-bold text-black">항공권 상세 정보</h1>
         <FlightDetailContent flightId={id} />
       </div>
     </main>

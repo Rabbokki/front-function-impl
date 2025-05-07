@@ -42,6 +42,9 @@ export function NavBar() {
         <nav className="hidden md:block">
           <ul className="flex space-x-8">
             <li>
+              <Link to="/flight-search" className="text-lg font-medium text-traveling-text hover:opacity-70">항공권</Link>
+            </li>
+            <li>
               <Link to="/travel-planner" className="text-lg font-medium text-traveling-text hover:opacity-70">여행만들기</Link>
             </li>
             <li>

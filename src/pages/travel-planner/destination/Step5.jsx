@@ -1,3 +1,4 @@
+import { useParams, Navigate } from "react-router-dom";
 import { NavBar } from "../../../components/Nav-bar";
 import { ItineraryGeneration } from "../../../components/travel-planner/Itinerary-generation";
 import StepIndicator  from "../../../components/travel-planner/Step-indicator";
@@ -11,6 +12,9 @@ export default function Step5Page({ params, searchParams }) {
   // if (!supportedCities.includes(params.destination)) {
   //   notFound();
   // }
+  if (!supportedCities.includes(params.destination)) {
+    return <Navigate to="/404" replace />;
+  }
 
   // AI 모드 여부 확인
   const isAiMode = searchParams.ai === "true";
