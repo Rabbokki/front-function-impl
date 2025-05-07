@@ -78,12 +78,13 @@ const FlightSearchHero = () => {
   }, [toQuery]);
 
   const handleSearch = async () => {
+    // 출발지/도착지 IATA 코드 검증
     if (!searchParams.from || !/^[A-Z]{3}$/.test(searchParams.from)) {
-      alert("출발지를 드롭다운에서 선택해주세요 (예: CDG).");
+      alert("출발지를 드롭다운에서 선택하거나 유효한 공항 코드(예: CDG)를 입력해주세요.");
       return;
     }
     if (!searchParams.to || !/^[A-Z]{3}$/.test(searchParams.to)) {
-      alert("도착지를 드롭다운에서 선택해주세요 (예: JFK).");
+      alert("도착지를 드롭다운에서 선택하거나 유효한 공항 코드(예: JFK)를 입력해주세요.");
       return;
     }
     if (!searchParams.date) {
@@ -100,21 +101,39 @@ const FlightSearchHero = () => {
         origin: searchParams.from,
         destination: searchParams.to,
         departureDate: searchParams.date,
-        realTime: searchParams.tripType === "oneway"
+        realTime: searchParams.tripType === "oneway",
       })).unwrap();
       const query = new URLSearchParams({
-        from: encodeURIComponent(searchParams.from),
-        to: encodeURIComponent(searchParams.to),
+        from: encodeURIComponent(`${searchParams.fromLabel || searchParams.from}`),
+        to: encodeURIComponent(`${searchParams.toLabel || searchParams.to}`),
         date: searchParams.date,
         return: searchParams.return || "",
         passengers: searchParams.passengers.toString(),
         tripType: searchParams.tripType,
       }).toString();
+      console.log('Search query:', query); // 디버깅용
       navigate(`/flight-search/results?${query}`);
     } catch (err) {
       const errorMessage = err?.message || "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
       alert(`검색 오류: ${errorMessage}`);
     }
+  };
+
+  const handleComboboxInput = (field, value) => {
+    // IATA 코드 직접 입력 처리
+    const iataPattern = /^[A-Z]{3}$/;
+    if (iataPattern.test(value)) {
+      dispatch(setSearchParams({
+        [field]: value,
+        [`${field}Label`]: value, // 임시 레이블
+      }));
+    } else {
+      dispatch(setSearchParams({
+        [field]: "",
+        [`${field}Label`]: "",
+      }));
+    }
+    field === "from" ? setFromQuery(value) : setToQuery(value);
   };
 
   return (
@@ -200,12 +219,12 @@ const FlightSearchHero = () => {
                             if (suggestion) {
                               dispatch(setSearchParams({
                                 from: suggestion.value,
-                                fromLabel: suggestion.label
+                                fromLabel: suggestion.label,
                               }));
                             } else {
                               dispatch(setSearchParams({
                                 from: "",
-                                fromLabel: ""
+                                fromLabel: "",
                               }));
                             }
                           }}
@@ -214,9 +233,7 @@ const FlightSearchHero = () => {
                             <Combobox.Input
                               id="departure"
                               className="bg-gray-50 pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                              onChange={(e) => {
-                                setFromQuery(e.target.value);
-                              }}
+                              onChange={(e) => handleComboboxInput("from", e.target.value)}
                               placeholder="도시 또는 공항 (예: Paris 또는 CDG)"
                               displayValue={() => searchParams.fromLabel || ""}
                             />
@@ -255,7 +272,7 @@ const FlightSearchHero = () => {
                           </Combobox.Options>
                         </Combobox>
                         {searchParams.from && !/^[A-Z]{3}$/.test(searchParams.from) && (
-                          <span className="text-red-500 text-sm">드롭다운에서 공항을 선택해주세요</span>
+                          <span className="text-red-500 text-sm">드롭다운에서 공항을 선택하거나 유효한 공항 코드(예: CDG)를 입력해주세요</span>
                         )}
                       </div>
                     </div>
@@ -270,12 +287,12 @@ const FlightSearchHero = () => {
                             if (suggestion) {
                               dispatch(setSearchParams({
                                 to: suggestion.value,
-                                toLabel: suggestion.label
+                                toLabel: suggestion.label,
                               }));
                             } else {
                               dispatch(setSearchParams({
                                 to: "",
-                                toLabel: ""
+                                toLabel: "",
                               }));
                             }
                           }}
@@ -284,9 +301,7 @@ const FlightSearchHero = () => {
                             <Combobox.Input
                               id="arrival"
                               className="bg-gray-50 pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                              onChange={(e) => {
-                                setToQuery(e.target.value);
-                              }}
+                              onChange={(e) => handleComboboxInput("to", e.target.value)}
                               placeholder="도시 또는 공항 (예: New York 또는 JFK)"
                               displayValue={() => searchParams.toLabel || ""}
                             />
@@ -325,7 +340,7 @@ const FlightSearchHero = () => {
                           </Combobox.Options>
                         </Combobox>
                         {searchParams.to && !/^[A-Z]{3}$/.test(searchParams.to) && (
-                          <span className="text-red-500 text-sm">드롭다운에서 공항을 선택해주세요</span>
+                          <span className="text-red-500 text-sm">드롭다운에서 공항을 선택하거나 유효한 공항 코드(예: JFK)를 입력해주세요</span>
                         )}
                       </div>
                     </div>
