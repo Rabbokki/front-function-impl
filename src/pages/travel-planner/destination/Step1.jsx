@@ -1,18 +1,18 @@
-
-import { useParams, Navigate } from "react-router-dom";
+import { useParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar";
 import { DestinationInfo } from "../../../components/travel-planner/Destination-info";
-import StepIndicator from "../../../components/travel-planner/Step-indicator";
+import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
+
 
 // 지원하는 도시 목록에 새로운 도시들 추가
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
 
-
 export default function Step1Page() {
   const { destination } = useParams();
 
-  if (!destination || !supportedCities.includes(destination)) {
-    return <Navigate to="/404" replace />; // Redirect to a 404 page if destination is invalid
+  // 지원하지 않는 도시인 경우 404 처리
+  if (!supportedCities.includes(destination)) {
+    return <div>404 - 지원하지 않는 도시입니다.</div>;
   }
 
   return (

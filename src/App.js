@@ -23,6 +23,8 @@ import FlightSearchContent from "./components/flight-search/Flight-search-conten
 import FlightSearchHero from "./components/flight-search/Flight-search-hero";
 import FlightSearchResultsPage from "./pages/flight-search/results/Page.jsx";
 import FlightDetailPage from "./pages/flight-search/[id]/Page.jsx";
+import {AIPlannerPage} from "./pages/travel-planner/destination/Ai-planner";
+import AIPlannerContent from "./components/travel-planner/Ai-planner-content";
 import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
@@ -50,6 +52,7 @@ function App() {
           <Route path="/attraction-content" elem
           ent={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
+          <Route path="/ai-planner" element={<AIPlannerContent />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
           <Route path="/community/post/:id" element={<CommunityPostPage />} />

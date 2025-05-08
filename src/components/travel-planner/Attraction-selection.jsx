@@ -550,27 +550,8 @@ export function AttractionSelection({ destination }) {
                   >
                     추천 장소
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-traveling-text/30 text-traveling-text/70 hover:bg-traveling-background"
-                  >
-                    명소
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-traveling-text/30 text-traveling-text/70 hover:bg-traveling-background"
-                  >
-                    식당
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-traveling-text/30 text-traveling-text/70 hover:bg-traveling-background"
-                  >
-                    카페
-                  </Button>
+                  
+                 
                 </div>
 
                 <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2">
