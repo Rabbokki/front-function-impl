@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../modules/Tabs';
 import { Separator } from '../modules/Separator';
 import { toast } from '../hooks/Use-toast';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
 
 export function SettingsContent() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export function SettingsContent() {
     }, 1500);
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
         title: '오류',
@@ -50,23 +51,41 @@ export function SettingsContent() {
     if (newPassword !== confirmPassword) {
       toast({
         title: '오류',
-        description: '새 비밀번호와 비밀번호 확인이 일치하지 않습니다.',
+        description: '새 비밀번호와 확인이 일치하지 않습니다.',
         variant: 'destructive',
       });
       return;
     }
 
-    // 실제 구현에서는 여기서 API 호출 등을 통해 비밀번호 변경
+    try {
+      await axiosInstance.put('/api/accounts/password', {
+        currentPassword,
+        newPassword,
+      });
 
-    toast({
-      title: '비밀번호가 변경되었습니다.',
-      description: '새 비밀번호로 성공적으로 변경되었습니다.',
-    });
+      toast({
+        title: '비밀번호가 변경되었습니다',
+        description: '다시 로그인해주세요.',
+      });
 
-    // 필드 초기화
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+      localStorage.removeItem('accessToken'); // 또는 쿠키 제거
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+
+      // 입력값 초기화
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast({
+        title: '비밀번호 변경 실패',
+        description:
+          error.response?.data ||
+          '현재 비밀번호가 틀렸거나 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleToggleNotification = (key) => {
@@ -264,24 +283,23 @@ export function SettingsContent() {
               </div>
             </CardContent>
           </Card>
+          <div className="flex justify-end space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/mypage')} 
+            >
+              취소
+            </Button>
+            <Button
+              className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]"
+              onClick={handleSaveSettings}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              설정 저장
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
-
-      <div className="flex justify-end space-x-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/mypage')} // ✅ 수정
-        >
-          취소
-        </Button>
-        <Button
-          className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]"
-          onClick={handleSaveSettings}
-        >
-          <Save className="mr-2 h-4 w-4" />
-          설정 저장
-        </Button>
-      </div>
     </div>
   );
 }

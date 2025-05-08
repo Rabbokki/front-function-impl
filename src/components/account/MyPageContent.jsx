@@ -1,29 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  MapPin,
-  Bookmark,
-  Star,
-  Settings,
-  PenLine,
-  Plus,
-} from 'lucide-react';
+import {Calendar, MapPin, Bookmark, Star, Settings, PenLine, Plus,} from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '../../modules/Card';
-import { Avatar, AvatarFallback, AvatarImage } from '../../modules/Avatar';
+import { Card,CardContent, CardFooter, CardHeader, CardTitle,} from '../../modules/Card';
+import { Avatar, AvatarImage } from '../../modules/Avatar';
 import { Progress } from '../../modules/Progress';
 import { Badge } from '../../modules/Badge';
-import { Input } from '../../modules/Input';
-import { Label } from '../../modules/Label';
-import { Textarea } from '../../modules/Textarea';
 import axiosInstance from '../../api/axiosInstance';
 
 function MyPageContent() {
@@ -32,6 +15,7 @@ function MyPageContent() {
   const [userInfo, setUserInfo] = useState({
     email: '',
     nickname: '',
+    imgUrl: '',
     level: '',
     levelExp: 0,
   });
@@ -44,6 +28,7 @@ function MyPageContent() {
         setUserInfo({
           email: res.data.email,
           nickname: res.data.nickname,
+          imgUrl: res.data.imgUrl,
           level: res.data.level,
           levelExp: res.data.levelExp,
         });
@@ -160,7 +145,7 @@ function MyPageContent() {
       <div className="mb-8 flex flex-col items-center justify-center md:flex-row md:items-start md:justify-start">
         <Avatar className="h-24 w-24 border-4 border-[#4dabf7]">
           <AvatarImage
-            src="/placeholder.svg?height=96&width=96"
+            src={userInfo?.imgUrl || '/placeholder.svg?height=96&width=96'}
             alt="프로필 이미지"
           />
         </Avatar>
@@ -201,7 +186,7 @@ function MyPageContent() {
                 설정
               </Button>
             </Link>
-            
+
             <Link to="/profile-edit">
               <Button
                 size="sm"

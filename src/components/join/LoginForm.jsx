@@ -10,6 +10,7 @@ import { Separator } from '../../modules/Separator';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginAccount } from '../../hooks/reducer/account/accountThunk';
+import axiosInstance from '../../api/axiosInstance';
 
 function LoginForm() {
   const dispatch = useDispatch();
@@ -22,32 +23,53 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const loginData = {
       email,
       password,
     };
-
+  
     try {
       const resultAction = await dispatch(loginAccount(loginData)).unwrap();
       console.log('로그인 성공:', resultAction);
-
-      // 로그인 성공 후
+  
+      const { accessToken, refreshToken } = resultAction;
+  
       if (rememberMe) {
-        localStorage.setItem('accessToken', resultAction.accessToken);
-        localStorage.setItem('refreshToken', resultAction.refreshToken);
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
       } else {
-        sessionStorage.setItem('accessToken', resultAction.accessToken);
-        sessionStorage.setItem('refreshToken', resultAction.refreshToken);
+        sessionStorage.setItem('accessToken', accessToken);
+        sessionStorage.setItem('refreshToken', refreshToken);
       }
-
-      alert('로그인 성공!');
-      navigate('/');
+  
+      
+      const token = rememberMe
+        ? localStorage.getItem("accessToken")
+        : sessionStorage.getItem("accessToken");
+  
+      const meResponse = await axiosInstance.get("/api/accounts/mypage", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const user = meResponse.data;
+  
+      if (rememberMe) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        sessionStorage.setItem("user", JSON.stringify(user));
+      }
+  
+      alert("로그인 성공!");
+      navigate("/"); // ✅ 이후 이동
     } catch (error) {
-      console.error('로그인 실패:', error);
-      alert('로그인 실패: ' + (error?.message || '서버 오류'));
+      console.error("로그인 실패:", error);
+      alert("로그인 실패: " + (error?.message || "서버 오류"));
     }
   };
+  
 
   return (
     <div className="mx-auto max-w-md">

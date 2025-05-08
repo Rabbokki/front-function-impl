@@ -36,58 +36,79 @@ export function SignupForm() {
   const [birthDate, setBirthDate] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
- 
+  const [bio, setBio] = useState('');
+  const [gender, setGender] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // 이메일 형식 유효성 검사
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert('올바른 이메일 형식을 입력해주세요.');
       return;
     }
-  
+
+    if (!gender) {
+      alert('성별을 선택해주세요.');
+      return;
+    }
+
     // 비밀번호 유효성 검사: 8자 이상, 영문, 숫자, 특수문자 포함
-    if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(password)) {
+    if (
+      !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(
+        password
+      )
+    ) {
       alert('비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 포함해야 합니다.');
       return;
     }
-  
+
     // 비밀번호 확인 일치 검사
     if (password !== confirmPassword) {
       alert('비밀번호가 일치하지 않습니다.');
       return;
     }
-  
+
     // 약관 동의 확인 (필수)
     if (!agreeTerms) {
       alert('이용약관 및 개인정보처리방침에 동의하셔야 합니다.');
       return;
     }
-  
+
     const formattedBirthDate = birthDate
       ? birthDate.toISOString().split('T')[0]
       : null;
-  
-    const signupData = {
-      email,
-      name,
-      nickname,
-      birthday: formattedBirthDate,
-      password,
-      agreeTerms,      // ✅ 백엔드로 함께 전송
-      agreeMarketing,  // ✅ 선택 항목도 전송
-    };
-  
+
+      const signupData = new FormData();
+      signupData.append('request', new Blob(
+        [JSON.stringify({
+          email,
+          name,
+          nickname,
+          birthday: formattedBirthDate,
+          password,
+          gender,
+          bio,
+          agreeTerms,
+          agreeMarketing,
+        })],
+        { type: "application/json" }
+      ));
+      if (profileImage) {
+        signupData.append('profileImage', profileImage);
+      }
+      
     try {
       await dispatch(registerAccount(signupData)).unwrap();
       alert('회원가입 성공!');
       navigate('/login');
     } catch (error) {
       console.error('회원가입 실패:', error);
-      alert('회원가입 실패: ' + error.message || error);
+      const message = error?.response?.data?.message || '서버 오류';
+      alert('회원가입 실패: ' + message);
     }
   };
-  
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 100 }, (_, i) => currentYear - i);
@@ -186,6 +207,21 @@ export function SignupForm() {
 
       <Card className="bg-white p-6 shadow-md">
         <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <Label
+              htmlFor="profileImage"
+              className="mb-2 block text-traveling-text"
+            >
+              프로필 이미지
+            </Label>
+            <input
+              type="file"
+              id="profileImage"
+              accept="image/*"
+              className="w-full text-sm text-traveling-text/70"
+              onChange={(e) => setProfileImage(e.target.files[0])}
+            />
+          </div>
           {/* 이메일 */}
           <div className="mb-4">
             <Label htmlFor="email" className="mb-2 block text-traveling-text">
@@ -270,6 +306,23 @@ export function SignupForm() {
             </div>
           </div>
 
+          <div className="mb-4">
+            <Label htmlFor="gender" className="mb-2 block text-traveling-text">
+              성별
+            </Label>
+            <select
+              id="gender"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full rounded-md border border-traveling-text/30 bg-traveling-background p-2 outline-none focus:outline-none"
+            >
+              <option value="">성별 선택</option>
+              <option value="남성">남성</option>
+              <option value="여성">여성</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+
           {/* 비밀번호 */}
           <div className="mb-4">
             <Label
@@ -337,6 +390,19 @@ export function SignupForm() {
                 )}
               </button>
             </div>
+          </div>
+
+          <div className="mb-4">
+            <Label htmlFor="bio" className="mb-2 block text-traveling-text">
+              자기소개
+            </Label>
+            <textarea
+              id="bio"
+              className="w-full rounded-md border border-traveling-text/30 bg-traveling-background p-2 outline-none focus:outline-none"
+              placeholder="자기소개를 입력하세요"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+            />
           </div>
 
           {/* 체크박스 */}
