@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar";
 import { DestinationInfo } from "../../../components/travel-planner/Destination-info";
-import StepIndicator from "../../../components/travel-planner/Step-indicator";
+import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
+
 
 // 지원하는 도시 목록에 새로운 도시들 추가
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];

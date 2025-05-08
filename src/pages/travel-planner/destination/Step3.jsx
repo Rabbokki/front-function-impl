@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar"; 
 import AccommodationSelection from "../../../components/travel-planner/Accommodation-selection";
-import StepIndicator from "../../../components/travel-planner/Step-indicator";
+import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
+
 
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
 
