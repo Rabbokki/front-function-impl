@@ -1,29 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  MapPin,
-  Bookmark,
-  Star,
-  Settings,
-  PenLine,
-  Plus,
-} from 'lucide-react';
+import {Calendar, MapPin, Bookmark, Star, Settings, PenLine, Plus,} from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '../../modules/Card';
-import { Avatar, AvatarFallback, AvatarImage } from '../../modules/Avatar';
+import { Card,CardContent, CardFooter, CardHeader, CardTitle,} from '../../modules/Card';
+import { Avatar, AvatarImage } from '../../modules/Avatar';
 import { Progress } from '../../modules/Progress';
 import { Badge } from '../../modules/Badge';
-import { Input } from '../../modules/Input';
-import { Label } from '../../modules/Label';
-import { Textarea } from '../../modules/Textarea';
 import axiosInstance from '../../api/axiosInstance';
 
 function MyPageContent() {
@@ -32,6 +15,7 @@ function MyPageContent() {
   const [userInfo, setUserInfo] = useState({
     email: '',
     nickname: '',
+    imgUrl: '',
     level: '',
     levelExp: 0,
   });
@@ -44,6 +28,7 @@ function MyPageContent() {
         setUserInfo({
           email: res.data.email,
           nickname: res.data.nickname,
+          imgUrl: res.data.imgUrl,
           level: res.data.level,
           levelExp: res.data.levelExp,
         });
@@ -160,12 +145,9 @@ function MyPageContent() {
       <div className="mb-8 flex flex-col items-center justify-center md:flex-row md:items-start md:justify-start">
         <Avatar className="h-24 w-24 border-4 border-[#4dabf7]">
           <AvatarImage
-            src="/placeholder.svg?height=96&width=96"
+            src={userInfo?.imgUrl || '/placeholder.svg?height=96&width=96'}
             alt="프로필 이미지"
           />
-          {/* <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a]">
-            여행자
-          </AvatarFallback> */}
         </Avatar>
 
         <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
@@ -194,7 +176,7 @@ function MyPageContent() {
           </div>
 
           <div className="mt-4 flex space-x-2">
-            <Link href="/mypage/settings">
+            <Link to="/settings">
               <Button
                 size="sm"
                 variant="outline"
@@ -204,7 +186,8 @@ function MyPageContent() {
                 설정
               </Button>
             </Link>
-            <Link href="/mypage/profile-edit">
+
+            <Link to="/profile-edit">
               <Button
                 size="sm"
                 variant="outline"
@@ -215,15 +198,7 @@ function MyPageContent() {
               </Button>
             </Link>
           </div>
-          
         </div>
-
-        {/* <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
-          <h2 className="text-2xl font-bold text-[#1e3a8a]">
-            {userInfo.nickname}
-          </h2>
-          <p className="text-[#495057]">{userInfo.email}</p>
-        </div> */}
       </div>
 
       <Tabs
@@ -238,23 +213,26 @@ function MyPageContent() {
           >
             내 여행
           </TabsTrigger>
+
+          <TabsTrigger
+            value="bookings"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+          >
+            내 예약
+          </TabsTrigger>
+
           <TabsTrigger
             value="saved"
             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
           >
             내 저장
           </TabsTrigger>
+
           <TabsTrigger
             value="reviews"
             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
           >
             내 리뷰
-          </TabsTrigger>
-          <TabsTrigger
-            value="profile"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-          >
-            프로필/수정
           </TabsTrigger>
         </TabsList>
 
@@ -355,6 +333,9 @@ function MyPageContent() {
             </Link>
           </div>
         </TabsContent>
+
+        {/*  마이페이지 내 예약 부분 작성 해야함 
+           TabsContent value= "bookings" */}
 
         <TabsContent value="saved">
           <div className="space-y-4">
@@ -478,104 +459,6 @@ function MyPageContent() {
               </Card>
             ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="profile">
-          <Card className="bg-[#f8f9fa]">
-            <CardHeader>
-              <CardTitle className="text-xl text-[#1e3a8a]">
-                프로필 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col space-y-1">
-                <Label htmlFor="username" className="text-[#1e3a8a]">
-                  닉네임
-                </Label>
-                <Input
-                  id="username"
-                  value={userInfo.nickname}
-                  readOnly
-                  className="bg-[#e7f5ff]/30"
-                />
-              </div>
-
-              <div className="flex flex-col space-y-1">
-                <Label htmlFor="email" className="text-[#1e3a8a]">
-                  이메일
-                </Label>
-                <Input
-                  id="email"
-                  value={userInfo.email}
-                  readOnly
-                  className="bg-[#e7f5ff]/30"
-                />
-              </div>
-
-              <div className="flex flex-col space-y-1">
-                <Label htmlFor="bio" className="text-[#1e3a8a]">
-                  자기소개
-                </Label>
-                <Textarea
-                  id="bio"
-                  defaultValue="여행 좋아하는 30대 직장인입니다. 맛집 탐방과 사진 찍는 것을 좋아해요."
-                  className="min-h-[100px] bg-[#e7f5ff]/30"
-                />
-              </div>
-
-              <div className="flex flex-col space-y-1">
-                <Label htmlFor="preferences" className="text-[#1e3a8a]">
-                  여행 선호도
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {['맛집', '자연', '문화', '쇼핑', '휴양', '모험', '사진'].map(
-                    (pref) => (
-                      <Badge
-                        key={pref}
-                        className="bg-[#e7f5ff] text-[#1c7ed6] hover:bg-[#4dabf7] hover:text-white cursor-pointer"
-                      >
-                        {pref}
-                      </Badge>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col space-y-1">
-                <Label htmlFor="profile-image" className="text-[#1e3a8a]">
-                  프로필 이미지
-                </Label>
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-16 w-16 border-2 border-[#4dabf7]">
-                    <AvatarImage
-                      src="/placeholder.svg?height=64&width=64"
-                      alt="프로필 이미지"
-                    />
-                    <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a]">
-                      여행자
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button
-                    variant="outline"
-                    className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                  >
-                    이미지 변경
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end space-x-2 bg-[#e7f5ff]/30 p-4">
-              <Button
-                variant="outline"
-                className="border-[#adb5bd] text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-              >
-                취소
-              </Button>
-              <Button className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]">
-                저장하기
-              </Button>
-            </CardFooter>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

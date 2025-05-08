@@ -23,9 +23,8 @@ import FlightSearchContent from "./components/flight-search/Flight-search-conten
 import FlightSearchHero from "./components/flight-search/Flight-search-hero";
 import FlightSearchResultsPage from "./pages/flight-search/results/Page.jsx";
 import FlightDetailPage from "./pages/flight-search/[id]/Page.jsx";
-import {AIPlannerPage} from "./pages/travel-planner/destination/Ai-planner";
-import AIPlannerContent from "./components/travel-planner/Ai-planner-content";
 import { PrivateRoute } from './components/PrivateRoute';
+import { SettingsContent } from './modules/Settings-content'
 
 function App() {
   return (
@@ -41,6 +40,14 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/settings"
+            element={
+              <PrivateRoute>
+                <SettingsContent />
+              </PrivateRoute>
+            }
+          />
           <Route path="/flight-search" element={<FlightSearchPage />} />
           <Route path="/flight-detail/:id" element={<FlightDetailPage />} />
           <Route path="/flight-search/content" element={<FlightSearchContent />} />
@@ -51,7 +58,6 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
-          <Route path="/ai-planner" element={<AIPlannerContent />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
           <Route path="/community/post/:id" element={<CommunityPostPage />} />

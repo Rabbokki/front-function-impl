@@ -1,23 +1,30 @@
-import { useState } from "react";
-import { useHistory } from "react-router-dom";
-import { Lock, Eye, EyeOff, Save } from "lucide-react";
-import { Button } from "./Button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
-import { Switch } from "./Switch";
-import { Label } from "./Label";
-import { Input } from "./Input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
-import { Separator } from "./Separator";
-import { toast } from "../hooks/Use-toast";
+import { useState } from 'react';
+import { Lock, Eye, EyeOff, Save } from 'lucide-react';
+import { Button } from '../modules/Button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../modules/Card';
+import { Switch } from '../modules/Switch';
+import { Label } from '../modules/Label';
+import { Input } from '../modules/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../modules/Tabs';
+import { Separator } from '../modules/Separator';
+import { toast } from '../hooks/Use-toast';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
 
 export function SettingsContent() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Notification settings state
+  // 알림 설정 상태
   const [notifications, setNotifications] = useState({
     email: true,
     social: true,
@@ -25,49 +32,60 @@ export function SettingsContent() {
   });
 
   const handleSaveSettings = () => {
-    toast({
-      title: "Settings saved.",
-      description: "Changes have been applied successfully.",
-    });
-
-    // In a real implementation, here you'd make an API call to save the settings
-
-    // Redirect to the MyPage after saving
+    toast({ title: '설정 저장됨', description: '변경사항이 저장되었습니다.' });
     setTimeout(() => {
-      history.push("/mypage");
+      navigate('/mypage');
     }, 1500);
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
-        title: "Error",
-        description: "Please fill in all password fields.",
-        variant: "destructive",
+        title: '오류',
+        description: '모든 비밀번호 필드를 입력해주세요.',
+        variant: 'destructive',
       });
       return;
     }
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "New password and confirmation do not match.",
-        variant: "destructive",
+        title: '오류',
+        description: '새 비밀번호와 확인이 일치하지 않습니다.',
+        variant: 'destructive',
       });
       return;
     }
 
-    // In a real implementation, here you'd make an API call to change the password
+    try {
+      await axiosInstance.put('/api/accounts/password', {
+        currentPassword,
+        newPassword,
+      });
 
-    toast({
-      title: "Password changed.",
-      description: "Your password has been updated successfully.",
-    });
+      toast({
+        title: '비밀번호가 변경되었습니다',
+        description: '다시 로그인해주세요.',
+      });
 
-    // Reset fields
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+      localStorage.removeItem('accessToken'); // 또는 쿠키 제거
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+
+      // 입력값 초기화
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast({
+        title: '비밀번호 변경 실패',
+        description:
+          error.response?.data ||
+          '현재 비밀번호가 틀렸거나 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleToggleNotification = (key) => {
@@ -81,36 +99,48 @@ export function SettingsContent() {
     <div className="space-y-6">
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-[#e7f5ff]">
-          <TabsTrigger value="account" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
-            Account
+          <TabsTrigger
+            value="account"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+          >
+            계정
           </TabsTrigger>
           <TabsTrigger
             value="notifications"
             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
           >
-            Notifications
+            알림
           </TabsTrigger>
         </TabsList>
 
-        {/* Account Settings */}
+        {/* 계정 설정 */}
         <TabsContent value="account">
           <Card className="bg-white">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1e3a8a]">Account Settings</CardTitle>
-              <CardDescription>Manage your account information and password.</CardDescription>
+              <CardTitle className="text-xl text-[#1e3a8a]">
+                계정 설정
+              </CardTitle>
+              <CardDescription>
+                계정 정보 및 비밀번호를 관리하세요.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-[#1e3a8a]">Change Password</h3>
+                <h3 className="text-lg font-medium text-[#1e3a8a]">
+                  비밀번호 변경
+                </h3>
                 <div className="space-y-3">
                   <div className="relative">
-                    <Label htmlFor="current-password" className="text-[#1e3a8a]">
-                      Current Password
+                    <Label
+                      htmlFor="current-password"
+                      className="text-[#1e3a8a]"
+                    >
+                      현재 비밀번호
                     </Label>
                     <div className="relative">
                       <Input
                         id="current-password"
-                        type={showPassword ? "text" : "password"}
+                        type={showPassword ? 'text' : 'password'}
                         className="bg-[#e7f5ff]/30 pr-10"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
@@ -120,18 +150,22 @@ export function SettingsContent() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#495057]"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="new-password" className="text-[#1e3a8a]">
-                      New Password
+                      새 비밀번호
                     </Label>
                     <Input
                       id="new-password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       className="bg-[#e7f5ff]/30"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
@@ -139,12 +173,15 @@ export function SettingsContent() {
                   </div>
 
                   <div>
-                    <Label htmlFor="confirm-password" className="text-[#1e3a8a]">
-                      Confirm Password
+                    <Label
+                      htmlFor="confirm-password"
+                      className="text-[#1e3a8a]"
+                    >
+                      비밀번호 확인
                     </Label>
                     <Input
                       id="confirm-password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       className="bg-[#e7f5ff]/30"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -152,44 +189,58 @@ export function SettingsContent() {
                   </div>
                 </div>
 
-                <Button onClick={handlePasswordChange} className="mt-2 bg-[#4dabf7] text-white hover:bg-[#339af0]">
+                <Button
+                  onClick={handlePasswordChange}
+                  className="mt-2 bg-[#4dabf7] text-white hover:bg-[#339af0]"
+                >
                   <Lock className="mr-2 h-4 w-4" />
-                  Change Password
+                  비밀번호 변경
                 </Button>
               </div>
 
               <Separator className="my-4" />
 
               <div>
-                <h3 className="text-lg font-medium text-[#1e3a8a]">Delete Account</h3>
+                <h3 className="text-lg font-medium text-[#1e3a8a]">
+                  계정 삭제
+                </h3>
                 <p className="mt-1 text-sm text-[#495057]">
-                  Deleting your account will permanently erase all your data. This action cannot be undone.
+                  계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 이 작업은
+                  되돌릴 수 없습니다.
                 </p>
                 <Button variant="destructive" className="mt-3">
-                  Delete Account
+                  계정 삭제
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Notification Settings */}
+        {/* 알림 설정 */}
         <TabsContent value="notifications">
           <Card className="bg-white">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1e3a8a]">Notification Settings</CardTitle>
-              <CardDescription>Manage how and what types of notifications you receive.</CardDescription>
+              <CardTitle className="text-xl text-[#1e3a8a]">
+                알림 설정
+              </CardTitle>
+              <CardDescription>
+                알림 수신 방법과 종류를 설정하세요.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base text-[#1e3a8a]">Email Notifications</Label>
-                    <p className="text-sm text-[#495057]">Receive important notifications via email.</p>
+                    <Label className="text-base text-[#1e3a8a]">
+                      이메일 알림
+                    </Label>
+                    <p className="text-sm text-[#495057]">
+                      중요 알림을 이메일로 받습니다.
+                    </p>
                   </div>
                   <Switch
                     checked={notifications.email}
-                    onCheckedChange={() => handleToggleNotification("email")}
+                    onCheckedChange={() => handleToggleNotification('email')}
                     className="data-[state=checked]:bg-[#4dabf7]"
                   />
                 </div>
@@ -198,12 +249,16 @@ export function SettingsContent() {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base text-[#1e3a8a]">Social Notifications</Label>
-                    <p className="text-sm text-[#495057]">Receive notifications for friends' activities and social updates.</p>
+                    <Label className="text-base text-[#1e3a8a]">
+                      소셜 알림
+                    </Label>
+                    <p className="text-sm text-[#495057]">
+                      친구 활동 및 소셜 업데이트를 받습니다.
+                    </p>
                   </div>
                   <Switch
                     checked={notifications.social}
-                    onCheckedChange={() => handleToggleNotification("social")}
+                    onCheckedChange={() => handleToggleNotification('social')}
                     className="data-[state=checked]:bg-[#4dabf7]"
                   />
                 </div>
@@ -212,34 +267,39 @@ export function SettingsContent() {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base text-[#1e3a8a]">Service Updates</Label>
-                    <p className="text-sm text-[#495057]">Receive updates and changes to services.</p>
+                    <Label className="text-base text-[#1e3a8a]">
+                      서비스 업데이트
+                    </Label>
+                    <p className="text-sm text-[#495057]">
+                      서비스 변경 및 업데이트 정보를 받습니다.
+                    </p>
                   </div>
                   <Switch
                     checked={notifications.updates}
-                    onCheckedChange={() => handleToggleNotification("updates")}
+                    onCheckedChange={() => handleToggleNotification('updates')}
                     className="data-[state=checked]:bg-[#4dabf7]"
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
+          <div className="flex justify-end space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/mypage')} 
+            >
+              취소
+            </Button>
+            <Button
+              className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]"
+              onClick={handleSaveSettings}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              설정 저장
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
-
-      <div className="flex justify-end space-x-4">
-        <Button
-          variant="outline"
-          className="border-[#adb5bd] text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-          onClick={() => history.push("/mypage")}
-        >
-          Cancel
-        </Button>
-        <Button className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]" onClick={handleSaveSettings}>
-          <Save className="mr-2 h-4 w-4" />
-          Save Settings
-        </Button>
-      </div>
     </div>
   );
 }
