@@ -9,7 +9,7 @@ import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginAccount } from '../../hooks/reducer/account/accountThunk';
+import { loginAccount, getAccountDetails } from '../../hooks/reducer/account/accountThunk';
 
 function LoginForm() {
   const dispatch = useDispatch();
@@ -22,17 +22,14 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const loginData = {
-      email,
-      password,
-    };
-
+  
+    const loginData = { email, password };
+  
     try {
       const resultAction = await dispatch(loginAccount(loginData)).unwrap();
       console.log('로그인 성공:', resultAction);
-
-      // 로그인 성공 후
+  
+      // Store tokens
       if (rememberMe) {
         localStorage.setItem('accessToken', resultAction.accessToken);
         localStorage.setItem('refreshToken', resultAction.refreshToken);
@@ -40,7 +37,10 @@ function LoginForm() {
         sessionStorage.setItem('accessToken', resultAction.accessToken);
         sessionStorage.setItem('refreshToken', resultAction.refreshToken);
       }
-
+  
+      // ✅ Fetch user profile
+      await dispatch(getAccountDetails());
+  
       alert('로그인 성공!');
       navigate('/');
     } catch (error) {

@@ -28,6 +28,23 @@ export const loginAccount = createAsyncThunk(
 );
 
 
+// 유저 디태일
+export const getAccountDetails = createAsyncThunk(
+  'account/getDetails',
+  async (loginData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/api/accounts/mypage', {
+        withCredentials: true,
+      });
+      console.log('from accountThunk getAccountDetails:', response.data)
+      return response.data; 
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+
 // 로그아웃 요청
 
 export const logoutAccount = () => (dispatch) => {
