@@ -49,8 +49,7 @@ function App() {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/attraction-content" elem
-          ent={<AttractionsPage />} />
+          <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route path="/ai-planner" element={<AIPlannerContent />} />
           <Route path="/admin" element={<AdminPage />} />
