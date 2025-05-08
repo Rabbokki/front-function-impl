@@ -12,7 +12,7 @@ export function NavBar() {
     localStorage.removeItem('refreshToken');
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
-    setIsLoggedIn(false); // 상태 갱신
+    setIsLoggedIn(false);
     alert('로그아웃 되었습니다!');
     navigate('/');
   };
@@ -33,7 +33,10 @@ export function NavBar() {
         <Link to="/" className="flex items-center gap-2">
           <div className="relative h-10 w-10">
             <svg viewBox="0 0 40 40" className="h-full w-full">
-              <path d="M10 10 L20 20 L30 10 Z" fill="#8ca896" />
+              {/* <path
+                d="M10 30 L20 10 L30 30 Z"
+                fill="#8ca896"
+              /> */}
             </svg>
           </div>
           <span className="text-2xl font-bold text-traveling-text">트래블링</span>
