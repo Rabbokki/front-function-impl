@@ -40,6 +40,7 @@ export const getAllPosts = createAsyncThunk('post/getAll', async (_, thunkAPI) =
 export const getPostById = createAsyncThunk('post/getById', async (id, thunkAPI) => {
   try {
     const response = await axiosInstance.get(`${API_BASE_URL}/find/${id}`);
+    console.log("from postThunk, post is:", response.data)
     return response.data; // 단일 게시글 반환
   } catch (error) {
     const errorMessage = error.response?.data || '게시글 상세 조회 실패';
