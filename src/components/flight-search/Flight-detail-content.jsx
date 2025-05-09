@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "../../modules/Card";
+import axios from "axios";
 import { Button } from "../../modules/Button";
 import { Badge } from "../../modules/Badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../modules/Tabs";
@@ -8,27 +9,65 @@ import { Label } from "../../modules/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../modules/Select";
 import { ArrowLeft, ArrowRight, Plane, Users, Luggage, Calendar } from "lucide-react";
 
-// 더미 데이터 (FlightSearchResults와 동일)
+// 더미 데이터 (DB 테스트 데이터와 동기화)
 const mockFlights = [
   {
-    carrier: "KE",
+    id: "FL123",
+    carrier: "대한항공",
+    carrierCode: "KE",
     price: "250000",
-    departureTime: "2025-02-01T08:00:00Z",
-    arrivalTime: "2025-02-01T10:30:00Z",
+    currency: "KRW",
+    departureTime: "2025-06-01T08:00:00",
+    arrivalTime: "2025-06-01T10:30:00",
     departureAirport: "ICN",
     arrivalAirport: "NRT",
-  },
-  {
-    carrier: "OZ",
-    price: "300000",
-    departureTime: "2025-02-01T12:00:00Z",
-    arrivalTime: "2025-02-01T14:30:00Z",
-    departureAirport: "ICN",
-    arrivalAirport: "NRT",
+    duration: "PT2H30M",
+    flightNumber: "KE123",
+    cabinBaggage: "Weight: 20kg",
+    numberOfBookableSeats: 50,
   },
 ];
 
 function FlightInfoSection({ flight, formatPrice }) {
+  const parseDuration = (duration) => {
+    console.log("Parsing duration:", duration); // 디버깅
+    if (!duration) return "N/A";
+    const match = duration.match(/PT(\d+)H(?:(\d+)M)?/);
+    const hours = parseInt(match[1] || 0);
+    const minutes = parseInt(match[2] || 0);
+    return `${hours}시간${minutes ? ` ${minutes}분` : ""}`;
+  };
+
+  const getTimeZone = (airportCode) => {
+    const timeZones = {
+      JFK: "America/New_York",
+      CDG: "Europe/Paris",
+      ICN: "Asia/Seoul",
+      NRT: "Asia/Tokyo",
+    };
+    return timeZones[airportCode] || "UTC";
+  };
+
+  const parseFlightTime = (time, airportCode) => {
+    try {
+      const date = new Date(time);
+      if (isNaN(date.getTime())) {
+        console.error(`Invalid date format: ${time} for airport ${airportCode}`);
+        return "N/A";
+      }
+      return date.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: getTimeZone(airportCode),
+      });
+    } catch (error) {
+      console.error(`Error parsing time: ${time}, error: ${error.message}`);
+      return "N/A";
+    }
+  };
+
+  console.log("FlightInfoSection flight data:", flight); // 디버깅
+
   return (
     <TabsContent value="flight-info" className="space-y-6">
       <div className="rounded-lg bg-traveling-background p-6">
@@ -37,10 +76,7 @@ function FlightInfoSection({ flight, formatPrice }) {
           <div className="flex items-center">
             <div className="text-center">
               <div className="text-xl font-bold text-traveling-text">
-                {new Date(flight.departureTime).toLocaleTimeString("ko-KR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {parseFlightTime(flight.departureTime, flight.departureAirport)}
               </div>
               <div className="text-sm text-traveling-text/70">{flight.departureAirport}</div>
               <div className="mt-1 text-xs font-medium text-traveling-text">
@@ -48,7 +84,7 @@ function FlightInfoSection({ flight, formatPrice }) {
               </div>
             </div>
             <div className="mx-4 flex flex-1 flex-col items-center">
-              <div className="text-xs text-traveling-text/70">직항</div>
+              <div className="text-xs text-traveling-text/70">직항 ({parseDuration(flight.duration)})</div>
               <div className="relative w-full">
                 <div className="absolute top-1/2 h-0.5 w-full -translate-y-1/2 bg-traveling-text/10" />
                 <ArrowRight className="relative mx-auto h-4 w-4 text-traveling-text" />
@@ -56,10 +92,7 @@ function FlightInfoSection({ flight, formatPrice }) {
             </div>
             <div className="text-center">
               <div className="text-xl font-bold text-traveling-text">
-                {new Date(flight.arrivalTime).toLocaleTimeString("ko-KR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {parseFlightTime(flight.arrivalTime, flight.arrivalAirport)}
               </div>
               <div className="text-sm text-traveling-text/70">{flight.arrivalAirport}</div>
               <div className="mt-1 text-xs font-medium text-traveling-text">
@@ -70,54 +103,40 @@ function FlightInfoSection({ flight, formatPrice }) {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {flight.returnDepartureTime && (
         <div className="rounded-lg bg-traveling-background p-6">
-          <h3 className="mb-4 text-lg font-bold text-traveling-text">항공편 상세 정보</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-start">
-              <Plane className="mr-2 h-5 w-5 text-traveling-text" />
-              <div>
-                <p className="font-medium text-traveling-text">항공사</p>
-                <p className="text-traveling-text/70">{flight.carrier}</p>
+          <h3 className="mb-4 text-lg font-bold text-traveling-text">오는 편</h3>
+          <div className="flex flex-col justify-between md:flex-row">
+            <div className="flex items-center">
+              <div className="text-center">
+                <div className="text-xl font-bold text-traveling-text">
+                  {parseFlightTime(flight.returnDepartureTime, flight.returnDepartureAirport)}
+                </div>
+                <div className="text-sm text-traveling-text/70">{flight.returnDepartureAirport}</div>
+                <div className="mt-1 text-xs font-medium text-traveling-text">
+                  {new Date(flight.returnDepartureTime).toLocaleDateString("ko-KR")}
+                </div>
               </div>
-            </div>
-            <div className="flex items-start">
-              <Luggage className="mr-2 h-5 w-5 text-traveling-text" />
-              <div>
-                <p className="font-medium text-traveling-text">수하물 허용량</p>
-                <p className="text-traveling-text/70">20kg</p>
+              <div className="mx-4 flex flex-1 flex-col items-center">
+                <div className="text-xs text-traveling-text/70">직항 ({parseDuration(flight.returnDuration)})</div>
+                <div className="relative w-full">
+                  <div className="absolute top-1/2 h-0.5 w-full -translate-y-1/2 bg-traveling-text/10" />
+                  <ArrowRight className="relative mx-auto h-4 w-4 text-traveling-text" />
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-traveling-text">
+                  {parseFlightTime(flight.returnArrivalTime, flight.returnArrivalAirport)}
+                </div>
+                <div className="text-sm text-traveling-text/70">{flight.returnArrivalAirport}</div>
+                <div className="mt-1 text-xs font-medium text-traveling-text">
+                  {new Date(flight.returnArrivalTime).toLocaleDateString("ko-KR")}
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="rounded-lg bg-traveling-background p-6">
-          <h3 className="mb-4 text-lg font-bold text-traveling-text">요금 정보</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-traveling-text/70">성인 1인</span>
-              <span className="font-medium text-traveling-text">{formatPrice(parseFloat(flight.price))}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-traveling-text/70">세금 및 수수료</span>
-              <span className="font-medium text-traveling-text">{formatPrice(parseFloat(flight.price) * 0.1)}</span>
-            </div>
-            <div className="border-t border-traveling-text/10 pt-2">
-              <div className="flex justify-between">
-                <span className="font-medium text-traveling-text">총 요금</span>
-                <span className="text-lg font-bold text-traveling-text">
-                  {formatPrice(parseFloat(flight.price) * 1.1)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <Button className="rounded-full btn-flight">
-          다음: 좌석 선택
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
+      )}
     </TabsContent>
   );
 }
@@ -478,7 +497,7 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, formatPrice, handl
 
 export default function FlightDetailContent() {
   const navigate = useNavigate();
-  const { id } = useParams(); // URL에서 flightId 가져오기
+  const { id } = useParams();
   const [flight, setFlight] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [passengerCount, setPassengerCount] = useState(1);
@@ -488,38 +507,20 @@ export default function FlightDetailContent() {
   useEffect(() => {
     async function fetchFlight() {
       try {
-        // 더미 데이터 환경에서는 mockFlights에서 id로 조회
-        const selectedFlight = mockFlights.find((flight, index) => `${index + 1}` === id);
-        if (selectedFlight) {
-          setFlight({
-            ...selectedFlight,
-            id,
-            departureAirport: selectedFlight.departureAirport || "ICN",
-            arrivalAirport: selectedFlight.arrivalAirport || "NRT",
-          });
-        } else {
-          setError("항공편을 찾을 수 없습니다.");
-        }
-
-        // 실제 API 호출 (주석 처리)
-        /*
-        const response = await fetch(`/api/flights/${id}`, {
-          method: "GET",
+        const response = await axios.get(`http://localhost:8080/api/flights/detail/by-travel-flight/${id}`, {
           headers: { "Content-Type": "application/json" },
+          timeout: 10000,
         });
-        const result = await response.json();
-        if (result.success && result.data.flight) {
-          setFlight({
-            ...result.data.flight,
-            departureAirport: result.data.flight.departureAirport || "ICN",
-            arrivalAirport: result.data.flight.arrivalAirport || "NRT",
-          });
+        console.log("API 응답:", JSON.stringify(response.data, null, 2));
+        if (response.data.success && response.data.data) {
+          setFlight(response.data.data); // Redux 상태 참조 제거
+          setError(null);
         } else {
-          setError("항공편을 찾을 수 없습니다.");
+          throw new Error("항공편 데이터가 없습니다.");
         }
-        */
       } catch (err) {
-        setError("항공편 정보를 가져오는 데 실패했습니다.");
+        console.error("API 오류:", err.message, err.response?.data);
+        setError(`항공편 정보를 가져오는 데 실패했습니다. (TravelFlight ID: ${id})`);
       } finally {
         setLoading(false);
       }
@@ -530,12 +531,17 @@ export default function FlightDetailContent() {
   const formatPrice = (price) => {
     return new Intl.NumberFormat("ko-KR", {
       style: "currency",
-      currency: "KRW",
+      currency: flight?.currency || "KRW",
       maximumFractionDigits: 0,
     }).format(price);
   };
 
   const handleBooking = () => {
+    console.log("예약 데이터:", {
+      flightId: flight?.id,
+      passengerCount,
+      selectedSeats,
+    });
     navigate("/mypage");
   };
 
@@ -547,9 +553,10 @@ export default function FlightDetailContent() {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="text-2xl font-bold text-traveling-text">항공권을 찾을 수 없습니다</h2>
-        <p className="mt-2 text-traveling-text/70">{error || "요청하신 항공권 정보를 찾을 수 없습니다."}</p>
+        <p className="mt-2 text-traveling-text/70">{error}</p>
+        <p className="mt-2 text-sm text-red-500">TravelFlight ID: {id}</p>
         <Button className="mt-6 rounded-full btn-flight" onClick={() => navigate("/flight-search")}>
-          <ArrowLeft className="mr-2 h-4 w-4"/>
+          <ArrowLeft className="mr-2 h-4 w-4" />
           항공권 검색으로 돌아가기
         </Button>
       </div>
@@ -557,7 +564,7 @@ export default function FlightDetailContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto px-4 py-8 space-y-6">
       <Button
         variant="outline"
         className="mb-4 border-traveling-text-black/30 text-black"
@@ -571,7 +578,7 @@ export default function FlightDetailContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-traveling-mint">
-                <span className="font-bold text-white">{flight.carrier}</span>
+                <span className="font-bold text-white">{flight.carrierCode}</span>
               </div>
               <div className="ml-4">
                 <CardTitle className="text-xl font-bold text-traveling-text">{flight.carrier}</CardTitle>

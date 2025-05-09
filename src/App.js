@@ -17,6 +17,7 @@ import CommunityPostPage from './pages/community/post/[id]/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
+import ProfileEditPage from './pages/mypage/profile-edit/Page';
 import FlightSearchPage from "./pages/flight-search/Page";
 import FlightDetailContent from "./components/flight-search/Flight-detail-content";
 import FlightSearchContent from "./components/flight-search/Flight-search-content";
@@ -45,6 +46,14 @@ function App() {
             element={
               <PrivateRoute>
                 <SettingsContent />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile-edit"
+            element={
+              <PrivateRoute>
+                <ProfileEditPage />
               </PrivateRoute>
             }
           />

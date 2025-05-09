@@ -71,7 +71,6 @@ function FilterPanel({
                 <span>{formatPrice(priceRange[1])}</span>
               </div>
               <Slider
-                defaultValue={[200000, 5000000]}
                 min={200000}
                 max={5000000}
                 step={10000}
@@ -132,7 +131,6 @@ function FilterPanel({
                   <span>{formatPrice(priceRange[1])}</span>
                 </div>
                 <Slider
-                  defaultValue={[200000, 5000000]}
                   min={200000}
                   max={5000000}
                   step={10000}
@@ -221,8 +219,8 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
   };
 
   // 출발 여정
-  const departureTime = toZonedTime(new Date(flight.departureTime), 'America/Los_Angeles');
-  const arrivalTime = toZonedTime(new Date(flight.arrivalTime), 'America/New_York');
+  const departureTime = toZonedTime(new Date(flight.departureTime), 'America/New_York');
+  const arrivalTime = toZonedTime(new Date(flight.arrivalTime), 'Europe/Paris');
   const outboundDuration = parseDuration(flight.duration);
 
   // 귀국 여정
@@ -231,18 +229,32 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
   let returnArrivalTime = null;
   let hasReturn = isRoundTrip && flight.returnDepartureTime && flight.returnArrivalTime;
   if (hasReturn) {
-    returnDepartureTime = toZonedTime(new Date(flight.returnDepartureTime), 'America/New_York');
-    returnArrivalTime = toZonedTime(new Date(flight.returnArrivalTime), 'America/Los_Angeles');
+    returnDepartureTime = toZonedTime(new Date(flight.returnDepartureTime), 'Europe/Paris');
+    returnArrivalTime = toZonedTime(new Date(flight.returnArrivalTime), 'America/New_York');
     returnDuration = parseDuration(flight.returnDuration);
   }
 
   // 비행 시간 검증
-  if (outboundDuration.totalMinutes < 300) {
+  if (outboundDuration.totalMinutes < 60) {
     console.warn(`항공편 ${flight.id} 출발 비행 시간 비현실적: ${outboundDuration.totalMinutes}분`);
   }
-  if (hasReturn && returnDuration.totalMinutes < 300) {
+  if (hasReturn && returnDuration.totalMinutes < 60) {
     console.warn(`항공편 ${flight.id} 귀국 비행 시간 비현실적: ${returnDuration.totalMinutes}분`);
   }
+
+  console.log("FlightCard 데이터:", {
+    id: flight.id,
+    travelFlightId: flight.travelFlightId,
+    carrier: flight.carrier,
+    departureAirport: flight.departureAirport,
+    arrivalAirport: flight.arrivalAirport,
+    departureTime: flight.departureTime,
+    arrivalTime: flight.arrivalTime,
+    returnDepartureTime: flight.returnDepartureTime,
+    returnArrivalTime: flight.returnArrivalTime,
+    price: flight.price,
+    currency: flight.currency
+  });
 
   return (
     <Card className="overflow-hidden bg-white shadow-md">
@@ -261,20 +273,19 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
                 </p>
               </div>
             </div>
-            <Badge className={outboundDuration.totalMinutes < 300 || (hasReturn && returnDuration.totalMinutes < 300) ? "bg-red-500 text-white" : "bg-green-500 text-white"}>
-              {outboundDuration.totalMinutes < 300 || (hasReturn && returnDuration.totalMinutes < 300) ? "비행 시간 오류" : "직항/경유"}
+            <Badge className={outboundDuration.totalMinutes < 60 || (hasReturn && returnDuration.totalMinutes < 60) ? "bg-red-500 text-white" : "bg-green-500 text-white"}>
+              {outboundDuration.totalMinutes < 60 || (hasReturn && returnDuration.totalMinutes < 60) ? "비행 시간 오류" : "직항/경유"}
             </Badge>
           </div>
         </div>
         <div className="p-4">
-          {/* 출발 여정 */}
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="flex flex-1 items-center justify-between md:justify-start md:gap-12">
               <div className="text-center">
                 <div className="text-lg font-bold text-gray-800">
-                  {format(departureTime, 'hh:mm a', { timeZone: 'America/Los_Angeles' })}
+                  {format(departureTime, 'hh:mm a', { timeZone: 'America/New_York' })}
                 </div>
-                <div className="text-xs text-gray-500">{flight.departureAirport} (LAX)</div>
+                <div className="text-xs text-gray-500">{flight.departureAirport} (JFK)</div>
               </div>
               <div className="flex flex-col items-center">
                 <div className="flex items-center text-xs text-gray-500">
@@ -288,9 +299,9 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-gray-800">
-                  {format(arrivalTime, 'hh:mm a', { timeZone: 'America/New_York' })}
+                  {format(arrivalTime, 'hh:mm a', { timeZone: 'Europe/Paris' })}
                 </div>
-                <div className="text-xs text-gray-500">{flight.arrivalAirport} (JFK)</div>
+                <div className="text-xs text-gray-500">{flight.arrivalAirport} (CDG)</div>
               </div>
             </div>
             <div className="flex flex-col items-end border-t pt-4 md:border-t-0 md:pt-0">
@@ -299,13 +310,12 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
               </div>
               <Button
                 className="mt-2 bg-orange-500 text-white hover:bg-orange-600 rounded-md px-4 py-2"
-                onClick={() => navigate(`/flight-detail/${flight.id}`)}
+                onClick={() => navigate(`/flight-detail/${flight.travelFlightId || flight.id}`)}
               >
                 선택하기
               </Button>
             </div>
           </div>
-          {/* 귀국 여정 */}
           {hasReturn && (
             <div className="mt-4 border-t pt-4">
               <h4 className="text-sm font-medium text-gray-700">귀국 여정</h4>
@@ -313,9 +323,9 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
                 <div className="flex flex-1 items-center justify-between md:justify-start md:gap-12">
                   <div className="text-center">
                     <div className="text-lg font-bold text-gray-800">
-                      {format(returnDepartureTime, 'hh:mm a', { timeZone: 'America/New_York' })}
+                      {format(returnDepartureTime, 'hh:mm a', { timeZone: 'Europe/Paris' })}
                     </div>
-                    <div className="text-xs text-gray-500">{flight.returnDepartureAirport} (JFK)</div>
+                    <div className="text-xs text-gray-500">{flight.returnDepartureAirport} (CDG)</div>
                   </div>
                   <div className="flex flex-col items-center">
                     <div className="flex items-center text-xs text-gray-500">
@@ -329,9 +339,9 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-bold text-gray-800">
-                      {format(returnArrivalTime, 'hh:mm a', { timeZone: 'America/Los_Angeles' })}
+                      {format(returnArrivalTime, 'hh:mm a', { timeZone: 'America/New_York' })}
                     </div>
-                    <div className="text-xs text-gray-500">{flight.returnArrivalAirport} (LAX)</div>
+                    <div className="text-xs text-gray-500">{flight.returnArrivalAirport} (JFK)</div>
                   </div>
                 </div>
               </div>
@@ -342,12 +352,12 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
               경고: 귀국 여정 데이터가 누락되었습니다. 출발 여정만 표시됩니다.
             </div>
           )}
-          {outboundDuration.totalMinutes < 300 && (
+          {outboundDuration.totalMinutes < 60 && (
             <div className="text-sm text-red-500 mt-2">
               경고: 출발 비행 시간({outboundDuration.hours}시간 {outboundDuration.minutes}분)이 비현실적일 수 있습니다.
             </div>
           )}
-          {hasReturn && returnDuration.totalMinutes < 300 && (
+          {hasReturn && returnDuration.totalMinutes < 60 && (
             <div className="text-sm text-red-500 mt-2">
               경고: 귀국 비행 시간({returnDuration.hours}시간 {returnDuration.minutes}분)이 비현실적일 수 있습니다.
             </div>
@@ -366,12 +376,12 @@ export default function FlightSearchResults() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const params = {
-    from: decodeURIComponent(searchParams.get("from") || "인천 (ICN)"),
-    to: decodeURIComponent(searchParams.get("to") || "도쿄 (NRT)"),
-    date: searchParams.get("date") || "2025-02-01",
+    from: decodeURIComponent(searchParams.get("from") || "뉴욕 (JFK)"),
+    to: decodeURIComponent(searchParams.get("to") || "파리 (CDG)"),
+    date: searchParams.get("date") || "2025-05-13",
     return: searchParams.get("return") || null,
     passengers: searchParams.get("passengers") || "1",
-    tripType: searchParams.get("tripType") || "oneway",
+    tripType: searchParams.get("tripType") || "roundtrip",
   };
 
   const [flights, setFlights] = useState([]);
@@ -417,13 +427,17 @@ export default function FlightSearchResults() {
         console.log("API 응답 전체:", JSON.stringify(response.data, null, 2));
         console.log("API 응답 항공편 상세:", response.data.flights?.map(flight => ({
           id: flight.id,
+          travelFlightId: flight.travelFlightId,
+          carrier: flight.carrier,
+          departureAirport: flight.departureAirport,
           arrivalAirport: flight.arrivalAirport,
-          price: flight.price,
-          currency: flight.currency,
           departureTime: flight.departureTime,
-          duration: flight.duration || 'N/A',
+          arrivalTime: flight.arrivalTime,
           returnDepartureTime: flight.returnDepartureTime || 'N/A',
           returnArrivalTime: flight.returnArrivalTime || 'N/A',
+          price: flight.price,
+          currency: flight.currency,
+          duration: flight.duration || 'N/A',
           returnDuration: flight.returnDuration || 'N/A',
         })));
 
@@ -432,7 +446,10 @@ export default function FlightSearchResults() {
         }
 
         if (response.data.success && Array.isArray(response.data.flights)) {
-          const filteredByDestination = response.data.flights.filter(flight => {
+          const filteredByDestination = response.data.flights.map(flight => ({
+            ...flight,
+            travelFlightId: flight.travelFlightId || flight.id
+          })).filter(flight => {
             const isValidArrival = flight.arrivalAirport?.trim().toUpperCase() === toIata?.trim().toUpperCase();
             const isValidPrice = !isNaN(parseFloat(flight.price));
             const isValidTime = !isNaN(new Date(flight.departureTime).getTime());
@@ -453,7 +470,7 @@ export default function FlightSearchResults() {
             console.log(`항공편 ${flight.id} 소요 시간: 출발=${duration}, 귀국=${returnDuration}`);
           });
           if (filteredByDestination.length === 0) {
-            setError("항공편을 찾을 수 없습니다. 검색 조건을 확인해주세요.");
+            setError("검색 조건에 맞는 항공편을 찾을 수 없습니다. 다른 조건을 시도해주세요.");
             setFlights([]);
             setFilteredFlights([]);
           } else {
@@ -494,7 +511,13 @@ export default function FlightSearchResults() {
         }
       } catch (err) {
         console.error("API 오류:", err.message, err.response?.data);
-        setError("항공편 정보를 가져오는 데 실패했습니다. 다시 시도해주세요.");
+        let errorMessage = "항공편 정보를 가져오는 데 실패했습니다. 다시 시도해주세요.";
+        if (err.response?.status === 400) {
+          errorMessage = "잘못된 요청입니다. 검색 조건을 확인해주세요.";
+        } else if (err.response?.status === 500) {
+          errorMessage = "서버 오류가 발생했습니다. 나중에 다시 시도해주세요.";
+        }
+        setError(errorMessage);
         setFlights([]);
         setFilteredFlights([]);
       } finally {
@@ -507,6 +530,7 @@ export default function FlightSearchResults() {
   useEffect(() => {
     if (flights.length === 0) {
       setFilteredFlights([]);
+      setError("검색된 항공편이 없습니다. 검색 조건을 변경해주세요.");
       return;
     }
 
@@ -522,7 +546,7 @@ export default function FlightSearchResults() {
     console.log("가격 필터 후 항공편 수:", filtered.length);
 
     if (filtered.length === 0 && flights.length > 0) {
-      setError("선택한 가격 범위에 맞는 항공편이 없습니다. 가격 필터를 조정해 보세요.");
+      setError(`선택한 가격 범위(${new Intl.NumberFormat('ko-KR').format(priceRange[0])}원 ~ ${new Intl.NumberFormat('ko-KR').format(priceRange[1])}원)에 맞는 항공편이 없습니다. 가격 필터를 조정해 보세요.`);
       setFilteredFlights([]);
       return;
     }
@@ -530,11 +554,16 @@ export default function FlightSearchResults() {
     if (selectedAirlines.length > 0) {
       filtered = filtered.filter((flight) => selectedAirlines.includes(flight.carrierCode));
       console.log("항공사 필터 후 항공편 수:", filtered.length);
+      if (filtered.length === 0) {
+        setError("선택한 항공사에 맞는 항공편이 없습니다. 항공사 필터를 조정해 보세요.");
+        setFilteredFlights([]);
+        return;
+      }
     }
 
     if (departureTime.length > 0) {
       filtered = filtered.filter((flight) => {
-        const hour = toZonedTime(new Date(flight.departureTime), flight.departureAirport === 'LAX' ? 'America/Los_Angeles' : 'America/New_York').getHours();
+        const hour = toZonedTime(new Date(flight.departureTime), 'America/New_York').getHours();
         if (departureTime.includes("morning") && hour >= 6 && hour < 12) return true;
         if (departureTime.includes("afternoon") && hour >= 12 && hour < 18) return true;
         if (departureTime.includes("evening") && hour >= 18 && hour < 21) return true;
@@ -542,6 +571,11 @@ export default function FlightSearchResults() {
         return false;
       });
       console.log("출발 시간 필터 후 항공편 수:", filtered.length);
+      if (filtered.length === 0) {
+        setError("선택한 출발 시간에 맞는 항공편이 없습니다. 출발 시간 필터를 조정해 보세요.");
+        setFilteredFlights([]);
+        return;
+      }
     }
 
     const sorted = [...filtered];
@@ -574,10 +608,12 @@ export default function FlightSearchResults() {
     }
 
     console.log("필터링된 항공편:", sorted);
+    setFilteredFlights(sorted);
     if (sorted.length === 0 && (selectedAirlines.length > 0 || departureTime.length > 0)) {
       setError("선택한 항공사 또는 출발 시간에 맞는 항공편이 없습니다. 필터를 조정해 보세요.");
+    } else {
+      setError(null);
     }
-    setFilteredFlights(sorted);
   }, [flights, sortBy, priceRange, selectedAirlines, departureTime]);
 
   const handleAirlineChange = (airlineId) => {

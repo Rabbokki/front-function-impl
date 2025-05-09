@@ -26,6 +26,26 @@ const FlightSearchHero = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autocompleteError, setAutocompleteError] = useState(null);
 
+  // 컴포넌트 마운트 시 searchParams와 관련 상태 초기화
+  useEffect(() => {
+    dispatch(setSearchParams({
+      from: "",
+      fromLabel: "",
+      to: "",
+      toLabel: "",
+      date: "",
+      return: "",
+      passengers: 1,
+      tripType: "roundtrip"
+    }));
+    dispatch(clearError());
+    setFromQuery("");
+    setToQuery("");
+    setFromSuggestions([]);
+    setToSuggestions([]);
+    setAutocompleteError(null);
+  }, [dispatch]);
+
   const fetchSuggestions = async (query, field) => {
     if (query.length < 2) {
       field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
