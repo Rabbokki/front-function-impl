@@ -8,7 +8,7 @@ export const createComment = createAsyncThunk(
   async ({ postId, data }, thunkAPI) => {
     try {
       const response = await axiosInstance.post(
-        `/api/comment/create/${postId}`,
+        `/api/comment/posts/${postId}/comment`,
         data,
         {
           headers: {
@@ -17,7 +17,7 @@ export const createComment = createAsyncThunk(
           withCredentials: true,
         }
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       const errorMessage = error.response?.data?.error || '댓글 생성 실패';
       return thunkAPI.rejectWithValue(errorMessage);
@@ -30,7 +30,7 @@ export const getCommentsByPostId = createAsyncThunk(
   'comment/getByPostId',
   async (postId, thunkAPI) => {
     try {
-      const response = await axiosInstance.get(`${API_BASE_URL}`);
+      const response = await axiosInstance.get(`${API_BASE_URL}/posts/${postId}/comments`);
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.error || '댓글 조회 실패';
