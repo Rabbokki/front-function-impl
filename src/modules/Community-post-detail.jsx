@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { getAccountDetails } from '../hooks/reducer/account/accountThunk';
-import { getPostById, deletePost } from '../hooks/reducer/post/postThunk';
+import { getPostById, deletePost, viewPost } from '../hooks/reducer/post/postThunk';
 import { addLike, removeLike, getLikeStatus } from '../hooks/reducer/like/likeThunk';
 import { getCommentsByPostId, createComment } from '../hooks/reducer/comment/commentThunk';
 import {
@@ -32,6 +32,7 @@ export function CommunityPostDetail({ postId }) {
   // 게시글 불러오기
   useEffect(() => {
     dispatch(getPostById(postId));
+    dispatch(viewPost(postId));
     dispatch(getLikeStatus(postId)).then((res) => {
       if (res.meta.requestStatus === 'fulfilled') {
         setLiked(res.payload.isLiked);
@@ -205,10 +206,10 @@ export function CommunityPostDetail({ postId }) {
         <div className="flex items-center justify-between text-sm text-[#495057]">
           <div className="flex items-center">
             <Avatar className="mr-2 h-6 w-6">
-              <AvatarImage src={"/placeholder.svg"} />
+              <AvatarImage src={localPost.userImgUrl || '/placeholder.svg?height=96&width=96'} />
               <AvatarFallback>익</AvatarFallback>
             </Avatar>
-            <span className="mr-3">작성자</span>
+            <span className="mr-3">{localPost.userName}</span>
             <Clock className="mr-1 h-3 w-3 text-[#4dabf7]" />
             <span>{new Date().toLocaleDateString()}</span>
           </div>
@@ -251,7 +252,7 @@ export function CommunityPostDetail({ postId }) {
 
         <div className="mb-6 flex items-start space-x-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/abstract-profile-two.png" />
+            <AvatarImage src={currentUser?.imgUrl || '/placeholder.svg?height=96&width=96'} />
             <AvatarFallback>나</AvatarFallback>
           </Avatar>
           <div className="flex-1">

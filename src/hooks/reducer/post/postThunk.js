@@ -79,3 +79,14 @@ export const deletePost = createAsyncThunk('post/delete', async (id, thunkAPI) =
     return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
   }
 });
+
+// 뷰 처리
+export const viewPost = createAsyncThunk("posts/viewPost", async (postId) => {
+  try {
+    const response = await axiosInstance.put(`${API_BASE_URL}/${postId}/view`);
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data || '뷰 처리 실패';
+    return errorMessage;
+  }
+});
