@@ -1,810 +1,592 @@
-import { useState } from 'react';
-import { Clock, MapPin, ArrowRight, Download, Share2 } from 'lucide-react';
-import { Button } from '../../modules/Button';
-import { Card, CardContent } from '../../modules/Card';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Plane,
+  Hotel,
+  Coffee,
+  Utensils,
+  Camera,
+  X,
+  Edit,
+  Check,
+  Map,
+} from "lucide-react";
+import { Button } from "../../modules/Button";
+import { Card, CardContent } from "../../modules/Card";
+import { FlightModal } from "./flight-modal";
 
-export function ItineraryGeneration({ destination }) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isGenerated, setIsGenerated] = useState(true); // 데모를 위해 true로 설정
+function ItineraryGeneration({ destination, isAiMode = false }) {
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerated, setIsGenerated] = useState(false);
 
-  // 도시별 데이터
-  const cityData = {
-    osaka: {
-      name: '오사카',
-      nameEn: 'OSAKA',
-      dates: '2025.04.23(수) - 2025.04.26(토)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-04-23(수)',
-          places: [
-            {
-              time: '19:28-19:28',
-              name: '오사카 국제공항',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Osaka International Airport terminal',
-            },
-            {
-              time: '19:52-19:52',
-              name: '호텔 한큐 리스메이아 오사카',
-              category: '숙소',
-              image: '/images/hotels/hotel1.jpg',
-            },
-            {
-              time: '20:00-22:00',
-              name: '우메다 공중정원',
-              category: '명소',
-              image: '/images/attractions/umeda-wheel.jpg',
-            },
-            {
-              time: '22:06-22:06',
-              name: '호텔 한큐 리스메이아 오사카',
-              category: '숙소',
-              image: '/images/hotels/hotel1.jpg',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-04-24(목)',
-          places: [
-            {
-              time: '19:29-19:29',
-              name: '호텔 한큐 리스메이아 오사카',
-              category: '숙소',
-              image: '/images/hotels/hotel1.jpg',
-            },
-            {
-              time: '20:00-22:00',
-              name: '유니버설 스튜디오 재팬',
-              category: '명소',
-              image: '/images/attractions/universal-studios.jpg',
-            },
-            {
-              time: '22:53-22:53',
-              name: 'BON콘드 難波日本橋',
-              category: '숙소',
-              image: '/images/hotels/hotel2.jpg',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-04-25(금)',
-          places: [
-            {
-              time: '19:55-19:55',
-              name: 'BON콘드 難波日本橋',
-              category: '숙소',
-              image: '/images/hotels/hotel2.jpg',
-            },
-            {
-              time: '20:00-22:00',
-              name: '도톤보리',
-              category: '명소',
-              image: '/images/attractions/dotonbori.png',
-            },
-            {
-              time: '22:05-22:05',
-              name: 'BON콘드 難波日本橋',
-              category: '숙소',
-              image: '/images/hotels/hotel2.jpg',
-            },
-          ],
-        },
-      ],
-    },
-    tokyo: {
-      name: '도쿄',
-      nameEn: 'TOKYO',
-      dates: '2025.05.15(목) - 2025.05.18(일)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-05-15(목)',
-          places: [
-            {
-              time: '14:30-14:30',
-              name: '도쿄 국제공항',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Tokyo International Airport terminal',
-            },
-            {
-              time: '16:00-16:00',
-              name: '호텔 그레이서리 신주쿠',
-              category: '숙소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Hotel Gracery Shinjuku entrance',
-            },
-            {
-              time: '17:00-19:00',
-              name: '시부야 스크램블 교차로',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Shibuya Crossing with crowds of people',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-05-16(금)',
-          places: [
-            {
-              time: '09:00-11:00',
-              name: '메이지 신궁',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Meiji Shrine traditional Japanese architecture',
-            },
-            {
-              time: '12:00-14:00',
-              name: '도쿄 타워',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Tokyo Tower at night with city lights',
-            },
-            {
-              time: '15:00-17:00',
-              name: '센소지 사원',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Senso-ji Temple with red lantern',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-05-17(토)',
-          places: [
-            {
-              time: '10:00-14:00',
-              name: '도쿄 스카이트리',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Tokyo Skytree tall tower',
-            },
-            {
-              time: '15:00-17:00',
-              name: '아키하바라',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Akihabara electric town with neon signs',
-            },
-          ],
-        },
-      ],
-    },
-    fukuoka: {
-      name: '후쿠오카',
-      nameEn: 'FUKUOKA',
-      dates: '2025.06.10(화) - 2025.06.13(금)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-06-10(화)',
-          places: [
-            {
-              time: '13:30-13:30',
-              name: '후쿠오카 공항',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Fukuoka Airport terminal',
-            },
-            {
-              time: '15:00-15:00',
-              name: 'JR 규슈 호텔 블로섬 하카타 중앙',
-              category: '숙소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=JR Kyushu Hotel Blossom Hakata Central entrance',
-            },
-            {
-              time: '16:00-18:00',
-              name: '캐널시티 하카타',
-              category: '명소',
-              image: '/canal-city-hakata-water-show.png',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-06-11(수)',
-          places: [
-            {
-              time: '09:00-11:00',
-              name: '오호리 공원',
-              category: '명소',
-              image: '/ohori-park-serenity.png',
-            },
-            {
-              time: '12:00-14:00',
-              name: '후쿠오카 타워',
-              category: '명소',
-              image: '/fukuoka-seaside-view.png',
-            },
-            {
-              time: '15:00-17:00',
-              name: '나카스',
-              category: '명소',
-              image: '/nakasu-night-lights.png',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-06-12(목)',
-          places: [
-            {
-              time: '10:00-16:00',
-              name: '다자이후 텐만구',
-              category: '명소',
-              image: '/dazaifu-plum-blossoms.png',
-            },
-          ],
-        },
-      ],
-    },
-    paris: {
-      name: '파리',
-      nameEn: 'PARIS',
-      dates: '2025.07.15(화) - 2025.07.18(금)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-07-15(화)',
-          places: [
-            {
-              time: '13:30-13:30',
-              name: '샤를 드골 공항',
-              category: '공항',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Charles de Gaulle Airport Paris terminal',
-            },
-            {
-              time: '15:00-15:00',
-              name: '호텔 플라자 아테네 파리',
-              category: '숙소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Hotel Plaza Athenee Paris entrance',
-            },
-            {
-              time: '16:00-18:00',
-              name: '에펠탑',
-              category: '명소',
-              image: '/paris-eiffel-tower.png',
-            },
-            {
-              time: '19:00-21:00',
-              name: '세느강 크루즈',
-              category: '액티비티',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Seine River Cruise Paris at night',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-07-16(수)',
-          places: [
-            {
-              time: '09:00-12:00',
-              name: '루브르 박물관',
-              category: '명소',
-              image: '/paris-louvre-museum.png',
-            },
-            {
-              time: '13:00-14:00',
-              name: '튈르리 정원',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Tuileries Garden Paris with flowers',
-            },
-            {
-              time: '15:00-17:00',
-              name: '개선문',
-              category: '명소',
-              image: '/paris-arc-de-triomphe.png',
-            },
-            {
-              time: '18:00-20:00',
-              name: '샹젤리제 거리',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Champs Elysees Paris shopping street',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-07-17(목)',
-          places: [
-            {
-              time: '09:00-11:00',
-              name: '노트르담 대성당',
-              category: '명소',
-              image: '/paris-notre-dame.png',
-            },
-            {
-              time: '12:00-14:00',
-              name: '몽마르트',
-              category: '명소',
-              image: '/paris-montmartre.png',
-            },
-            {
-              time: '15:00-17:00',
-              name: '사크레쾨르 대성당',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Sacre Coeur Basilica Paris white dome',
-            },
-          ],
-        },
-      ],
-    },
-    rome: {
-      name: '로마',
-      nameEn: 'ROME',
-      dates: '2025.08.10(일) - 2025.08.13(수)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-08-10(일)',
-          places: [
-            {
-              time: '14:00-14:00',
-              name: '레오나르도 다 빈치 국제공항',
-              category: '공항',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Leonardo da Vinci International Airport Rome terminal',
-            },
-            {
-              time: '16:00-16:00',
-              name: '호텔 하슬러 로마',
-              category: '숙소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Hotel Hassler Roma entrance',
-            },
-            {
-              time: '17:00-19:00',
-              name: '트레비 분수',
-              category: '명소',
-              image: '/rome-trevi-fountain.png',
-            },
-            {
-              time: '20:00-22:00',
-              name: '나보나 광장',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Piazza Navona Rome with fountains at night',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-08-11(월)',
-          places: [
-            {
-              time: '09:00-12:00',
-              name: '콜로세움',
-              category: '명소',
-              image: '/rome-colosseum.png',
-            },
-            {
-              time: '13:00-15:00',
-              name: '로마 포럼',
-              category: '명소',
-              image: '/rome-roman-forum.png',
-            },
-            {
-              time: '16:00-18:00',
-              name: '판테온',
-              category: '명소',
-              image: '/rome-pantheon.png',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-08-12(화)',
-          places: [
-            {
-              time: '09:00-13:00',
-              name: '바티칸 박물관',
-              category: '명소',
-              image: '/rome-vatican-museums.png',
-            },
-            {
-              time: '14:00-16:00',
-              name: '성 베드로 대성당',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=St Peters Basilica Vatican City interior',
-            },
-            {
-              time: '17:00-19:00',
-              name: '스페인 계단',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Spanish Steps Rome with flowers',
-            },
-          ],
-        },
-      ],
-    },
-    venice: {
-      name: '베니스',
-      nameEn: 'VENICE',
-      dates: '2025.09.05(금) - 2025.09.08(월)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-09-05(금)',
-          places: [
-            {
-              time: '13:00-13:00',
-              name: '마르코 폴로 국제공항',
-              category: '공항',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Marco Polo International Airport Venice terminal',
-            },
-            {
-              time: '15:00-15:00',
-              name: '그리티 팰리스 베니스',
-              category: '숙소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Gritti Palace Venice entrance',
-            },
-            {
-              time: '16:00-18:00',
-              name: '산 마르코 광장',
-              category: '명소',
-              image: '/venice-st-marks-square.png',
-            },
-            {
-              time: '19:00-21:00',
-              name: '곤돌라 투어',
-              category: '액티비티',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Gondola tour Venice at sunset',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-09-06(토)',
-          places: [
-            {
-              time: '09:00-11:00',
-              name: '산 마르코 대성당',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=St Marks Basilica Venice interior',
-            },
-            {
-              time: '12:00-14:00',
-              name: '도지의 궁전',
-              category: '명소',
-              image: '/venice-doges-palace.png',
-            },
-            {
-              time: '15:00-17:00',
-              name: '리알토 다리',
-              category: '명소',
-              image: '/venice-rialto-bridge.png',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-09-07(일)',
-          places: [
-            {
-              time: '09:00-14:00',
-              name: '부라노 섬',
-              category: '명소',
-              image: '/venice-burano.png',
-            },
-            {
-              time: '15:00-17:00',
-              name: '대운하 투어',
-              category: '액티비티',
-              image: '/venice-grand-canal.png',
-            },
-          ],
-        },
-      ],
-    },
-    bangkok: {
-      name: '방콕',
-      nameEn: 'BANGKOK',
-      dates: '2025.10.10(금) - 2025.10.13(월)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-10-10(금)',
-          places: [
-            {
-              time: '12:00-12:00',
-              name: '수완나품 국제공항',
-              category: '공항',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Suvarnabhumi Airport Bangkok terminal',
-            },
-            {
-              time: '14:00-14:00',
-              name: '만다린 오리엔탈 방콕',
-              category: '숙소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Mandarin Oriental Bangkok entrance',
-            },
-            {
-              time: '16:00-18:00',
-              name: '왕궁',
-              category: '명소',
-              image: '/bangkok-grand-palace.png',
-            },
-            {
-              time: '19:00-21:00',
-              name: '차오프라야 강 디너 크루즈',
-              category: '액티비티',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Chao Phraya River Dinner Cruise Bangkok at night',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-10-11(토)',
-          places: [
-            {
-              time: '09:00-11:00',
-              name: '왓 포',
-              category: '명소',
-              image: '/bangkok-wat-pho.png',
-            },
-            {
-              time: '12:00-14:00',
-              name: '왓 아룬',
-              category: '명소',
-              image: '/bangkok-wat-arun.png',
-            },
-            {
-              time: '15:00-18:00',
-              name: '차투착 주말 시장',
-              category: '명소',
-              image: '/bangkok-chatuchak-market.png',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-10-12(일)',
-          places: [
-            {
-              time: '09:00-12:00',
-              name: '담넌 사두악 수상시장',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Damnoen Saduak Floating Market Bangkok colorful boats',
-            },
-            {
-              time: '14:00-16:00',
-              name: '짐 톰슨의 집',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Jim Thompson House Bangkok traditional architecture',
-            },
-            {
-              time: '18:00-20:00',
-              name: '카오산 로드',
-              category: '명소',
-              image: '/bangkok-khao-san-road.png',
-            },
-          ],
-        },
-      ],
-    },
-    singapore: {
-      name: '싱가포르',
-      nameEn: 'SINGAPORE',
-      dates: '2025.11.15(토) - 2025.11.18(화)',
-      itinerary: [
-        {
-          day: '1일차',
-          date: '2025-11-15(토)',
-          places: [
-            {
-              time: '13:00-13:00',
-              name: '창이 국제공항',
-              category: '공항',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Changi Airport Singapore terminal',
-            },
-            {
-              time: '15:00-15:00',
-              name: '마리나 베이 샌즈',
-              category: '숙소',
-              image: '/singapore-marina-bay-sands.png',
-            },
-            {
-              time: '17:00-19:00',
-              name: '가든스 바이 더 베이',
-              category: '명소',
-              image: '/singapore-gardens-by-the-bay.png',
-            },
-            {
-              time: '20:00-21:00',
-              name: '마리나 베이 샌즈 라이트 쇼',
-              category: '액티비티',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Marina Bay Sands Light Show Singapore at night',
-            },
-          ],
-        },
-        {
-          day: '2일차',
-          date: '2025-11-16(일)',
-          places: [
-            {
-              time: '09:00-14:00',
-              name: '센토사 섬',
-              category: '명소',
-              image: '/singapore-sentosa-island.png',
-            },
-            {
-              time: '15:00-18:00',
-              name: '유니버설 스튜디오 싱가포르',
-              category: '명소',
-              image: '/singapore-universal-studios.png',
-            },
-          ],
-        },
-        {
-          day: '3일차',
-          date: '2025-11-17(월)',
-          places: [
-            {
-              time: '09:00-11:00',
-              name: '머라이언 파크',
-              category: '명소',
-              image: '/singapore-merlion-park.png',
-            },
-            {
-              time: '12:00-14:00',
-              name: '차이나타운',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Chinatown Singapore colorful buildings',
-            },
-            {
-              time: '15:00-17:00',
-              name: '오차드 로드',
-              category: '명소',
-              image:
-                '/placeholder.svg?height=100&width=150&query=Orchard Road Singapore shopping district',
-            },
-          ],
-        },
-      ],
-    },
+  const isInitialized = useRef(false);
+
+  const [itinerary, setItinerary] = useState({});
+
+  const cityNames = {
+    osaka: "오사카",
+    tokyo: "도쿄",
+    fukuoka: "후쿠오카",
+    paris: "파리",
+    rome: "로마",
+    venice: "베니스",
+    bangkok: "방콕",
+    singapore: "싱가포르",
   };
 
-  const city = cityData[destination];
+  useEffect(() => {
+    if (isInitialized.current || isGenerated) return;
 
-  const handleGenerateItinerary = () => {
-    setIsGenerating(true);
+    isInitialized.current = true;
+    setIsLoading(true);
+
     setTimeout(() => {
-      setIsGenerating(false);
+      if (destination === "tokyo") {
+        const dummyItinerary = isAiMode
+          ? {
+               // AI 모드 일정 (더 상세한 일정)
+               1: {
+                places: [
+                  {
+                    id: "a1",
+                    name: "도쿄 스카이트리",
+                    type: "attraction",
+                    time: "10:00",
+                    description:
+                      "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요. 맑은 날에는 후지산도 보입니다.",
+                  },
+                  {
+                    id: "r1",
+                    name: "스시 긴자",
+                    type: "restaurant",
+                    time: "12:30",
+                    description: "현지인들에게도 인기 있는 스시 레스토랑에서 신선한 해산물을 즐겨보세요.",
+                  },
+                  {
+                    id: "a2",
+                    name: "센소지 사원",
+                    type: "attraction",
+                    time: "14:30",
+                    description: "도쿄에서 가장 오래된 사원인 센소지를 방문하여 일본 전통 문화를 체험해보세요.",
+                  },
+                  {
+                    id: "c1",
+                    name: "아사쿠사 카페",
+                    type: "cafe",
+                    time: "16:00",
+                    description: "전통적인 일본 디저트와 함께 차를 즐길 수 있는 카페입니다.",
+                  },
+                ],
+                accommodation: {
+                  id: "h1",
+                  name: "시타디네스 신주쿠",
+                  description:
+                    "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
+                },
+              },
+              2: {
+                places: [
+                  {
+                    id: "a3",
+                    name: "메이지 신궁",
+                    type: "attraction",
+                    time: "09:30",
+                    description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사입니다. 평화로운 산책을 즐겨보세요.",
+                  },
+                  {
+                    id: "a4",
+                    name: "하라주쿠 쇼핑",
+                    type: "attraction",
+                    time: "11:30",
+                    description: "일본 청소년 문화의 중심지인 하라주쿠에서 독특한 패션과 상점들을 구경해보세요.",
+                  },
+                  {
+                    id: "r2",
+                    name: "이치란 라멘",
+                    type: "restaurant",
+                    time: "13:00",
+                    description: "개인 부스에서 맛보는 유명한 돈코츠 라멘 체인점입니다.",
+                  },
+                  {
+                    id: "a5",
+                    name: "시부야 스크램블 교차로",
+                    type: "attraction",
+                    time: "15:00",
+                    description: "세계에서 가장 분주한 횡단보도 중 하나인 시부야 스크램블 교차로를 경험해보세요.",
+                  },
+                ],
+                accommodation: {
+                  id: "h1",
+                  name: "시타디네스 신주쿠",
+                  description:
+                    "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
+                },
+              },
+              3: {
+                places: [
+                  {
+                    id: "a6",
+                    name: "도쿄 디즈니랜드",
+                    type: "attraction",
+                    time: "09:00",
+                    description: "하루 종일 즐길 수 있는 세계적으로 유명한 테마파크입니다.",
+                  },
+                ],
+                accommodation: {
+                  id: "h2",
+                  name: "도쿄 베이 호텔",
+                  description:
+                    "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다. 디즈니 캐릭터들로 꾸며진 객실을 제공합니다.",
+                },
+              },
+              4: {
+                places: [
+                  {
+                    id: "a7",
+                    name: "우에노 공원",
+                    type: "attraction",
+                    time: "10:00",
+                    description: "아름다운 공원과 여러 박물관이 있는 문화 공간입니다.",
+                  },
+                  {
+                    id: "r3",
+                    name: "우동 레스토랑",
+                    type: "restaurant",
+                    time: "12:30",
+                    description: "전통적인 일본 우동을 맛볼 수 있는 현지인들이 사랑하는 식당입니다.",
+                  },
+                  {
+                    id: "a8",
+                    name: "아키하바라",
+                    type: "attraction",
+                    time: "14:00",
+                    description: "전자제품과 애니메이션의 중심지인 아키하바라에서 일본 오타쿠 문화를 경험해보세요.",
+                  },
+                  {
+                    id: "c2",
+                    name: "메이드 카페",
+                    type: "cafe",
+                    time: "16:30",
+                    description: "아키하바라의 유명한 테마 카페에서 독특한 경험을 해보세요.",
+                  },
+                ],
+                accommodation: {
+                  id: "h3",
+                  name: "고지라 그레이서리 호텔",
+                  description: "신주쿠에 위치한 고지라 테마 호텔입니다. 객실에서 고지라 조형물을 볼 수 있습니다.",
+                },
+              },
+              5: {
+                places: [
+                  {
+                    id: "a9",
+                    name: "오다이바",
+                    type: "attraction",
+                    time: "10:00",
+                    description:
+                      "도쿄 베이에 위치한 인공 섬으로, 쇼핑몰, 엔터테인먼트 시설, 자유의 여신상 복제품 등이 있습니다.",
+                  },
+                  {
+                    id: "r4",
+                    name: "해산물 뷔페",
+                    type: "restaurant",
+                    time: "13:00",
+                    description: "오다이바에 위치한 고급 해산물 뷔페에서 다양한 일본 요리를 즐겨보세요.",
+                  },
+                  {
+                    id: "a10",
+                    name: "팀랩 보더리스",
+                    type: "attraction",
+                    time: "15:00",
+                    description: "디지털 아트 뮤지엄에서 몰입형 예술 경험을 해보세요.",
+                  },
+                ],
+                accommodation: {
+                  id: "h3",
+                  name: "고지라 그레이서리 호텔",
+                  description: "신주쿠에 위치한 고지라 테마 호텔입니다. 객실에서 고지라 조형물을 볼 수 있습니다.",
+                },
+              },
+            }
+          : {
+              // 일반 모드 일정 (기본 일정)
+              1: {
+                places: [
+                  {
+                    id: "a1",
+                    name: "도쿄 스카이트리",
+                    type: "attraction",
+                    time: "10:00",
+                    description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요.",
+                  },
+                  {
+                    id: "a2",
+                    name: "센소지 사원",
+                    type: "attraction",
+                    time: "14:00",
+                    description: "도쿄에서 가장 오래된 사원인 센소지를 방문하세요.",
+                  },
+                ],
+                accommodation: {
+                  id: "h1",
+                  name: "시타디네스 신주쿠",
+                  description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다.",
+                },
+              },
+              2: {
+                places: [
+                  {
+                    id: "a3",
+                    name: "메이지 신궁",
+                    type: "attraction",
+                    time: "09:30",
+                    description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사입니다.",
+                  },
+                  {
+                    id: "a5",
+                    name: "시부야 스크램블 교차로",
+                    type: "attraction",
+                    time: "15:00",
+                    description: "세계에서 가장 분주한 횡단보도 중 하나입니다.",
+                  },
+                ],
+                accommodation: {
+                  id: "h1",
+                  name: "시타디네스 신주쿠",
+                  description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다.",
+                },
+              },
+              3: {
+                places: [
+                  {
+                    id: "a6",
+                    name: "도쿄 디즈니랜드",
+                    type: "attraction",
+                    time: "09:00",
+                    description: "하루 종일 즐길 수 있는 세계적으로 유명한 테마파크입니다.",
+                  },
+                ],
+                accommodation: {
+                  id: "h2",
+                  name: "도쿄 베이 호텔",
+                  description: "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다.",
+                },
+              },
+            }
+        setItinerary(dummyItinerary);
+      } else {
+        const basicItinerary = {
+          1: {
+            places: [
+              {
+                id: "a1",
+                name: `${cityNames[destination] || destination} 주요 관광지 1`,
+                type: "attraction",
+                time: "10:00",
+                description: "이 도시의 주요 관광 명소입니다.",
+              },
+              {
+                id: "r1",
+                name: "현지 레스토랑",
+                type: "restaurant",
+                time: "13:00",
+                description: "현지 음식을 맛볼 수 있는 인기 레스토랑입니다.",
+              },
+            ],
+            accommodation: {
+              id: "h1",
+              name: "시티 센터 호텔",
+              description: "도심에 위치한 편리한 호텔입니다.",
+            },
+          },
+          2: {
+            places: [
+              {
+                id: "a2",
+                name: `${cityNames[destination] || destination} 주요 관광지 2`,
+                type: "attraction",
+                time: "09:30",
+                description: "이 도시의 또 다른 주요 관광 명소입니다.",
+              },
+              {
+                id: "c1",
+                name: "로컬 카페",
+                type: "cafe",
+                time: "15:00",
+                description: "현지인들이 즐겨찾는 카페입니다.",
+              },
+            ],
+            accommodation: {
+              id: "h1",
+              name: "시티 센터 호텔",
+              description: "도심에 위치한 편리한 호텔입니다.",
+            },
+          },
+          3: {
+            places: [
+              {
+                id: "a3",
+                name: `${cityNames[destination] || destination} 주요 관광지 3`,
+                type: "attraction",
+                time: "10:00",
+                description: "이 도시의 또 다른 주요 관광 명소입니다.",
+              },
+            ],
+            accommodation: {
+              id: "h2",
+              name: "리조트 호텔",
+              description: "휴양지에 위치한 고급 호텔입니다.",
+            },
+          },
+        }
+        setItinerary(basicItinerary);
+      }
+
+      setIsLoading(false);
       setIsGenerated(true);
-    }, 2000);
+    }, 1500);
+  }, [destination, isAiMode, isGenerated]);
+
+  const removePlaceFromItinerary = (day, placeId) => {
+    setItinerary((prev) => {
+      const updatedDay = { ...prev[day] };
+      updatedDay.places = updatedDay.places.filter(
+        (place) => place.id !== placeId
+      );
+      return { ...prev, [day]: updatedDay };
+    });
+  };
+
+  const changeAccommodation = (day) => {
+    const accommodations = [
+      {
+        id: "h1",
+        name: "시티 센터 호텔",
+        description: "도심에 위치한 편리한 호텔입니다.",
+      },
+      {
+        id: "h2",
+        name: "리조트 호텔",
+        description: "휴양지에 위치한 고급 호텔입니다.",
+      },
+      {
+        id: "h3",
+        name: "부티크 호텔",
+        description: "독특한 디자인의 부티크 호텔입니다.",
+      },
+    ];
+
+    const currentId = itinerary[day]?.accommodation?.id;
+    const newAccommodation =
+      accommodations.find((acc) => acc.id !== currentId) || accommodations[0];
+
+    setItinerary((prev) => {
+      const updatedDay = { ...prev[day] };
+      updatedDay.accommodation = newAccommodation;
+      return { ...prev, [day]: updatedDay };
+    });
   };
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white p-6 shadow-md">
-        <div className="mb-6">
-          <h2 className="mb-2 text-center text-2xl font-bold text-traveling-text">
-            일정 생성
-          </h2>
-          <p className="text-center text-sm text-traveling-text/70">
-            {city.name} 여행 일정이 생성되었습니다.
-          </p>
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-traveling-purple border-t-transparent"></div>
+          <span className="ml-3 text-lg">일정을 생성하는 중입니다...</span>
         </div>
-
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-traveling-text">
-              {city.name}
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold">
+              {isAiMode ? "AI 추천 일정" : "나의 여행 일정"}:{" "}
+              {cityNames[destination] || destination}
             </h3>
-            <p className="text-sm text-traveling-text/70">{city.dates}</p>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? (
+                  <>
+                    <Check className="mr-1 h-4 w-4" />
+                    <span>완료</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit className="mr-1 h-4 w-4" />
+                    <span>일정 수정</span>
+                  </>
+                )}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFlightModalOpen(true)}
+              >
+                <Plane className="mr-1 h-4 w-4" />
+                <span>항공편 추가</span>
+              </Button>
+            </div>
           </div>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              className="border-traveling-text/30 text-traveling-text"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              저장
-            </Button>
-            <Button
-              variant="outline"
-              className="border-traveling-text/30 text-traveling-text"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              공유
-            </Button>
-          </div>
-        </div>
 
-        <div className="relative">
-          <div className="absolute left-8 top-0 h-full w-0.5 bg-traveling-purple/20"></div>
-
-          <div className="space-y-8">
-            {city.itinerary.map((day, dayIndex) => (
-              <div key={dayIndex} className="relative">
-                <div className="mb-4 flex items-center">
-                  <div className="absolute -left-2 flex h-10 w-10 items-center justify-center rounded-full bg-traveling-purple text-white">
-                    {dayIndex + 1}
-                  </div>
-                  <div className="ml-12">
-                    <h3 className="text-lg font-bold text-traveling-text">
-                      {day.day}
-                    </h3>
-                    <p className="text-sm text-traveling-text/70">{day.date}</p>
-                  </div>
-                </div>
-
-                <div className="ml-12 space-y-4">
-                  {day.places.map((place, placeIndex) => (
-                    <Card
-                      key={placeIndex}
-                      className="overflow-hidden border border-traveling-text/10"
-                    >
-                      <div className="flex flex-col md:flex-row">
-                        <div className="relative h-24 w-full md:h-auto md:w-1/5">
-                          <img
-                            src={place.image || '/placeholder.svg'}
-                            alt={place.name}
-                            className="object-cover w-full h-full"
-                          />
-                        </div>
-                        <CardContent className="flex flex-1 flex-col p-4">
-                          <div className="mb-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-bold text-traveling-text">
-                                {place.name}
-                              </h4>
-                              <div className="flex items-center text-sm text-traveling-text/70">
-                                <Clock className="mr-1 h-4 w-4" />
-                                {place.time}
-                              </div>
-                            </div>
-                            <p className="flex items-center text-sm text-traveling-text/70">
-                              <MapPin className="mr-1 h-4 w-4" />
-                              {place.category}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(itinerary).map((day) => (
+              <Button
+                key={day}
+                variant={
+                  selectedDay === Number.parseInt(day) ? "default" : "outline"
+                }
+                className={`${
+                  selectedDay === Number.parseInt(day)
+                    ? "bg-traveling-purple text-white"
+                    : "bg-white"
+                }`}
+                onClick={() => setSelectedDay(Number.parseInt(day))}
+              >
+                {day}일차
+              </Button>
             ))}
           </div>
-        </div>
 
-        <div className="mt-8 flex justify-end">
-          <Link to="/">
-            <Button className="bg-traveling-purple text-white hover:bg-traveling-purple/90">
-              완료
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-      </Card>
+          <div className="grid gap-6 md:grid-cols-5">
+            <Card className="md:col-span-2">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">지도</h4>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Map className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="relative h-[400px] bg-gray-100 rounded-md flex items-center justify-center">
+                  <p className="text-gray-500">
+                    지도 영역 (실제 구현 시 Google Maps 등 연동)
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-3">
+              <CardContent className="p-4">
+                <h4 className="font-medium mb-4">{selectedDay}일차 일정</h4>
+
+                {itinerary[selectedDay]?.places.length === 0 ? (
+                  <p className="text-center text-gray-500">
+                    이 날의 일정이 비어있습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {itinerary[selectedDay]?.places.map((place, index) => (
+                      <div key={place.id} className="rounded-lg border p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-traveling-purple/10">
+                              {place.type === "attraction" && (
+                                <Camera className="h-4 w-4 text-traveling-purple" />
+                              )}
+                              {place.type === "restaurant" && (
+                                <Utensils className="h-4 w-4 text-traveling-purple" />
+                              )}
+                              {place.type === "cafe" && (
+                                <Coffee className="h-4 w-4 text-traveling-purple" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center">
+                                <p className="font-medium">{place.name}</p>
+                                <span className="ml-2 text-xs text-gray-500">
+                                  {place.time}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                {place.type === "attraction" && "관광지"}
+                                {place.type === "restaurant" && "식당"}
+                                {place.type === "cafe" && "카페"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {isEditing && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                removePlaceFromItinerary(selectedDay, place.id)
+                              }
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <p className="mt-2 text-sm text-gray-600">
+                          {place.description}
+                        </p>
+
+                        {index <
+                          itinerary[selectedDay]?.places.length - 1 && (
+                          <div className="mt-2 flex items-center">
+                            <div className="ml-4 h-6 border-l-2 border-dashed border-gray-300"></div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {itinerary[selectedDay]?.accommodation && (
+                      <div className="rounded-lg border p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-traveling-purple/10">
+                              <Hotel className="h-4 w-4 text-traveling-purple" />
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {itinerary[selectedDay].accommodation.name}
+                              </p>
+                              <p className="text-xs text-gray-500">숙소</p>
+                            </div>
+                          </div>
+
+                          {isEditing && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => changeAccommodation(selectedDay)}
+                              className="h-8 p-2"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              <span className="text-xs">변경</span>
+                            </Button>
+                          )}
+                        </div>
+
+                        <p className="mt-2 text-sm text-gray-600">
+                          {itinerary[selectedDay].accommodation.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-end">
+            <Button className="bg-traveling-purple">여행 일정 저장하기</Button>
+          </div>
+        </>
+      )}
+
+      <FlightModal
+        isOpen={isFlightModalOpen}
+        onClose={() => setIsFlightModalOpen(false)}
+      />
     </div>
   );
 }
+
+export default ItineraryGeneration;

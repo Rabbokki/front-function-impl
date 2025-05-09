@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar"; 
-import { AttractionSelection } from "../../../components/travel-planner/Attraction-selection";
+import  AttractionSelection  from "../../../components/travel-planner/Attraction-selection";
 import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
 
 

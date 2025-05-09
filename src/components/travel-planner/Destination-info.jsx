@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Brain } from "lucide-react";
@@ -160,6 +161,8 @@ export function DestinationInfo({ destination }) {
   const defaultCityKey = "osaka";
   const city = cityData[destination] ?? cityData[defaultCityKey];
 
+  const navigate = useNavigate();
+
   if (!city) {
     return (
       <div className="text-red-600 font-bold p-4">
@@ -260,16 +263,20 @@ export function DestinationInfo({ destination }) {
             나의 여행 만들기
           </Button>
           <Button
-            className={`flex h-24 flex-col items-center justify-center gap-2 text-lg ${
-              plannerType === "ai"
-                ? "bg-traveling-purple text-white"
-                : "bg-traveling-background text-traveling-text hover:bg-traveling-purple/20"
-            }`}
-            onClick={() => setPlannerType("ai")}
-          >
-            <Brain className="h-6 w-6" />
-            AI 추천 일정 만들기
-          </Button>
+  className={`flex h-24 flex-col items-center justify-center gap-2 text-lg ${
+    plannerType === "ai"
+      ? "bg-traveling-purple text-white"
+      : "bg-traveling-background text-traveling-text hover:bg-traveling-purple/20"
+  }`}
+  onClick={() => {
+    setPlannerType("ai");
+    
+  }}
+>
+  <Brain className="h-6 w-6" />
+  AI 추천 일정 만들기
+</Button>
+
         </div>
 
         <div className="mt-8">
@@ -321,8 +328,19 @@ export function DestinationInfo({ destination }) {
           </div>
 
           <div className="mt-8 flex justify-end">
-            <Link to={selectedDates.length > 0 ? `/travel-planner/${destination}/${plannerType === "manual" ? "step2" : "ai-planner"}` : "#"}>
-              <Button className="bg-traveling-purple text-white hover:bg-traveling-purple/90" disabled={selectedDates.length === 0}>
+            <Link 
+              to={
+              selectedDates.length > 0 
+              ? plannerType === "manual"
+               ? `/travel-planner/${destination}/step2` 
+              : `/ai-planner/${destination}` 
+              : "#"
+            }
+              >
+              <Button
+               className="bg-traveling-purple text-white hover:bg-traveling-purple/90" 
+               disabled={selectedDates.length === 0}
+               >
                 다음 단계로
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

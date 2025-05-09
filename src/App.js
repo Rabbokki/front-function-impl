@@ -17,8 +17,8 @@ import WritePage from './pages/community/write/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
-import {AIPlannerPage} from "./pages/travel-planner/destination/Ai-planner";
-import AIPlannerContent from "./components/travel-planner/Ai-planner-content";
+import AIPlannerPage from "./pages/travel-planner/destination/AIPlannerPage";
+import {AIPlannerContent} from "./components/travel-planner/AIPlannerContent";
 import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
@@ -40,7 +40,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
-          <Route path="/ai-planner" element={<AIPlannerContent />} />
+          <Route path="/ai-planner/:destination" element={<AIPlannerPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/community/write" element={<WritePage />} />
           <Route

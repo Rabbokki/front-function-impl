@@ -1,20 +1,18 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Brain, Loader2 } from "lucide-react";
-import { Button } from "../../modules/Button";
+import React, { useState } from "react";
+// import { Brain, Loader2 } from "lucide-react";
+
+// 기본 UI 컴포넌트들 (shadcn 등 사용하지 않을 경우엔 별도 구현 또는 대체 필요)
 import { Card } from "../../modules/Card";
+import { Button } from "../../modules/Button";
 import { Textarea } from "../../modules/Textarea";
 import { Slider } from "../../modules/Slider";
 
-export function AIPlannerContent() {
-  const { destination } = useParams();
-  const navigate = useNavigate();
+export function AIPlannerContent({ destination }) {
   const [preferences, setPreferences] = useState("");
-  const [budget, setBudget] = useState([50]); // 예산 범위 (1-100)
-  const [pace, setPace] = useState([50]); // 여행 페이스 (1-100)
+  const [budget, setBudget] = useState([50]);
+  const [pace, setPace] = useState([50]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // 도시별 데이터
   const cityData = {
     osaka: { name: "오사카", nameEn: "OSAKA", country: "일본" },
     tokyo: { name: "도쿄", nameEn: "TOKYO", country: "일본" },
@@ -26,13 +24,15 @@ export function AIPlannerContent() {
     singapore: { name: "싱가포르", nameEn: "SINGAPORE", country: "싱가포르" },
   };
 
-  const city = cityData[destination] || cityData["osaka"];
+  // ✅ 문자열 정리
+  const cleanedDestination = destination?.toLowerCase().trim();
+  const city = cityData[cleanedDestination] || cityData.osaka;
 
   const handleGenerateItinerary = () => {
     setIsGenerating(true);
     setTimeout(() => {
       setIsGenerating(false);
-      navigate(`/travel-planner/${destination}/step5`);
+      window.location.href = `/travel-planner/${cleanedDestination}/step5`;
     }, 3000);
   };
 
@@ -49,11 +49,12 @@ export function AIPlannerContent() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
+          {/* 왼쪽 입력 폼 */}
           <div>
             <div className="mb-6">
               <h3 className="mb-2 text-lg font-medium text-traveling-text">여행 선호도</h3>
               <Textarea
-                placeholder="여행 스타일, 관심사, 음식 취향 등을 자유롭게 입력해주세요. 예: '역사 유적지 방문을 좋아하고, 현지 음식 체험을 선호합니다. 쇼핑보다는 자연 경관을 즐기고 싶어요.'"
+                placeholder="예: 역사 유적지를 좋아하고, 자연 경관을 즐깁니다."
                 className="min-h-[150px] bg-traveling-background border-traveling-text/30"
                 value={preferences}
                 onChange={(e) => setPreferences(e.target.value)}
@@ -91,18 +92,19 @@ export function AIPlannerContent() {
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {/* <Loader2 className="mr-2 h-4 w-4 animate-spin" /> */}
                   일정 생성 중...
                 </>
               ) : (
                 <>
-                  <Brain className="mr-2 h-4 w-4" />
+                  {/* <Brain className="mr-2 h-4 w-4" /> */}
                   AI 일정 생성하기
                 </>
               )}
             </Button>
           </div>
 
+          {/* 오른쪽 예시 일정 */}
           <div className="rounded-lg bg-traveling-background/30 p-6">
             <h3 className="mb-4 text-lg font-medium text-traveling-text">AI 추천 일정 예시</h3>
             <div className="space-y-4">

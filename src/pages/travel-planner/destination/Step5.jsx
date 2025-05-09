@@ -1,7 +1,7 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { NavBar } from "../../../components/Nav-bar";
-import { ItineraryGeneration } from "../../../components/travel-planner/Itinerary-generation";
+import  ItineraryGeneration  from "../../../components/travel-planner/Itinerary-generation";
 import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
 
 
