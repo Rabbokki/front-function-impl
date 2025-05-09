@@ -22,7 +22,9 @@ export function CommunityPostDetail({ postId }) {
   const { post, loading } = useSelector((state) => state.posts);
   const { like } = useSelector((state) => state.likes);
   const { comments, loading: commentLoading, error: commentError } = useSelector((state) => state.comments);
-
+  useEffect(() => {
+  console.log("💬 댓글 목록 상태:", comments);
+  }, [comments]);
   const isOwner = currentUser && post && post.userId === currentUser.id;
 
   const [localPost, setLocalPost] = useState(null);
@@ -61,8 +63,10 @@ export function CommunityPostDetail({ postId }) {
   
     try {
       dispatch(createComment({ postId, data: uploadComment })).then((res) => {
+        console.log("댓글 작성 응답:", res);
         if (res.meta.requestStatus === 'fulfilled') {
           setNewComment(""); // Clear the textarea
+          dispatch(getCommentsByPostId(postId));
         }
       });
     } catch (err) {
@@ -274,7 +278,6 @@ export function CommunityPostDetail({ postId }) {
                 <div className="flex items-center">
                   <Avatar className="mr-2 h-6 w-6">
                     <AvatarImage src={comment.authorImage || "/placeholder.svg"} />
-                    <AvatarFallback>익</AvatarFallback>
                   </Avatar>
                   <span className="mr-2 font-medium text-[#1e3a8a]">{comment.author || "익명"}</span>
                   <span className="text-xs text-[#868e96]">{comment.date || "방금 전"}</span>
