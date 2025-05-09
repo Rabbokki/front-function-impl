@@ -51,13 +51,13 @@ export const getPostById = createAsyncThunk('post/getById', async (id, thunkAPI)
 // 게시글 수정
 export const updatePost = createAsyncThunk(
   'post/update',
-  async ({ id, dto, postImg }, thunkAPI) => {
+  async ({ postId, formData }, thunkAPI) => {
+    console.log("postId:", postId)
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
     try {
-      const formData = new FormData();
-      formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
-      postImg?.forEach((file) => formData.append('postImg', file));
-
-      const response = await axiosInstance.patch(`${API_BASE_URL}/update/${id}`, formData, {
+      const response = await axiosInstance.patch(`${API_BASE_URL}/update/${postId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });

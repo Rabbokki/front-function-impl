@@ -24,6 +24,10 @@ const postSlice = createSlice({
       state.success = false;
       state.error = null;
     },
+    // If you want to add a post manually to the posts list, you can use this action.
+    addPostToList(state, action) {
+      state.posts.unshift(action.payload); // Adds the post at the beginning of the list
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -33,7 +37,7 @@ const postSlice = createSlice({
       })
       .addCase(getAllPosts.fulfilled, (state, action) => {
         state.loading = false;
-        state.posts = action.payload;
+        state.posts = action.payload; // Stores the list of posts
       })
       .addCase(getAllPosts.rejected, (state, action) => {
         state.loading = false;
@@ -47,6 +51,9 @@ const postSlice = createSlice({
       .addCase(getPostById.fulfilled, (state, action) => {
         state.loading = false;
         state.post = action.payload;
+        if (!state.posts.some(post => post.id === action.payload.id)) {
+          state.posts.unshift(action.payload);
+        }
       })
       .addCase(getPostById.rejected, (state, action) => {
         state.loading = false;
@@ -61,7 +68,7 @@ const postSlice = createSlice({
       .addCase(createPost.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        state.posts.unshift(action.payload); // 리스트에 바로 추가
+        state.posts.unshift(action.payload); // Adds the newly created post to the top of the list
       })
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
@@ -76,10 +83,13 @@ const postSlice = createSlice({
       .addCase(updatePost.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        // 수정된 게시글을 기존 게시글 목록에 반영
+        // Updates the post in the posts list
         state.posts = state.posts.map(post => 
           post.id === action.payload.id ? action.payload : post
         );
+        if (state.post && state.post.id === action.payload.id) {
+          state.post = action.payload; // Updates the single post if it's being viewed
+        }
       })
       .addCase(updatePost.rejected, (state, action) => {
         state.loading = false;
@@ -93,7 +103,10 @@ const postSlice = createSlice({
       .addCase(deletePost.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        state.posts = state.posts.filter((p) => p.id !== action.payload);
+        state.posts = state.posts.filter((p) => p.id !== action.payload); // Remove post from list
+        if (state.post && state.post.id === action.payload) {
+          state.post = null; // If the deleted post was the one being viewed, clear it
+        }
       })
       .addCase(deletePost.rejected, (state, action) => {
         state.loading = false;
@@ -102,6 +115,6 @@ const postSlice = createSlice({
   },
 });
 
-export const { clearPostState } = postSlice.actions;
+export const { clearPostState, addPostToList } = postSlice.actions;
 
 export default postSlice.reducer;

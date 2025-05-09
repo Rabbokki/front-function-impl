@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
-import { getPostById } from '../hooks/reducer/post/postThunk';
+import { getAccountDetails } from '../hooks/reducer/account/accountThunk';
+import { getPostById, deletePost } from '../hooks/reducer/post/postThunk';
 import { addLike, removeLike, getLikeStatus } from '../hooks/reducer/like/likeThunk';
 import { getCommentsByPostId, createComment } from '../hooks/reducer/comment/commentThunk';
 import {
@@ -22,7 +23,7 @@ export function CommunityPostDetail({ postId }) {
   const { like } = useSelector((state) => state.likes);
   const { comments, loading: commentLoading, error: commentError } = useSelector((state) => state.comments);
 
-  const isOwner = currentUser && post.accountId === currentUser.id;
+  const isOwner = currentUser && post && post.userId === currentUser.id;
 
   const [localPost, setLocalPost] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -50,8 +51,16 @@ export function CommunityPostDetail({ postId }) {
   // 댓글 작성
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
+
+    const formData = new FormData();
+
+    const uploadComment = {
+      content: newComment ?? '',
+      likeCount: 0
+    }
+  
     try {
-      dispatch(createComment({ postId, content: newComment })).then((res) => {
+      dispatch(createComment({ postId, data: uploadComment })).then((res) => {
         if (res.meta.requestStatus === 'fulfilled') {
           setNewComment(""); // Clear the textarea
         }
@@ -61,7 +70,7 @@ export function CommunityPostDetail({ postId }) {
     }
   };
 
-  // 좋아요 처리 (Optimistic Update)
+  // 좋아요 처리
   const handleLike = () => {
     if (!localPost) return;
 
@@ -100,6 +109,24 @@ export function CommunityPostDetail({ postId }) {
     }
   };
 
+  // 삭제 처리
+  const handleDelete = () => {
+    if (!window.confirm('정말 삭제 하겠습니가?')) return;
+
+    dispatch(deletePost(postId))
+      .then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          console.log("삭제 성공 했습니다.");
+          navigate("/community");
+        } else {
+          console.error("삭제 실패 했습니다");
+        }
+      })
+      .catch((error) => {
+        console.error("삭제 실패:", error);
+      });
+  };
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -130,17 +157,20 @@ export function CommunityPostDetail({ postId }) {
         <div className="ml-auto flex space-x-2">
           {isOwner ? (
             <div className="flex gap-2">
+              <Link to="/community/write">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-[#4dabf7] text-white"
+                >
+                  수정
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"
                 className="bg-[#4dabf7] text-white"
-              >
-                수정
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-[#4dabf7] text-white"
+                onClick={handleDelete}
               >
                 삭제
               </Button>

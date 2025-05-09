@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';  // Import useSelector
 import { useNavigate } from 'react-router-dom';
 
-import { createPost } from '../hooks/reducer/post/postThunk';
+import { createPost, updatePost, getPostById } from '../hooks/reducer/post/postThunk';
 
 import { Button } from '../../src/modules/Button';
 import { Input } from '../../src/modules/Input';
@@ -18,17 +18,37 @@ import { Card } from '../../src/modules/Card';
 
 import { X, ImageIcon } from 'lucide-react';
 
-export function WritePostForm() {
+export function WritePostForm({ postId }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [postTitle, setPostTitle] = useState('');
-  const [postContent, setPostContent] = useState('');
-  const [postCategory, setPostCategory] = useState('tips');
-  const [postTags, setPostTags] = useState('');
-  const [images, setImages] = useState([]);
+  // Use useSelector to get the post from the Redux store
+  const existingPost = useSelector(state => state.posts.post);
+  const isEditMode = Boolean(existingPost);
+
+  const [postTitle, setPostTitle] = useState(existingPost?.title || '');
+  const [postContent, setPostContent] = useState(existingPost?.content || '');
+  const [postCategory, setPostCategory] = useState(existingPost?.category?.toLowerCase() || 'tips');
+  const [postTags, setPostTags] = useState(existingPost?.tags?.join(', ') || '');
+  const [images, setImages] = useState(
+    existingPost?.imgUrl?.map((url) => ({
+      id: Date.now() + Math.random(),
+      file: null,
+      preview: url,
+    })) || []
+  );
   const [isDragging, setIsDragging] = useState(false);
 
+  useEffect(() => {
+    console.log("existing post:", existingPost)
+  }, [existingPost]);
+
+  // Fetch post data when postId is provided and the post is not already loaded
+  useEffect(() => {
+    if (postId && !existingPost) {
+      dispatch(getPostById(postId));  // Fetch the post if it's not in Redux already
+    }
+  }, [dispatch, postId, existingPost]);
 
   const handleImageUpload = (e) => {
     if (e.target.files) {
@@ -75,40 +95,43 @@ export function WritePostForm() {
     e.preventDefault();
 
     const formData = new FormData();
-    images.forEach(image => {
-      formData.append("postImg", image.file)
-    })
+    images.forEach((image) => {
+      if (image.file) {
+        formData.append("postImg", image.file);
+      }
+    });
 
-    const newPost = {
+    const dto = {
       title: postTitle ?? '',
       content: postContent ?? '',
       category: postCategory?.toUpperCase() ?? '',
-      tags: postTags ? postTags.split(',').map(tag => tag.trim()) : [],
-      imgUrl: images.length > 0 ? images.map(image => image.file.name) : []
+      tags: postTags ? postTags.split(',').map((tag) => tag.trim()) : [],
+      imgUrl: images
+        .filter((image) => !image.file && image.preview)
+        .map((image) => image.preview),
     };
-    console.log("Final DTO:", JSON.stringify(newPost, null, 2));
 
-    formData.append("dto", new Blob([JSON.stringify(newPost)], {type: "application/json"}))
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
+    formData.append("dto", new Blob([JSON.stringify(dto)], { type: "application/json" }));
 
     try {
-      const result = await dispatch(createPost(formData)).unwrap();
-      console.log("성공: ", result)
-      alert('게시글이 등록되었습니다!');
-      navigate('/community'); // 성공하면 커뮤니티 페이지로 이동
+      if (isEditMode) {
+        console.log("existingPostId:", existingPost.id)
+        const result = await dispatch(updatePost({ postId: existingPost.id, formData })).unwrap();
+        alert('게시글이 수정되었습니다!');
+      } else {
+        const result = await dispatch(createPost(formData)).unwrap();
+        alert('게시글이 등록되었습니다!');
+      }
+      navigate('/community');
     } catch (error) {
-      console.error('게시글이 등록 실패:', error);
-      alert('게시글이 등록 실패: ' + error);
+      console.error('게시글 처리 실패:', error);
+      alert('게시글 처리 실패: ' + error);
     }
   };
 
-  
   const handleCancel = () => {
-    // eslint-disable-next-line no-restricted-globals
-    if (confirm('작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?')) {
-      navigate('/community'); // ← 이전 페이지로 이동
+    if (window.confirm('작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?')) {
+      navigate('/community');
     }
   };
 
@@ -250,3 +273,22 @@ export function WritePostForm() {
     </form>
   );
 }
+
+// export const createPost = createAsyncThunk(
+//   'post/create',
+//   async (formData, thunkAPI) => {
+//     try {
+//       // Send the already built FormData directly to the backend
+//       const response = await axiosInstance.post(`${API_BASE_URL}/create`, formData, {
+//         headers: { 'Content-Type': 'multipart/form-data' },
+//         withCredentials: true,
+//       });
+
+//       console.log("response.data from postThunk.js: ", response.data);
+//       return response.data;
+//     } catch (error) {
+//       const errorMessage = error.response?.data?.error || '게시글 생성 실패';
+//       return thunkAPI.rejectWithValue(errorMessage);
+//     }
+//   }
+// );
