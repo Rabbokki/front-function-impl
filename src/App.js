@@ -16,6 +16,7 @@ import CommunityPostPage from './pages/community/post/[id]/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
+import ProfileEditPage from './pages/mypage/profile-edit/Page';
 import FlightSearchPage from "./pages/flight-search/Page";
 import FlightDetailPage from "./pages/flight-search/[id]/Page.jsx";
 import FlightSearchContent from "./components/flight-search/Flight-search-content";
