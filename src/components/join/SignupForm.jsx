@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Calendar } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Calendar, Camera } from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Input } from '../../modules/Input';
 import { Label } from '../../modules/Label';
@@ -39,6 +39,17 @@ export function SignupForm() {
   const [bio, setBio] = useState('');
   const [gender, setGender] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+
+
+   const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,25 +91,30 @@ export function SignupForm() {
       ? birthDate.toISOString().split('T')[0]
       : null;
 
-      const signupData = new FormData();
-      signupData.append('request', new Blob(
-        [JSON.stringify({
-          email,
-          name,
-          nickname,
-          birthday: formattedBirthDate,
-          password,
-          gender,
-          bio,
-          agreeTerms,
-          agreeMarketing,
-        })],
-        { type: "application/json" }
-      ));
-      if (profileImage) {
-        signupData.append('profileImage', profileImage);
-      }
-      
+    const signupData = new FormData();
+    signupData.append(
+      'request',
+      new Blob(
+        [
+          JSON.stringify({
+            email,
+            name,
+            nickname,
+            birthday: formattedBirthDate,
+            password,
+            gender,
+            bio,
+            agreeTerms,
+            agreeMarketing,
+          }),
+        ],
+        { type: 'application/json' }
+      )
+    );
+    if (profileImage) {
+      signupData.append('profileImage', profileImage);
+    }
+
     try {
       await dispatch(registerAccount(signupData)).unwrap();
       alert('회원가입 성공!');
@@ -124,7 +140,7 @@ export function SignupForm() {
         </p>
       </div>
 
-      {/* SVG 생략 없이 그대로 유지 */}
+      {/* SVG 생략 없이 그대로 유지
       <div className="relative mb-8 flex justify-center">
         <div className="relative h-64 w-64">
           <svg viewBox="0 0 200 200" className="h-full w-full">
@@ -203,25 +219,39 @@ export function SignupForm() {
             />
           </svg>
         </div>
-      </div>
+      </div> */}
 
       <Card className="bg-white p-6 shadow-md">
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label
-              htmlFor="profileImage"
-              className="mb-2 block text-traveling-text"
-            >
-              프로필 이미지
-            </Label>
-            <input
-              type="file"
-              id="profileImage"
-              accept="image/*"
-              className="w-full text-sm text-traveling-text/70"
-              onChange={(e) => setProfileImage(e.target.files[0])}
-            />
+          <div className="flex flex-col items-center space-y-2 mb-6">
+            <div className="relative h-28 w-28 rounded-full border-4 border-[#4dabf7] bg-[#e7f5ff] overflow-hidden">
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="프로필 미리보기"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-[#1e3a8a] text-sm">
+                  프로필 미리보기
+                </span>
+              )}
+              <label htmlFor="profileImageUpload">
+                <div className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#4dabf7] hover:bg-[#339af0] cursor-pointer">
+                  <Camera className="h-4 w-4 text-white" />
+                </div>
+              </label>
+              <input
+                id="profileImageUpload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </div>
+            <p className="text-sm text-[#495057]">프로필 이미지를 선택하세요</p>
           </div>
+
           {/* 이메일 */}
           <div className="mb-4">
             <Label htmlFor="email" className="mb-2 block text-traveling-text">

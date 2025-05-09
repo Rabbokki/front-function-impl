@@ -13,9 +13,9 @@ import { Label } from '../modules/Label';
 import { Input } from '../modules/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../modules/Tabs';
 import { Separator } from '../modules/Separator';
-import { toast } from '../hooks/Use-toast';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import { toast } from 'react-toastify';
 
 export function SettingsContent() {
   const navigate = useNavigate();
@@ -31,6 +31,13 @@ export function SettingsContent() {
     updates: true,
   });
 
+  const handleToggleNotification = (key) => {
+    setNotifications((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   const handleSaveSettings = () => {
     toast({ title: '설정 저장됨', description: '변경사항이 저장되었습니다.' });
     setTimeout(() => {
@@ -40,20 +47,12 @@ export function SettingsContent() {
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({
-        title: '오류',
-        description: '모든 비밀번호 필드를 입력해주세요.',
-        variant: 'destructive',
-      });
+      toast.error('모든 비밀번호 필드를 입력해주세요.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast({
-        title: '오류',
-        description: '새 비밀번호와 확인이 일치하지 않습니다.',
-        variant: 'destructive',
-      });
+      toast.error('새 비밀번호와 확인이 일치하지 않습니다.');
       return;
     }
 
@@ -63,36 +62,55 @@ export function SettingsContent() {
         newPassword,
       });
 
-      toast({
-        title: '비밀번호가 변경되었습니다',
-        description: '다시 로그인해주세요.',
-      });
+      toast.success('비밀번호가 성공적으로 변경되었습니다!');
 
-      localStorage.removeItem('accessToken'); // 또는 쿠키 제거
+      localStorage.removeItem('accessToken');
       setTimeout(() => {
         navigate('/login');
-      }, 1500);
+      }, 2000); // 2초 후 로그인 페이지 이동
 
       // 입력값 초기화
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      toast({
-        title: '비밀번호 변경 실패',
-        description:
-          error.response?.data ||
-          '현재 비밀번호가 틀렸거나 오류가 발생했습니다.',
-        variant: 'destructive',
-      });
+      const raw = error?.response?.data;
+      const errorMessage =
+        typeof raw === 'string'
+          ? raw
+          : raw?.message || '현재 비밀번호가 틀렸거나 오류가 발생했습니다.';
+
+      toast.error(errorMessage);
     }
   };
 
-  const handleToggleNotification = (key) => {
-    setNotifications((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  // SettingsContent.jsx
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        '정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await axiosInstance.delete('/api/accounts');
+
+      toast.success('계정이 성공적으로 삭제되었습니다!');
+
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || '계정 삭제 중 오류가 발생했습니다.';
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -208,7 +226,10 @@ export function SettingsContent() {
                   계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 이 작업은
                   되돌릴 수 없습니다.
                 </p>
-                <Button variant="destructive" className="mt-3">
+                <Button
+                  onClick={handleDeleteAccount}
+                  className="mt-3 bg-red-600 text-white hover:bg-red-700"
+                >
                   계정 삭제
                 </Button>
               </div>
@@ -284,10 +305,7 @@ export function SettingsContent() {
             </CardContent>
           </Card>
           <div className="flex justify-end space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/mypage')} 
-            >
+            <Button variant="outline" onClick={() => navigate('/mypage')}>
               취소
             </Button>
             <Button

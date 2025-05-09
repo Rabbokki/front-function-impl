@@ -1,17 +1,28 @@
-import { useState } from "react";
-import { Star, Upload, X, Hash } from "lucide-react";
-import { Button } from "../../modules/Button";
-import { Input } from "../../modules/Input";
-import { Textarea } from "../../modules/Textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../modules/Dialog";
+import { useState } from 'react';
+import { Star, Upload, X, Hash } from 'lucide-react';
+import { Button } from '../../modules/Button';
+import { Input } from '../../modules/Input';
+import { Textarea } from '../../modules/Textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../../modules/Dialog';
 
-export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트리", placeType = "관광지" }) {
+export function ReviewForm({
+  isOpen,
+  onClose,
+  placeName = '도쿄 스카이트리',
+  placeType = '관광지',
+}) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [summary, setSummary] = useState("");
-  const [review, setReview] = useState("");
+  const [summary, setSummary] = useState('');
+  const [review, setReview] = useState('');
   const [hashtags, setHashtags] = useState([]);
-  const [hashtagInput, setHashtagInput] = useState("");
+  const [hashtagInput, setHashtagInput] = useState('');
   const [photos, setPhotos] = useState([]);
 
   const handleRatingClick = (value) => setRating(value);
@@ -21,7 +32,7 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
   const handleAddHashtag = () => {
     if (hashtagInput.trim() && !hashtags.includes(hashtagInput.trim())) {
       setHashtags([...hashtags, hashtagInput.trim()]);
-      setHashtagInput("");
+      setHashtagInput('');
     }
   };
 
@@ -30,7 +41,11 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
   };
 
   const handleAddPhoto = () => {
-    const dummyPhotos = ["/tokyo-skytree-day.png", "/tokyo-skytree-observation-deck.png", "/tokyo-night-panorama.png"];
+    const dummyPhotos = [
+      '/tokyo-skytree-day.png',
+      '/tokyo-skytree-observation-deck.png',
+      '/tokyo-night-panorama.png',
+    ];
     if (photos.length < 3) {
       setPhotos([...photos, dummyPhotos[photos.length]]);
     }
@@ -47,7 +62,7 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="p-6 bg-white text-black shadow-xl rounded-lg">
         <DialogHeader>
           <DialogTitle>리뷰 작성하기</DialogTitle>
         </DialogHeader>
@@ -66,7 +81,9 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
                 <Star
                   key={value}
                   className={`h-8 w-8 cursor-pointer ${
-                    (hoverRating || rating) >= value ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                    (hoverRating || rating) >= value
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-gray-300'
                   }`}
                   onClick={() => handleRatingClick(value)}
                   onMouseEnter={() => handleRatingHover(value)}
@@ -108,7 +125,10 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
             <label className="text-sm font-medium">해시태그</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {hashtags.map((tag) => (
-                <div key={tag} className="flex items-center rounded-full bg-traveling-purple/10 px-3 py-1 text-sm">
+                <div
+                  key={tag}
+                  className="flex items-center rounded-full bg-traveling-purple/10 px-3 py-1 text-sm"
+                >
                   <Hash className="mr-1 h-3 w-3 text-traveling-purple" />
                   <span className="text-traveling-purple">{tag}</span>
                   <button
@@ -127,13 +147,18 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
                 value={hashtagInput}
                 onChange={(e) => setHashtagInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === 'Enter') {
                     e.preventDefault();
                     handleAddHashtag();
                   }
                 }}
               />
-              <Button type="button" variant="outline" onClick={handleAddHashtag} className="shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddHashtag}
+                className="shrink-0"
+              >
                 추가
               </Button>
             </div>
@@ -144,9 +169,12 @@ export function ReviewForm({ isOpen, onClose, placeName = "도쿄 스카이트�
             <label className="text-sm font-medium">사진 첨부 (최대 3장)</label>
             <div className="grid grid-cols-3 gap-2">
               {photos.map((photo, index) => (
-                <div key={index} className="relative h-24 rounded-md overflow-hidden">
+                <div
+                  key={index}
+                  className="relative h-24 rounded-md overflow-hidden"
+                >
                   <img
-                    src={photo || "/placeholder.svg"}
+                    src={photo || '/placeholder.svg'}
                     alt={`업로드한 사진 ${index + 1}`}
                     className="object-cover w-full h-full"
                   />

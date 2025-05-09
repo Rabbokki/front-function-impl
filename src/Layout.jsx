@@ -1,10 +1,15 @@
-import './globals.css';
+import { Outlet } from 'react-router-dom';
+import { NavBar } from './components/Nav-bar';
 
-export default function RootLayout({ children }) {
+function Layout() {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <>
+      <NavBar />
+      <main className="px-4 md:px-10 pt-4 pb-12">
+        <Outlet />
+      </main>
+    </>
   );
 }
 
+export default Layout;
