@@ -22,6 +22,8 @@ import FlightDetailPage from "./pages/flight-search/[id]/Page.jsx";
 import FlightSearchContent from "./components/flight-search/Flight-search-content";
 import FlightSearchHero from "./components/flight-search/Flight-search-hero";
 import FlightSearchResultsPage from "./pages/flight-search/results/Page.jsx";
+import AIPlannerPage from "./pages/travel-planner/destination/AIPlannerPage";
+import {AIPlannerContent} from "./components/travel-planner/AIPlannerContent";
 import { PrivateRoute } from './components/PrivateRoute';
 import { SettingsContent } from './modules/Settings-content';
 
@@ -65,9 +67,11 @@ function App() {
         <Route path="/travel-planner/:destination/step3" element={<Step3 />} />
         <Route path="/travel-planner/:destination/step4" element={<Step4 />} />
         <Route path="/travel-planner/:destination/step5" element={<Step5 />} />
+        <Route path="/ai-planner/:destination" element={<AIPlannerPage />} />
         <Route path="/not-found" element={<div>404 Not Found</div>} />
       </Routes>
     </BrowserRouter>
+
   );
 }
 

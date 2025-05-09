@@ -1,69 +1,31 @@
-import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '../../modules/Button';
-import { Card } from '../../modules/Card';
-import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "../../modules/Button";
+import { Card } from "../../modules/Card";
 
-export default function TransportationSelection({ destination }) {
+const TransportationSelection = ({ destination }) => {
   const [selectedTransportation, setSelectedTransportation] = useState(null);
-  const navigate = useNavigate(); // 내비게이션 훅 추가
+  const navigate = useNavigate();
 
-  // 도시별 데이터
   const cityData = {
-    osaka: {
-      name: '오사카',
-      nameEn: 'OSAKA',
-    },
-    tokyo: {
-      name: '도쿄',
-      nameEn: 'TOKYO',
-    },
-    fukuoka: {
-      name: '후쿠오카',
-      nameEn: 'FUKUOKA',
-    },
-    jeju: {
-      name: '제주',
-      nameEn: 'JEJU',
-    },
-    paris: {
-      name: '파리',
-      nameEn: 'PARIS',
-    },
-    rome: {
-      name: '로마',
-      nameEn: 'ROME',
-    },
-    venice: {
-      name: '베니스',
-      nameEn: 'VENICE',
-    },
-    bangkok: {
-      name: '방콕',
-      nameEn: 'BANGKOK',
-    },
-    singapore: {
-      name: '싱가포르',
-      nameEn: 'SINGAPORE',
-    },
+    osaka: { name: "오사카", nameEn: "OSAKA" },
+    tokyo: { name: "도쿄", nameEn: "TOKYO" },
+    fukuoka: { name: "후쿠오카", nameEn: "FUKUOKA" },
+    jeju: { name: "제주", nameEn: "JEJU" },
+    bangkok: { name: "방콕", nameEn: "BANGKOK" },
+    singapore: { name: "싱가포르", nameEn: "SINGAPORE" },
+    paris: { name: "파리", nameEn: "PARIS" },
+    rome: { name: "로마", nameEn: "ROME" },
+    venice: { name: "베니스", nameEn: "VENICE" },
   };
 
   const city = cityData[destination];
-
-  // 다음 단계로 이동 핸들러
-  const handleNext = () => {
-    if (selectedTransportation) {
-      navigate(`/travel-planner/${destination}/step5`);
-    }
-  };
 
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
         <div className="mb-6">
-          <h2 className="mb-2 text-center text-2xl font-bold text-traveling-text">
-            이동수단 선택
-          </h2>
+          <h2 className="mb-2 text-center text-2xl font-bold text-traveling-text">이동수단 선택</h2>
           <p className="text-center text-sm text-traveling-text/70">
             여행 시 이용하실 이동수단을 선택해주세요.
           </p>
@@ -78,11 +40,11 @@ export default function TransportationSelection({ destination }) {
             <div className="grid grid-cols-2 gap-4">
               <div
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-6 transition-all ${
-                  selectedTransportation === 'public'
-                    ? 'border-traveling-purple bg-traveling-purple/10'
-                    : 'border-gray-200 bg-white hover:border-traveling-purple/50'
+                  selectedTransportation === "public"
+                    ? "border-traveling-purple bg-traveling-purple/10"
+                    : "border-gray-200 bg-white hover:border-traveling-purple/50"
                 }`}
-                onClick={() => setSelectedTransportation('public')}
+                onClick={() => setSelectedTransportation("public")}
               >
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black text-white">
                   <svg
@@ -104,18 +66,16 @@ export default function TransportationSelection({ destination }) {
                     <rect width="18" height="16" x="3" y="4" rx="2" />
                   </svg>
                 </div>
-                <span className="font-medium text-traveling-text">
-                  대중교통
-                </span>
+                <span className="font-medium text-traveling-text">대중교통</span>
               </div>
 
               <div
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-6 transition-all ${
-                  selectedTransportation === 'car'
-                    ? 'border-traveling-purple bg-traveling-purple/10'
-                    : 'border-gray-200 bg-white hover:border-traveling-purple/50'
+                  selectedTransportation === "car"
+                    ? "border-traveling-purple bg-traveling-purple/10"
+                    : "border-gray-200 bg-white hover:border-traveling-purple/50"
                 }`}
-                onClick={() => setSelectedTransportation('car')}
+                onClick={() => setSelectedTransportation("car")}
               >
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-300 text-gray-600">
                   <svg
@@ -144,34 +104,22 @@ export default function TransportationSelection({ destination }) {
                 variant="outline"
                 className="border-traveling-text/30 text-traveling-text hover:bg-traveling-background"
               >
-                단기
+                닫기
               </Button>
-              <Button className="bg-traveling-purple text-white hover:bg-traveling-purple/90">
-                일정생성
-              </Button>
+              <Link to={selectedTransportation ? `/travel-planner/${destination}/step5` : "#"}>
+                <Button
+                  className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+                  disabled={!selectedTransportation}
+                >
+                  일정 생성
+                </Button>
+              </Link>
             </div>
           </div>
-        </div>
-
-        <div className="mt-8 flex justify-end">
-          <Link
-            to={
-              selectedTransportation
-                ? `/travel-planner/${destination}/step5`
-                : '#'
-            }
-          >
-            <Button
-              className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
-              disabled={!selectedTransportation}
-              onClick={handleNext} // 클릭 이벤트 추가
-            >
-              다음 단계로
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
         </div>
       </Card>
     </div>
   );
-}
+};
+
+export default TransportationSelection;

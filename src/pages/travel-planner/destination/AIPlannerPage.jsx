@@ -1,9 +1,12 @@
 import { useParams } from "react-router-dom";
 import { NavBar } from "../../../components/Nav-bar"
-import { AIPlannerContent } from "../../../components/travel-planner/Ai-planner-content";
+import { AIPlannerContent } from "../../../components/travel-planner/AIPlannerContent";
+
+
 
 export default function AIPlannerPage() {
   const { destination } = useParams();
+  
   return (
     <main className="min-h-screen bg-traveling-bg">
       <NavBar />
