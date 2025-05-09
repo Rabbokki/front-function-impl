@@ -101,7 +101,7 @@ export function AddToTripModal({ isOpen, onClose, placeName, placeType, placeLoc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="p-6 bg-white text-black rounded-lg shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-xl text-[#1e3a8a]">
             여행에 추가하기

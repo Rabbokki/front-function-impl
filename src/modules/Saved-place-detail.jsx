@@ -1,75 +1,59 @@
-import { useState } from "react";
-import Image from "next/image";
-import { MapPin, Clock, Star, ExternalLink, Calendar, Phone, Globe, Info } from "lucide-react";
-import { Dialog, DialogContent } from "./Dialog";
-import { Button } from "./Button";
-import { Badge } from "./Badge";
-import { Separator } from "./Separator";
-import { AddToTripModal } from "./Add-to-trip-modal";
-import { DirectionsModal } from "./Directions-modal";
+import { useState } from 'react';
+import Image from 'next/image';
+import {
+  MapPin,
+  Clock,
+  Star,
+  ExternalLink,
+  Calendar,
+  Phone,
+  Globe,
+  Info,
+} from 'lucide-react';
+import { Dialog, DialogContent } from './Dialog';
+import { Button } from './Button';
+import { Badge } from './Badge';
+import { Separator } from './Separator';
+import { AddToTripModal } from './Add-to-trip-modal';
+import { DirectionsModal } from './Directions-modal';
 
 // 장소 유형에 따른 이미지 및 색상 정의
 const placeTypeConfig = {
   명소: {
-    image: "/bustling-cityscape.png",
-    color: "#ff6b6b",
+    image: '/bustling-cityscape.png',
+    color: '#ff6b6b',
   },
   맛집: {
-    image: "/vibrant-pasta-dish.png",
-    color: "#ffd43b",
+    image: '/vibrant-pasta-dish.png',
+    color: '#ffd43b',
   },
   숙소: {
-    image: "/luxury-hotel-suite.png",
-    color: "#4dabf7",
+    image: '/luxury-hotel-suite.png',
+    color: '#4dabf7',
   },
   쇼핑: {
-    image: "/bustling-mall-interior.png",
-    color: "#51cf66",
+    image: '/bustling-mall-interior.png',
+    color: '#51cf66',
   },
   자연: {
-    image: "/mountain-valley-vista.png",
-    color: "#20c997",
+    image: '/mountain-valley-vista.png',
+    color: '#20c997',
   },
   문화: {
-    image: "/ancient-city-ruins.png",
-    color: "#9775fa",
+    image: '/ancient-city-ruins.png',
+    color: '#9775fa',
   },
 };
 
-// 상세 정보 데이터 타입 정의
-export interface SavedPlaceDetail {
-  id: number;
-  title: string;
-  type: string;
-  location: string;
-  address: string;
-  savedDate: string;
-  color: string;
-  description: string;
-  rating: number;
-  openingHours?: string;
-  contact?: string;
-  website?: string;
-  tags?: string[];
-  priceRange?: string;
-  images?: string[];
-}
-
-interface SavedPlaceDetailProps {
-  isOpen: boolean;
-  onClose: () => void;
-  place: SavedPlaceDetail | null;
-}
-
-export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailProps) {
+export function SavedPlaceDetail({ isOpen, onClose, place }) {
   const [isAddToTripModalOpen, setIsAddToTripModalOpen] = useState(false);
   const [isDirectionsModalOpen, setIsDirectionsModalOpen] = useState(false);
 
   if (!place) return null;
 
   const placeConfig = placeTypeConfig[place.type] || {
-    image: "/bustling-city-intersection.png",
-    color: "#adb5bd",
+    image: '/bustling-city-intersection.png',
+    color: '#adb5bd',
   };
 
   const handleAddToTrip = () => {
@@ -83,7 +67,7 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-white text-black shadow-xl rounded-lg">
           <div className="relative h-64 w-full">
             <Image
               src={place.images?.[0] || placeConfig.image}
@@ -98,7 +82,7 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                 className="mb-2"
                 style={{
                   backgroundColor: place.color,
-                  color: "#fff",
+                  color: '#fff',
                 }}
               >
                 {place.type}
@@ -119,14 +103,16 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                     key={i}
                     className={`h-5 w-5 ${
                       i < Math.floor(place.rating)
-                        ? "fill-[#ffd43b] text-[#ffd43b]"
+                        ? 'fill-[#ffd43b] text-[#ffd43b]'
                         : i < place.rating
-                        ? "fill-[#ffd43b] text-[#ffd43b] stroke-[#ffd43b]"
-                        : "text-[#dee2e6]"
+                        ? 'fill-[#ffd43b] text-[#ffd43b] stroke-[#ffd43b]'
+                        : 'text-[#dee2e6]'
                     }`}
                   />
                 ))}
-                <span className="ml-2 font-medium">{place.rating.toFixed(1)}</span>
+                <span className="ml-2 font-medium">
+                  {place.rating.toFixed(1)}
+                </span>
               </div>
               <div className="flex items-center text-sm text-[#495057]">
                 <Calendar className="h-4 w-4 mr-1 text-[#4dabf7]" />
@@ -151,7 +137,9 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                     <Clock className="h-5 w-5 mr-2 text-[#4dabf7] mt-0.5" />
                     <div>
                       <h4 className="font-medium text-[#1e3a8a]">영업시간</h4>
-                      <p className="text-sm text-[#495057]">{place.openingHours}</p>
+                      <p className="text-sm text-[#495057]">
+                        {place.openingHours}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -161,7 +149,9 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                     <Info className="h-5 w-5 mr-2 text-[#4dabf7] mt-0.5" />
                     <div>
                       <h4 className="font-medium text-[#1e3a8a]">가격대</h4>
-                      <p className="text-sm text-[#495057]">{place.priceRange}</p>
+                      <p className="text-sm text-[#495057]">
+                        {place.priceRange}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -189,7 +179,7 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                         rel="noopener noreferrer"
                         className="text-sm text-[#4dabf7] hover:underline flex items-center"
                       >
-                        {place.website.replace(/^https?:\/\//, "")}
+                        {place.website.replace(/^https?:\/\//, '')}
                         <ExternalLink className="h-3 w-3 ml-1" />
                       </a>
                     </div>
@@ -205,7 +195,10 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                   <h4 className="font-medium text-[#1e3a8a] mb-2">태그</h4>
                   <div className="flex flex-wrap gap-2">
                     {place.tags.map((tag, index) => (
-                      <Badge key={index} className="bg-[#e7f5ff] text-[#4dabf7]">
+                      <Badge
+                        key={index}
+                        className="bg-[#e7f5ff] text-[#4dabf7]"
+                      >
                         {tag}
                       </Badge>
                     ))}
@@ -221,9 +214,12 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                   <h4 className="font-medium text-[#1e3a8a] mb-3">사진</h4>
                   <div className="grid grid-cols-3 gap-2">
                     {place.images.slice(1).map((image, index) => (
-                      <div key={index} className="relative h-24 rounded-md overflow-hidden">
+                      <div
+                        key={index}
+                        className="relative h-24 rounded-md overflow-hidden"
+                      >
                         <Image
-                          src={image || "/placeholder.svg"}
+                          src={image || '/placeholder.svg'}
                           alt={`${place.title} 이미지 ${index + 2}`}
                           fill
                           className="object-cover"
@@ -247,7 +243,10 @@ export function SavedPlaceDetail({ isOpen, onClose, place }: SavedPlaceDetailPro
                 >
                   여행에 추가
                 </Button>
-                <Button className="bg-[#4dabf7] hover:bg-[#339af0]" onClick={handleGetDirections}>
+                <Button
+                  className="bg-[#4dabf7] hover:bg-[#339af0]"
+                  onClick={handleGetDirections}
+                >
                   길찾기
                 </Button>
               </div>

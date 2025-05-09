@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Calendar, MapPin, Bookmark, Star, Settings, PenLine, Plus,} from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  Bookmark,
+  Star,
+  Settings,
+  PenLine,
+  Plus,
+} from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
-import { Card,CardContent, CardFooter, CardHeader, CardTitle,} from '../../modules/Card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../../modules/Card';
 import { Avatar, AvatarImage } from '../../modules/Avatar';
 import { Progress } from '../../modules/Progress';
 import { Badge } from '../../modules/Badge';
@@ -19,6 +33,26 @@ function MyPageContent() {
     level: '',
     levelExp: 0,
   });
+
+  const [showLevelModal, setShowLevelModal] = useState(false);
+  const [showExpModal, setShowExpModal] = useState(false);
+
+  const levelInfo = {
+    BEGINNER: { label: '여행 새싹', min: 0, max: 99 },
+    NOVICE: { label: '초보 여행자', min: 100, max: 199 },
+    EXPLORER: { label: '탐험가', min: 200, max: 299 },
+    ADVENTURER: { label: '모험가', min: 300, max: 399 },
+    WORLD_TRAVELER: { label: '세계 여행자', min: 400, max: 499 },
+    MASTER: { label: '여행 달인', min: 500, max: 599 },
+    LEGEND: { label: '전설의 여행자', min: 600, max: 9999 },
+  };
+
+  const currentLevel = levelInfo[userInfo.level] || levelInfo.BEGINNER;
+  const percent = Math.floor(
+    ((userInfo.levelExp - currentLevel.min) /
+      (currentLevel.max - currentLevel.min + 1)) *
+      100
+  );
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -161,17 +195,27 @@ function MyPageContent() {
               <span className="text-sm text-[#495057]">
                 여행 레벨: {userInfo.level}
               </span>
-              <Badge className="ml-2 bg-[#ffd43b] text-[#1e3a8a]">
-                Lv.{userInfo.levelExp}
+              <Badge
+                onClick={() => setShowLevelModal(true)}
+                className="ml-2 cursor-pointer bg-[#ffd43b] text-[#1e3a8a]"
+              >
+                {Math.floor(userInfo.levelExp / 100) + 1 >= 7
+                  ? '🏆 MAX'
+                  : `Lv.${Math.floor(userInfo.levelExp / 100) + 1}`}
               </Badge>
             </div>
             <div className="mt-1 flex items-center">
               <Progress
-                value={65}
+                value={percent}
                 className="h-2 w-32 bg-[#e7f5ff]"
                 indicatorClassName="bg-[#4dabf7]"
               />
-              <span className="ml-2 text-xs text-[#495057]">65%</span>
+              <span
+                className="ml-2 text-xs text-[#495057] cursor-pointer hover:underline"
+                onClick={() => setShowExpModal(true)}
+              >
+                {percent}%
+              </span>
             </div>
           </div>
 
@@ -461,6 +505,76 @@ function MyPageContent() {
           </div>
         </TabsContent>
       </Tabs>
+      {/* 레벨 안내 */}
+      {showLevelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-lg bg-white p-6 w-[90%] max-w-md shadow-xl">
+            <h2 className="text-xl font-bold text-center mb-4 text-[#1e3a8a]">
+              🌟 여행 레벨 안내
+            </h2>
+            <ul className="space-y-2 text-sm text-[#495057]">
+              <li>
+                <strong>Lv.1</strong> 여행 새싹 (0~99 exp)
+              </li>
+              <li>
+                <strong>Lv.2</strong> 초보 여행자 (100~199 exp)
+              </li>
+              <li>
+                <strong>Lv.3</strong> 탐험가 (200~299 exp)
+              </li>
+              <li>
+                <strong>Lv.4</strong> 모험가 (300~399 exp)
+              </li>
+              <li>
+                <strong>Lv.5</strong> 세계 여행자 (400~499 exp)
+              </li>
+              <li>
+                <strong>Lv.6</strong> 여행 달인 (500~599 exp)
+              </li>
+              <li>
+                <strong>🏆</strong> 전설의 여행자 (600+ exp)
+              </li>
+            </ul>
+            <button
+              onClick={() => setShowLevelModal(false)}
+              className="mt-6 w-full rounded bg-[#4dabf7] py-2 text-white hover:bg-[#339af0]"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 경험치 안내 */}
+      {showExpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-lg bg-white p-6 w-[90%] max-w-md shadow-xl">
+            <h2 className="text-xl font-bold text-center mb-4 text-[#1e3a8a]">
+              💡 경험치(Exp)란?
+            </h2>
+            <p className="text-sm text-[#495057] leading-relaxed">
+              경험치는 여행 활동을 할 때마다 자동으로 쌓이는 점수입니다.
+              <br />
+              <br />
+              예를 들어:
+              <ul className="mt-2 list-disc pl-5 space-y-1 text-left">
+                <li>여행 일정 만들기 +20</li>
+                <li>명소 추가하기 +5</li>
+                <li>커뮤니티 글 작성 +15</li>
+                <li>리뷰 작성 +20</li>
+              </ul>
+              <br />
+              일정 경험치를 모으면 자동으로 다음 레벨로 올라갑니다!
+            </p>
+            <button
+              onClick={() => setShowExpModal(false)}
+              className="mt-6 w-full rounded bg-[#4dabf7] py-2 text-white hover:bg-[#339af0]"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
