@@ -26,7 +26,6 @@ const FlightSearchHero = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autocompleteError, setAutocompleteError] = useState(null);
 
-  // 컴포넌트 마운트 시 searchParams와 관련 상태 초기화
   useEffect(() => {
     dispatch(setSearchParams({
       from: "",
@@ -67,21 +66,11 @@ const FlightSearchHero = () => {
         setAutocompleteError(null);
       } else {
         field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-        setAutocompleteError(response.data.error.message || "자동완성 오류가 발생했습니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요.");
+        setAutocompleteError("검색 결과가 없습니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요.");
       }
     } catch (err) {
       field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-      let errorMessage = "서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.";
-      if (err.response?.status === 400) {
-        errorMessage = err.response.data?.error?.message?.includes("Invalid keyword")
-          ? "유효하지 않은 검색어입니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요."
-          : err.response.data?.error?.message?.includes("Authentication failed")
-            ? "인증 오류가 발생했습니다. 관리자에게 문의해주세요."
-            : err.response.data?.error?.message?.includes("Failed to connect to Amadeus API")
-              ? "Amadeus API 연결에 실패했습니다. 잠시 후 다시 시도해주세요."
-              : "잘못된 요청입니다. 검색어를 확인해주세요.";
-      }
-      setAutocompleteError(errorMessage);
+      setAutocompleteError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +87,6 @@ const FlightSearchHero = () => {
   }, [toQuery]);
 
   const handleSearch = async () => {
-    // 출발지/도착지 IATA 코드 검증
     if (!searchParams.from || !/^[A-Z]{3}$/.test(searchParams.from)) {
       alert("출발지를 드롭다운에서 선택하거나 유효한 공항 코드(예: CDG)를 입력해주세요.");
       return;
@@ -121,7 +109,8 @@ const FlightSearchHero = () => {
         origin: searchParams.from,
         destination: searchParams.to,
         departureDate: searchParams.date,
-        realTime: searchParams.tripType === "oneway",
+        returnDate: searchParams.return,
+        realTime: searchParams.tripType === "roundtrip",
       })).unwrap();
       const query = new URLSearchParams({
         from: encodeURIComponent(`${searchParams.fromLabel || searchParams.from}`),
@@ -131,21 +120,20 @@ const FlightSearchHero = () => {
         passengers: searchParams.passengers.toString(),
         tripType: searchParams.tripType,
       }).toString();
-      console.log('Search query:', query); // 디버깅용
+      console.log('Search query:', query);
       navigate(`/flight-search/results?${query}`);
     } catch (err) {
-      const errorMessage = err?.message || "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      const errorMessage = err?.message || "항공편을 찾을 수 없습니다. 다른 경로 또는 날짜를 시도해주세요.";
       alert(`검색 오류: ${errorMessage}`);
     }
   };
 
   const handleComboboxInput = (field, value) => {
-    // IATA 코드 직접 입력 처리
     const iataPattern = /^[A-Z]{3}$/;
     if (iataPattern.test(value)) {
       dispatch(setSearchParams({
         [field]: value,
-        [`${field}Label`]: value, // 임시 레이블
+        [`${field}Label`]: value,
       }));
     } else {
       dispatch(setSearchParams({
@@ -377,6 +365,7 @@ const FlightSearchHero = () => {
                           value={searchParams.date}
                           onChange={(e) => dispatch(setSearchParams({ date: e.target.value }))}
                           className="bg-gray-50"
+                          min={new Date().toISOString().split("T")[0]}
                         />
                         <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       </div>
@@ -393,6 +382,7 @@ const FlightSearchHero = () => {
                           onChange={(e) => dispatch(setSearchParams({ return: e.target.value }))}
                           className="bg-gray-50"
                           disabled={searchParams.tripType === "oneway"}
+                          min={searchParams.date || new Date().toISOString().split("T")[0]}
                         />
                         <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       </div>
