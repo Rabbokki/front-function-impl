@@ -26,9 +26,11 @@ export const createPost = createAsyncThunk(
 
 
 // 전체 게시글 조회
-export const getAllPosts = createAsyncThunk('post/getAll', async (_, thunkAPI) => {
+export const getAllPosts = createAsyncThunk('post/getAll', async ({ category, search }, thunkAPI) => {
   try {
-    const response = await axiosInstance.get(API_BASE_URL);
+    const response = await axiosInstance.get(API_BASE_URL, {
+      params: {category, search },
+    });
     return response.data; // 게시글 목록 반환
   } catch (error) {
     const errorMessage = error.response?.data || '게시글 조회 실패';

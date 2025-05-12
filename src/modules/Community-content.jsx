@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getAllPosts } from '../hooks/reducer/post/postThunk'; // Update the path as necessary
 
 export function CommunityContent() {
-  const [activeTab, setActiveTab] = useState('tips');
+  const [activeTab, setActiveTab] = useState('TIPS');
   const [searchTerm, setSearchTerm] = useState('');
   const dispatch = useDispatch();
 
@@ -33,7 +33,13 @@ export function CommunityContent() {
     dispatch(getAllPosts({ category: activeTab, search: searchTerm }));
   }, [dispatch, activeTab, searchTerm]); // activeTab이나 searchTerm이 변경될 때마다 호출
 
-  
+  useEffect(() => {
+    console.log('posts is: ', posts)
+  }, [posts])
+
+  useEffect(() => {
+    console.log('activeTab now is: ', activeTab)
+  }, [activeTab])
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-md">
@@ -54,15 +60,15 @@ export function CommunityContent() {
         </Link>
       </div>
 
-      <Tabs defaultValue="tips" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="TIPS" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-6 grid w-full grid-cols-3 bg-[#e7f5ff]">
-          <TabsTrigger value="tips" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+          <TabsTrigger value="TIPS" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
             꿀팁 게시판
           </TabsTrigger>
-          <TabsTrigger value="free" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+          <TabsTrigger value="FREE" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
             자유게시판
           </TabsTrigger>
-          <TabsTrigger value="mate" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+          <TabsTrigger value="MATE" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
             여행메이트
           </TabsTrigger>
         </TabsList>
@@ -94,7 +100,7 @@ export function CommunityContent() {
                     <CardFooter className="flex items-center justify-between pb-4 pt-2 text-sm text-[#495057]">
                       <div className="flex items-center">
                         <User className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                        <span className="mr-3">작성자</span>
+                        <span className="mr-3">{post.userName}</span>
                         <Clock className="mr-1 h-3 w-3 text-[#4dabf7]" />
                         <span>조회수: {post.views}</span>
                       </div>

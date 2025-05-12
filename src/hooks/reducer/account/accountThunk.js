@@ -36,7 +36,6 @@ export const getAccountDetails = createAsyncThunk(
       const response = await axiosInstance.get('/api/accounts/mypage', {
         withCredentials: true,
       });
-      console.log('from accountThunk getAccountDetails:', response.data)
       return response.data; 
     } catch (error) {
       return rejectWithValue(error.response.data);

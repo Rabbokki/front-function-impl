@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';  // Import useSelector
 import { useNavigate } from 'react-router-dom';
 
 import { createPost, updatePost, getPostById } from '../hooks/reducer/post/postThunk';
+import { clearPostState } from '../hooks/reducer/post/postSlice';
 
 import { Button } from '../../src/modules/Button';
 import { Input } from '../../src/modules/Input';
@@ -28,7 +29,7 @@ export function WritePostForm({ postId }) {
 
   const [postTitle, setPostTitle] = useState(existingPost?.title || '');
   const [postContent, setPostContent] = useState(existingPost?.content || '');
-  const [postCategory, setPostCategory] = useState(existingPost?.category?.toLowerCase() || 'tips');
+  const [postCategory, setPostCategory] = useState(existingPost?.category || 'TIPS');
   const [postTags, setPostTags] = useState(existingPost?.tags?.join(', ') || '');
   const [images, setImages] = useState(
     existingPost?.imgUrl?.map((url) => ({
@@ -40,8 +41,10 @@ export function WritePostForm({ postId }) {
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    console.log("existing post:", existingPost)
-  }, [existingPost]);
+    if (!postId) {
+      dispatch(clearPostState());
+    }
+  }, [dispatch, postId]);
 
   // Fetch post data when postId is provided and the post is not already loaded
   useEffect(() => {
@@ -49,6 +52,29 @@ export function WritePostForm({ postId }) {
       dispatch(getPostById(postId));  // Fetch the post if it's not in Redux already
     }
   }, [dispatch, postId, existingPost]);
+
+  useEffect(() => {
+  if (existingPost) {
+    setPostTitle(existingPost.title || '');
+    setPostContent(existingPost.content || '');
+    setPostCategory(existingPost.category || 'TIPS');
+    setPostTags(existingPost.tags?.join(' ') || '');
+    setImages(
+      existingPost.imgUrl?.map((url) => ({
+        id: Date.now() + Math.random(),
+        file: null,
+        preview: url,
+      })) || []
+    );
+  } else if (!isEditMode) {
+    // Ensure fields are blank if creating
+    setPostTitle('');
+    setPostContent('');
+    setPostCategory('tips');
+    setPostTags('');
+    setImages([]);
+  }
+}, [existingPost, isEditMode]);
 
   const handleImageUpload = (e) => {
     if (e.target.files) {
@@ -101,11 +127,13 @@ export function WritePostForm({ postId }) {
       }
     });
 
+    console.log('category: ', postCategory);
+
     const dto = {
       title: postTitle ?? '',
       content: postContent ?? '',
-      category: postCategory?.toUpperCase() ?? '',
-      tags: postTags ? postTags.split(',').map((tag) => tag.trim()) : [],
+      category: postCategory.toUpperCase(),
+      tags: postTags ? postTags.split(' ').map((tag) => tag.trim()) : [],
       imgUrl: images
         .filter((image) => !image.file && image.preview)
         .map((image) => image.preview),
@@ -147,7 +175,7 @@ export function WritePostForm({ postId }) {
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="게시판을 선택하세요" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-white shadow-md">
                 <SelectItem value="TIPS">꿀팁 게시판</SelectItem>
                 <SelectItem value="FREE">자유게시판</SelectItem>
                 <SelectItem value="MATE">여행메이트</SelectItem>
@@ -251,7 +279,7 @@ export function WritePostForm({ postId }) {
             </label>
             <Input
               id="tags"
-              placeholder="예: 도쿄, 일본, 꿀팁"
+              placeholder="예: 도쿄 일본 꿀팁"
               value={postTags}
               onChange={(e) => setPostTags(e.target.value)}
             />
