@@ -46,35 +46,38 @@ const FlightSearchHero = () => {
   }, [dispatch]);
 
   const fetchSuggestions = async (query, field) => {
-    if (query.length < 2) {
-      field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+  if (query.length < 2) {
+    field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+    setAutocompleteError(null);
+    return;
+  }
+  setIsLoading(true);
+  console.log("Sending autocomplete request with query:", query);
+  try {
+    const response = await axios.get("http://localhost:8080/api/flights/autocomplete", {
+      params: { term: query },
+    });
+    console.log("Autocomplete response:", response.data);
+    if (response.data.success) {
+      const suggestions = response.data.data.map((item) => ({
+        label: `${item.detailedName} (${item.iataCode})`,
+        value: item.iataCode,
+        isAirport: item.subType === "AIRPORT",
+      }));
+      field === "from" ? setFromSuggestions(suggestions) : setToSuggestions(suggestions);
       setAutocompleteError(null);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const response = await axios.get("/api/flights/autocomplete", {
-        params: { term: query },
-      });
-      if (response.data.success) {
-        const suggestions = response.data.data.map((item) => ({
-          label: `${item.detailedName} (${item.iataCode})`,
-          value: item.iataCode,
-          isAirport: item.subType === "AIRPORT",
-        }));
-        field === "from" ? setFromSuggestions(suggestions) : setToSuggestions(suggestions);
-        setAutocompleteError(null);
-      } else {
-        field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-        setAutocompleteError("검색 결과가 없습니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요.");
-      }
-    } catch (err) {
+    } else {
       field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-      setAutocompleteError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-    } finally {
-      setIsLoading(false);
+      setAutocompleteError("검색 결과가 없습니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요.");
     }
-  };
+  } catch (err) {
+    console.error("Autocomplete error:", err.response?.data || err.message);
+    field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+    setAutocompleteError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
     const timer = setTimeout(() => fetchSuggestions(fromQuery, "from"), 300);
@@ -242,7 +245,7 @@ const FlightSearchHero = () => {
                               id="departure"
                               className="bg-gray-50 pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
                               onChange={(e) => handleComboboxInput("from", e.target.value)}
-                              placeholder="도시 또는 공항 (예: Paris 또는 CDG)"
+                              placeholder="도시 또는 공항 (예: 인천, Seoul, ICN)"
                               displayValue={() => searchParams.fromLabel || ""}
                             />
                             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -310,7 +313,7 @@ const FlightSearchHero = () => {
                               id="arrival"
                               className="bg-gray-50 pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
                               onChange={(e) => handleComboboxInput("to", e.target.value)}
-                              placeholder="도시 또는 공항 (예: New York 또는 JFK)"
+                              placeholder="도시 또는 공항 (예: 파리, Paris, CDG)"
                               displayValue={() => searchParams.toLabel || ""}
                             />
                             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
