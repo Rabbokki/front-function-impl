@@ -379,6 +379,7 @@ function MyPageContent() {
         </TabsContent>
 
         {/*  마이페이지 내 예약 부분 작성 해야함 
+      
            TabsContent value= "bookings" */}
 
         <TabsContent value="saved">
