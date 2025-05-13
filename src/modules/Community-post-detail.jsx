@@ -1,13 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
-import { getAccountDetails } from '../hooks/reducer/account/accountThunk';
+
 import { getPostById, deletePost, viewPost } from '../hooks/reducer/post/postThunk';
-import { addLike, removeLike, getLikeStatus } from '../hooks/reducer/like/likeThunk';
-import { getCommentsByPostId, createComment } from '../hooks/reducer/comment/commentThunk';
+
+import { addLike,
+         removeLike,
+         getLikeStatus,
+         addCommentLike,
+         removeCommentLike,
+         getCommentLikeStatus } from '../hooks/reducer/like/likeThunk';
+
+import { getCommentsByPostId, createComment, deleteComment } from '../hooks/reducer/comment/commentThunk';
+
 import {
   ArrowLeft, ThumbsUp, MessageSquare, Share2, Clock, Eye,
 } from "lucide-react";
+
 import { Button } from "./Button";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Separator } from "./Separator";
@@ -23,12 +32,14 @@ export function CommunityPostDetail({ postId }) {
   const { like } = useSelector((state) => state.likes);
   const { comments, loading: commentLoading, error: commentError } = useSelector((state) => state.comments);
   useEffect(() => {
-  console.log("💬 댓글 목록 상태:", comments);
+    console.log("💬 댓글 목록 상태:", comments);
   }, [comments]);
   const isOwner = currentUser && post && post.userId === currentUser.id;
 
   const [localPost, setLocalPost] = useState(null);
   const [liked, setLiked] = useState(false);
+  const [commentLiked, setCommentLiked] = useState(false);
+  const [likedComments, setLikedComments] = useState(new Set());
   const [newComment, setNewComment] = useState("");
 
   // 게시글 불러오기
@@ -48,8 +59,19 @@ export function CommunityPostDetail({ postId }) {
   }, [post]);
 
   useEffect(() => {
-    console.log("currentUser is:", currentUser)
-  }, [currentUser]);
+    if (comments.length > 0) {
+      const likedSet = new Set();
+      comments.forEach((c) => {
+        dispatch(getCommentLikeStatus(c.id)).then((res) => {
+          if (res.meta.requestStatus === 'fulfilled' && res.payload.isLiked) {
+            likedSet.add(c.id);
+        }
+        }) // `likedByCurrentUser` should be set from backend
+      });
+      setLikedComments(likedSet);
+    }
+  }, [comments]);
+
 
   // 댓글 작성
   const handleCommentSubmit = async () => {
@@ -132,6 +154,46 @@ export function CommunityPostDetail({ postId }) {
       });
   };
 
+  // 거맨트 좋아요 처리
+  const handleCommentLike = (commentId) => {
+    const isAlreadyLiked = likedComments.has(commentId);
+
+    if (isAlreadyLiked) {
+      dispatch(removeCommentLike(commentId)).then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          setLikedComments((prev) => {
+            const updated = new Set(prev);
+            updated.delete(commentId);
+            return updated;
+          });
+          dispatch(getCommentsByPostId(postId));
+        }
+      });
+    } else {
+      dispatch(addCommentLike(commentId)).then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          setLikedComments((prev) => new Set(prev).add(commentId));
+          dispatch(getCommentsByPostId(postId));
+        }
+      });
+    }
+  };
+
+  const handleCommentDelete = (commentId) => {
+    if (!window.confirm('정말 삭제 하겠습니가?')) return;
+
+    dispatch(deleteComment(commentId)).then((res) => {
+      if (res.meta.requestStatus === 'fulfilled') {
+        navigate(`/community/post/${postId}`);
+      } else {
+        console.error("삭제 실패 했습니다");
+      }
+    })
+    .catch((error) => {
+      console.error("삭제 실패:", error);
+    });
+  }
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -162,7 +224,7 @@ export function CommunityPostDetail({ postId }) {
         <div className="ml-auto flex space-x-2">
           {isOwner ? (
             <div className="flex gap-2">
-              <Link to="/community/write">
+              <Link to={`/community/write/${postId}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -191,10 +253,10 @@ export function CommunityPostDetail({ postId }) {
                   <ThumbsUp className="mr-1 h-4 w-4" />
                   좋아요 {localPost.likeCount}
               </Button>
-              <Button variant="outline" size="sm" className="text-[#495057]">
+              {/* <Button variant="outline" size="sm" className="text-[#495057]">
                 <Share2 className="mr-1 h-4 w-4" />
                   공유하기
-              </Button>
+              </Button> */}
             </div>
           )}
         </div>
@@ -281,13 +343,30 @@ export function CommunityPostDetail({ postId }) {
                     <AvatarImage src={comment.authorImage || "/placeholder.svg"} />
                   </Avatar>
                   <span className="mr-2 font-medium text-[#1e3a8a]">{comment.author || "익명"}</span>
-                  <span className="text-xs text-[#868e96]">{comment.date || "방금 전"}</span>
+                  <span className="text-xs text-[#868e96]">{comment.createdAt || "방금 전"}</span>
                 </div>
-                <Button variant="ghost" size="sm" className="h-6 text-[#495057]">
-                  <ThumbsUp className="mr-1 h-3 w-3" />
-                  {comment.likes || 0}
-                </Button>
+                <div className="flex items-center space-x-1">
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    className={`h-6 ${likedComments.has(comment.id) ? "text-[#4dabf7]" : "text-[#495057]"}`}
+                    onClick={() => handleCommentLike(comment.id)}
+                  >
+                    <ThumbsUp className="mr-1 h-3 w-3" />
+                    {comment.likeCount || 0}
+                  </Button>
+                  {comment.author === currentUser.nickname && (
+                    <Button
+                      size="sm"
+                      className="text-xs text-[#868e96] opacity-70 hover:opacity-100 transition-opacity"
+                      onClick={() => handleCommentDelete(comment.id)}
+                    >
+                      삭제
+                    </Button>
+                  )}
+                </div>
               </div>
+
               <p className="text-[#495057]">{comment.content}</p>
             </div>
           ))}
