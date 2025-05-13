@@ -24,6 +24,11 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerated, setIsGenerated] = useState(false);
 
+  useEffect(() => {
+    console.log("시작 날: ", startDate)
+    console.log("끝 날: ", endDate)
+  }, [])
+
   const isInitialized = useRef(false);
   const [itinerary, setItinerary] = useState({});
   const dayCount =

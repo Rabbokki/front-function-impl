@@ -9,7 +9,9 @@ const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice",
 export default function Step3Page() {
   const { destination } = useParams();
   const location = useLocation();              // state에서 날짜 받기
-  const { startDate, endDate } = location.state || {};  // 날짜 정보 추출 
+  const startDate = localStorage.startDate;
+  const endDate = localStorage.endDate;
+    // 날짜 정보 추출 
 
   if (!supportedCities.includes(destination)) {
     return <div>404 - 지원하지 않는 도시입니다.</div>;

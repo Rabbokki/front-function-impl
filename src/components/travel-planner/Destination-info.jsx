@@ -263,19 +263,18 @@ export function DestinationInfo({ destination }) {
             나의 여행 만들기
           </Button>
           <Button
-  className={`flex h-24 flex-col items-center justify-center gap-2 text-lg ${
-    plannerType === "ai"
-      ? "bg-traveling-purple text-white"
-      : "bg-traveling-background text-traveling-text hover:bg-traveling-purple/20"
-  }`}
-  onClick={() => {
-    setPlannerType("ai");
-    
-  }}
->
-  <Brain className="h-6 w-6" />
-  AI 추천 일정 만들기
-</Button>
+            className={`flex h-24 flex-col items-center justify-center gap-2 text-lg ${
+              plannerType === "ai"
+                ? "bg-traveling-purple text-white"
+                : "bg-traveling-background text-traveling-text hover:bg-traveling-purple/20"
+           }`}
+            onClick={() => {
+              setPlannerType("ai");
+            }}
+          >
+            <Brain className="h-6 w-6" />
+            AI 추천 일정 만들기
+        </Button>
 
         </div>
 
@@ -342,15 +341,8 @@ export function DestinationInfo({ destination }) {
                   localStorage.setItem("startDate", startDate);
                   localStorage.setItem("endDate", endDate);
           
-                  if (plannerType === "manual") {
-                    navigate(`/travel-planner/${destination}/step2`, {
-                      state: { startDate, endDate },
-                    });
-                  } else {
-                    navigate(`/ai-planner/${destination}`, {
-                      state: { startDate, endDate },
-                    });
-                  }
+                  if (plannerType === "manual") navigate(`/travel-planner/${destination}/step2`);
+                  else navigate(`/ai-planner/${destination}`);
                 }
               }}
             >
