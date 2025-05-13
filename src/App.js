@@ -18,18 +18,18 @@ import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
 import AdminPage from './pages/admin/Page';
 import ProfileEditPage from './pages/mypage/profile-edit/Page';
-import FlightSearchPage from "./pages/flight-search/Page";
-import FlightDetailPage from "./pages/flight-search/[id]/Page.jsx";
-import FlightSearchContent from "./components/flight-search/Flight-search-content";
-import FlightSearchHero from "./components/flight-search/Flight-search-hero";
-import FlightSearchResultsPage from "./pages/flight-search/results/Page.jsx";
-import AIPlannerPage from "./pages/travel-planner/destination/AIPlannerPage";
-import { AIPlannerContent } from "./components/travel-planner/AIPlannerContent";
+import FlightSearchPage from './pages/flight-search/Page';
+import FlightDetailPage from './pages/flight-search/[id]/Page.jsx';
+import FlightSearchContent from './components/flight-search/Flight-search-content';
+import FlightSearchHero from './components/flight-search/Flight-search-hero';
+import FlightSearchResultsPage from './pages/flight-search/results/Page.jsx';
+import AIPlannerPage from './pages/travel-planner/destination/AIPlannerPage';
+import { AIPlannerContent } from './components/travel-planner/AIPlannerContent';
 import { PrivateRoute } from './components/PrivateRoute';
 import { SettingsContent } from './modules/Settings-content';
 import AttractionsContent from './modules/Attractions-content.jsx';
 import PlaceDetail from './modules/Place-detail.jsx';
-import Layout from "./Layout";
+import Layout from './Layout';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -62,12 +62,22 @@ function App() {
             }
           />
 
+          <Route path="/place/:placeId" element={<Layout />}>
+            <Route index element={<PlaceDetail />} />
+          </Route>
+
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/flight-search" element={<FlightSearchPage />} />
           <Route path="/flight-detail/:id" element={<FlightDetailPage />} />
-          <Route path="/flight-search/content" element={<FlightSearchContent />} />
+          <Route
+            path="/flight-search/content"
+            element={<FlightSearchContent />}
+          />
           <Route path="/flight-search/hero" element={<FlightSearchHero />} />
-          <Route path="/flight-search/results" element={<FlightSearchResultsPage />} />
+          <Route
+            path="/flight-search/results"
+            element={<FlightSearchResultsPage />}
+          />
 
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/community/write" element={<WritePage />} />
@@ -79,18 +89,32 @@ function App() {
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route path="/admin" element={<AdminPage />} />
 
-          <Route path="/travel-planner/:destination/step1" element={<Step1 />} />
-          <Route path="/travel-planner/:destination/step2" element={<Step2 />} />
-          <Route path="/travel-planner/:destination/step3" element={<Step3 />} />
-          <Route path="/travel-planner/:destination/step4" element={<Step4 />} />
-          <Route path="/travel-planner/:destination/step5" element={<Step5 />} />
+          <Route
+            path="/travel-planner/:destination/step1"
+            element={<Step1 />}
+          />
+          <Route
+            path="/travel-planner/:destination/step2"
+            element={<Step2 />}
+          />
+          <Route
+            path="/travel-planner/:destination/step3"
+            element={<Step3 />}
+          />
+          <Route
+            path="/travel-planner/:destination/step4"
+            element={<Step4 />}
+          />
+          <Route
+            path="/travel-planner/:destination/step5"
+            element={<Step5 />}
+          />
           <Route path="/ai-planner/:destination" element={<AIPlannerPage />} />
 
           <Route path="/attractions" element={<AttractionsContent />} />
           <Route path="/place/:placeId" element={<PlaceDetailWrapper />} />
 
           <Route path="/not-found" element={<div>404 Not Found</div>} />
-
         </Routes>
 
         <ToastContainer position="top-center" autoClose={2000} />
