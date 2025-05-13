@@ -132,7 +132,7 @@ export function WritePostForm({ postId }) {
     const dto = {
       title: postTitle ?? '',
       content: postContent ?? '',
-      category: postCategory.toUpperCase(),
+      category: postCategory?.toUpperCase() ?? '',
       tags: postTags ? postTags.split(' ').map((tag) => tag.trim()) : [],
       imgUrl: images
         .filter((image) => !image.file && image.preview)

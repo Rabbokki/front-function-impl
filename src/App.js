@@ -9,6 +9,7 @@ import Step2Page from './pages/travel-planner/destination/Step2';
 import Step3 from './pages/travel-planner/destination/Step3';
 import Step4 from './pages/travel-planner/destination/Step4';
 import Step5 from './pages/travel-planner/destination/Step5';
+import AdminPage from './pages/admin/Page';
 import MyPage from './pages/mypage/MyPage';
 import AttractionsPage from './pages/attractions/Attractions';
 import CommunityPage from './pages/community/Community';
@@ -16,7 +17,6 @@ import WritePage from './pages/community/write/Page';
 import CommunityPostPage from './pages/community/post/[id]/Page';
 import LoginPage from './pages/login/Login';
 import SignupPage from './pages/signup/Signup';
-import AdminPage from './pages/admin/Page';
 import ProfileEditPage from './pages/mypage/profile-edit/Page';
 import FlightSearchPage from './pages/flight-search/Page';
 import FlightDetailPage from './pages/flight-search/[id]/Page.jsx';
@@ -53,6 +53,7 @@ function App() {
               </PrivateRoute>
             }
           />
+
           <Route
             path="/settings"
             element={
