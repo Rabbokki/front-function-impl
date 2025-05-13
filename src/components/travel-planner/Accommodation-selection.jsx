@@ -29,7 +29,7 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
 });
 
 
-  const [activeDay, setActiveDay] = useState('day1');
+  const [activeDay, setActiveDay] = useState(() => dayKeys[0]);
   const [hoveredHotel, setHoveredHotel] = useState(null);
   const [starRating, setStarRating] = useState([]);
   const [propertyType, setPropertyType] = useState([]);
@@ -696,11 +696,11 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
 
   // 전체 날짜에 동일한 호텔 선택 함수 추가
   const selectHotelForAllDays = (hotelId) => {
-    setSelectedHotels({
-      day1: hotelId,
-      day2: hotelId,
-      day3: hotelId,
+    const updated = {};
+    dayKeys.forEach((day) => {
+      updated[day] = hotelId;
     });
+    setSelectedHotels(updated);
   };
 
   // 다음 단계로 넘어가기 전 유효성 검사 함수
@@ -930,13 +930,8 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                         className="flex justify-between items-center"
                       >
                         <div className="flex items-center">
-                          <span className="font-medium mr-2">
-                            {day === 'day1'
-                              ? '1일차'
-                              : day === 'day2'
-                              ? '2일차'
-                              : '3일차'}
-                            :
+                        <span className="font-medium mr-2">
+                        {dayKeys.indexOf(day) + 1}일차:
                           </span>
                           <span>{hotel.name}</span>
                         </div>
