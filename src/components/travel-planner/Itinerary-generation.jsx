@@ -13,8 +13,11 @@ import {
 import { Button } from "../../modules/Button";
 import { Card, CardContent } from "../../modules/Card";
 import { FlightModal } from "./flight-modal";
+import MapComponent from "../travel-planner/Map-component";
+import { differenceInCalendarDays } from "date-fns";
 
-function ItineraryGeneration({ destination, isAiMode = false }) {
+
+function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate }) {
   const [selectedDay, setSelectedDay] = useState(1);
   const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -22,8 +25,14 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
   const [isGenerated, setIsGenerated] = useState(false);
 
   const isInitialized = useRef(false);
-
   const [itinerary, setItinerary] = useState({});
+  const dayCount =
+  startDate && endDate
+    ? differenceInCalendarDays(new Date(endDate), new Date(startDate)) + 1
+    : 3;
+
+const dayKeys = Array.from({ length: dayCount }, (_, i) => i + 1); // [1, 2, 3, ...]
+
 
   const cityNames = {
     osaka: "오사카",
@@ -35,6 +44,57 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
     bangkok: "방콕",
     singapore: "싱가포르",
   };
+
+  const cityCoords = {
+    osaka: { lat: 34.6937, lng: 135.5023 },
+    tokyo: { lat: 35.6762, lng: 139.6503 },
+    fukuoka: { lat: 33.5904, lng: 130.4017 },
+    paris: { lat: 48.8566, lng: 2.3522 },
+    rome: { lat: 41.9028, lng: 12.4964 },
+    venice: { lat: 45.4408, lng: 12.3155 },
+    bangkok: { lat: 13.7563, lng: 100.5018 },
+    singapore: { lat: 1.3521, lng: 103.8198 },
+  };
+  const mapCenter = cityCoords[destination?.toLowerCase()] || { lat: 0, lng: 0 };
+
+  const mapMarkers =
+  itinerary[selectedDay]?.places
+    ?.filter((place) => place.position) // 좌표가 있는 곳만
+    .map((place) => ({
+      id: place.id,
+      position: place.position,
+      title: place.name,
+      selected: false,
+    })) || [];
+
+    console.log("mapMarkers", mapMarkers);
+    console.log("selectedDay", selectedDay);
+    console.log("itinerary", itinerary);
+    console.log("itinerary[selectedDay]?.places", itinerary[selectedDay]?.places);
+    console.log("itinerary", JSON.stringify(itinerary, null, 2));
+    console.log("selectedDay exists?", itinerary[selectedDay] !== undefined);
+    itinerary[selectedDay]?.places?.forEach((p) => {
+      console.log(p.name, p.position);
+    });
+    
+
+
+
+
+
+    const placePositions = {
+      "도쿄 스카이트리": { lat: 35.7101, lng: 139.8107 },
+      "센소지 사원": { lat: 35.7148, lng: 139.7967 },
+      "메이지 신궁": { lat: 35.6764, lng: 139.6993 },
+      "하라주쿠 쇼핑": { lat: 35.6702, lng: 139.7025 },
+      "시부야 스크램블 교차로": { lat: 35.6595, lng: 139.7005 },
+      "도쿄 디즈니랜드": { lat: 35.6329, lng: 139.8804 },
+      "우에노 공원": { lat: 35.7156, lng: 139.7745 },
+      "아키하바라": { lat: 35.6984, lng: 139.7730 },
+      "오다이바": { lat: 35.619, lng: 139.7765 },
+      "팀랩 보더리스": { lat: 35.6195, lng: 139.7908 }
+    };
+
 
   useEffect(() => {
     if (isInitialized.current || isGenerated) return;
@@ -54,8 +114,8 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     name: "도쿄 스카이트리",
                     type: "attraction",
                     time: "10:00",
-                    description:
-                      "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요. 맑은 날에는 후지산도 보입니다.",
+                    description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요. 맑은 날에는 후지산도 보입니다.",
+                    position: { lat: 35.7101, lng: 139.8107 },
                   },
                   {
                     id: "r1",
@@ -63,6 +123,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "restaurant",
                     time: "12:30",
                     description: "현지인들에게도 인기 있는 스시 레스토랑에서 신선한 해산물을 즐겨보세요.",
+                    position: { lat: 35.6717, lng: 139.7650 },
                   },
                   {
                     id: "a2",
@@ -70,6 +131,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "14:30",
                     description: "도쿄에서 가장 오래된 사원인 센소지를 방문하여 일본 전통 문화를 체험해보세요.",
+                    position: { lat: 35.7148, lng: 139.7967 },
                   },
                   {
                     id: "c1",
@@ -77,13 +139,13 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "cafe",
                     time: "16:00",
                     description: "전통적인 일본 디저트와 함께 차를 즐길 수 있는 카페입니다.",
+                    position: { lat: 35.7112, lng: 139.7943 },
                   },
                 ],
                 accommodation: {
                   id: "h1",
                   name: "시타디네스 신주쿠",
-                  description:
-                    "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
+                  description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
                 },
               },
               2: {
@@ -94,6 +156,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "09:30",
                     description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사입니다. 평화로운 산책을 즐겨보세요.",
+                    position: { lat: 35.6764, lng: 139.6993 },
                   },
                   {
                     id: "a4",
@@ -101,6 +164,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "11:30",
                     description: "일본 청소년 문화의 중심지인 하라주쿠에서 독특한 패션과 상점들을 구경해보세요.",
+                    position: { lat: 35.6702, lng: 139.7025 },
                   },
                   {
                     id: "r2",
@@ -108,6 +172,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "restaurant",
                     time: "13:00",
                     description: "개인 부스에서 맛보는 유명한 돈코츠 라멘 체인점입니다.",
+                    position: { lat: 35.6938, lng: 139.7034 },
                   },
                   {
                     id: "a5",
@@ -115,13 +180,54 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "15:00",
                     description: "세계에서 가장 분주한 횡단보도 중 하나인 시부야 스크램블 교차로를 경험해보세요.",
+                    position: { lat: 35.6595, lng: 139.7005 },
                   },
                 ],
                 accommodation: {
                   id: "h1",
                   name: "시타디네스 신주쿠",
-                  description:
-                    "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
+                  description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
+                },
+              },
+              2: {
+                places: [
+                  {
+                    id: "a3",
+                    name: "메이지 신궁",
+                    type: "attraction",
+                    time: "09:30",
+                    description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사입니다. 평화로운 산책을 즐겨보세요.",
+                    position: { lat: 35.6764, lng: 139.6993 },
+                  },
+                  {
+                    id: "a4",
+                    name: "하라주쿠 쇼핑",
+                    type: "attraction",
+                    time: "11:30",
+                    description: "일본 청소년 문화의 중심지인 하라주쿠에서 독특한 패션과 상점들을 구경해보세요.",
+                    position: { lat: 35.6702, lng: 139.7025 },
+                  },
+                  {
+                    id: "r2",
+                    name: "이치란 라멘",
+                    type: "restaurant",
+                    time: "13:00",
+                    description: "개인 부스에서 맛보는 유명한 돈코츠 라멘 체인점입니다.",
+                    position: { lat: 35.6938, lng: 139.7034 },
+                  },
+                  {
+                    id: "a5",
+                    name: "시부야 스크램블 교차로",
+                    type: "attraction",
+                    time: "15:00",
+                    description: "세계에서 가장 분주한 횡단보도 중 하나인 시부야 스크램블 교차로를 경험해보세요.",
+                    position: { lat: 35.6595, lng: 139.7005 },
+                  },
+                ],
+                accommodation: {
+                  id: "h1",
+                  name: "시타디네스 신주쿠",
+                  description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다. 깨끗하고 현대적인 객실을 제공합니다.",
                 },
               },
               3: {
@@ -132,13 +238,13 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "09:00",
                     description: "하루 종일 즐길 수 있는 세계적으로 유명한 테마파크입니다.",
+                    position: { lat: 35.6329, lng: 139.8804 },
                   },
                 ],
                 accommodation: {
                   id: "h2",
                   name: "도쿄 베이 호텔",
-                  description:
-                    "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다. 디즈니 캐릭터들로 꾸며진 객실을 제공합니다.",
+                  description: "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다. 디즈니 캐릭터들로 꾸며진 객실을 제공합니다.",
                 },
               },
               4: {
@@ -149,6 +255,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "10:00",
                     description: "아름다운 공원과 여러 박물관이 있는 문화 공간입니다.",
+                    position: { lat: 35.7156, lng: 139.7745 },
                   },
                   {
                     id: "r3",
@@ -156,6 +263,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "restaurant",
                     time: "12:30",
                     description: "전통적인 일본 우동을 맛볼 수 있는 현지인들이 사랑하는 식당입니다.",
+                    position: { lat: 35.7185, lng: 139.7736 },
                   },
                   {
                     id: "a8",
@@ -163,6 +271,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "14:00",
                     description: "전자제품과 애니메이션의 중심지인 아키하바라에서 일본 오타쿠 문화를 경험해보세요.",
+                    position: { lat: 35.6984, lng: 139.773 },
                   },
                   {
                     id: "c2",
@@ -170,6 +279,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "cafe",
                     time: "16:30",
                     description: "아키하바라의 유명한 테마 카페에서 독특한 경험을 해보세요.",
+                    position: { lat: 35.6995, lng: 139.7722 },
                   },
                 ],
                 accommodation: {
@@ -185,8 +295,8 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     name: "오다이바",
                     type: "attraction",
                     time: "10:00",
-                    description:
-                      "도쿄 베이에 위치한 인공 섬으로, 쇼핑몰, 엔터테인먼트 시설, 자유의 여신상 복제품 등이 있습니다.",
+                    description: "도쿄 베이에 위치한 인공 섬으로, 쇼핑몰, 엔터테인먼트 시설, 자유의 여신상 복제품 등이 있습니다.",
+                    position: { lat: 35.619, lng: 139.7765 },
                   },
                   {
                     id: "r4",
@@ -194,6 +304,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "restaurant",
                     time: "13:00",
                     description: "오다이바에 위치한 고급 해산물 뷔페에서 다양한 일본 요리를 즐겨보세요.",
+                    position: { lat: 35.6201, lng: 139.7767 },
                   },
                   {
                     id: "a10",
@@ -201,6 +312,7 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     type: "attraction",
                     time: "15:00",
                     description: "디지털 아트 뮤지엄에서 몰입형 예술 경험을 해보세요.",
+                    position: { lat: 35.6195, lng: 139.7908 },
                   },
                 ],
                 accommodation: {
@@ -274,72 +386,36 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                   description: "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다.",
                 },
               },
-            }
+            };
+
+            Object.values(dummyItinerary).forEach((day) => {
+              day.places.forEach((place) => {
+                if (!place.position && placePositions[place.name]) {
+                  place.position = placePositions[place.name];
+                }
+              });
+            });
         setItinerary(dummyItinerary);
       } else {
-        const basicItinerary = {
-          1: {
+        const basicItinerary = {};
+        for (let i = 1; i <= dayCount; i++) {
+          basicItinerary[i] = {
             places: [
               {
-                id: "a1",
-                name: `${cityNames[destination] || destination} 주요 관광지 1`,
+                id: `a${i}`,
+                name: `${cityNames[destination] || destination} 주요 관광지 ${i}`,
                 type: "attraction",
                 time: "10:00",
-                description: "이 도시의 주요 관광 명소입니다.",
-              },
-              {
-                id: "r1",
-                name: "현지 레스토랑",
-                type: "restaurant",
-                time: "13:00",
-                description: "현지 음식을 맛볼 수 있는 인기 레스토랑입니다.",
+                description: "이 도시의 대표 관광지입니다.",
+                position: placePositions[`${cityNames[destination] || destination} 주요 관광지 ${i}`] || null,
               },
             ],
             accommodation: {
-              id: "h1",
+              id: `h${i}`,
               name: "시티 센터 호텔",
               description: "도심에 위치한 편리한 호텔입니다.",
             },
-          },
-          2: {
-            places: [
-              {
-                id: "a2",
-                name: `${cityNames[destination] || destination} 주요 관광지 2`,
-                type: "attraction",
-                time: "09:30",
-                description: "이 도시의 또 다른 주요 관광 명소입니다.",
-              },
-              {
-                id: "c1",
-                name: "로컬 카페",
-                type: "cafe",
-                time: "15:00",
-                description: "현지인들이 즐겨찾는 카페입니다.",
-              },
-            ],
-            accommodation: {
-              id: "h1",
-              name: "시티 센터 호텔",
-              description: "도심에 위치한 편리한 호텔입니다.",
-            },
-          },
-          3: {
-            places: [
-              {
-                id: "a3",
-                name: `${cityNames[destination] || destination} 주요 관광지 3`,
-                type: "attraction",
-                time: "10:00",
-                description: "이 도시의 또 다른 주요 관광 명소입니다.",
-              },
-            ],
-            accommodation: {
-              id: "h2",
-              name: "리조트 호텔",
-              description: "휴양지에 위치한 고급 호텔입니다.",
-            },
-          },
+          };
         }
         setItinerary(basicItinerary);
       }
@@ -347,18 +423,17 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
       setIsLoading(false);
       setIsGenerated(true);
     }, 1500);
-  }, [destination, isAiMode, isGenerated]);
+  }, [destination, isAiMode, isGenerated, startDate, endDate]);
 
-  const removePlaceFromItinerary = (day, placeId) => {
-    setItinerary((prev) => {
-      const updatedDay = { ...prev[day] };
-      updatedDay.places = updatedDay.places.filter(
-        (place) => place.id !== placeId
-      );
-      return { ...prev, [day]: updatedDay };
-    });
-  };
+const removePlaceFromItinerary = (day, placeId) => {
+  setItinerary((prev) => {
+    const updatedDay = { ...prev[day] };
+    updatedDay.places = updatedDay.places.filter((place) => place.id !== placeId);
+    return { ...prev, [day]: updatedDay };
+  });
+};
 
+        
   const changeAccommodation = (day) => {
     const accommodations = [
       {
@@ -434,18 +509,17 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {Object.keys(itinerary).map((day) => (
+            {dayKeys.map((day) => (
               <Button
                 key={day}
                 variant={
-                  selectedDay === Number.parseInt(day) ? "default" : "outline"
-                }
+                  selectedDay === day ? "default" : "outline"}
                 className={`${
-                  selectedDay === Number.parseInt(day)
+                  selectedDay === day
                     ? "bg-traveling-purple text-white"
                     : "bg-white"
                 }`}
-                onClick={() => setSelectedDay(Number.parseInt(day))}
+                onClick={() => setSelectedDay(day)}
               >
                 {day}일차
               </Button>
@@ -461,11 +535,8 @@ function ItineraryGeneration({ destination, isAiMode = false }) {
                     <Map className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="relative h-[400px] bg-gray-100 rounded-md flex items-center justify-center">
-                  <p className="text-gray-500">
-                    지도 영역 (실제 구현 시 Google Maps 등 연동)
-                  </p>
-                </div>
+                <MapComponent center={mapCenter} height="400px" markers={mapMarkers} />
+
               </CardContent>
             </Card>
 

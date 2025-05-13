@@ -246,6 +246,21 @@ export function DestinationInfo({ destination }) {
     return `${format(start)} - ${format(end)} (${sorted.length}일)`;
   };
 
+
+  const handleNextStep = () => {
+    if (selectedDates.length >= 2) {
+      const sorted = [...selectedDates].sort();
+      const startDate = sorted[0];
+      const endDate = sorted[sorted.length - 1];
+      navigate(`/travel-planner/${destination}/step2`, {
+        state: { startDate, endDate }
+      });
+    } else {
+      alert("시작일과 종료일을 모두 선택해 주세요!");
+    }
+  };
+  
+
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
@@ -328,23 +343,23 @@ export function DestinationInfo({ destination }) {
           </div>
 
           <div className="mt-8 flex justify-end">
-            <Link 
+          <Link 
               to={
               selectedDates.length > 0 
               ? plannerType === "manual"
                ? `/travel-planner/${destination}/step2` 
               : `/ai-planner/${destination}` 
               : "#"
-            }
-              >
+            }>
               <Button
                className="bg-traveling-purple text-white hover:bg-traveling-purple/90" 
                disabled={selectedDates.length === 0}
+               onClick={handleNextStep}
                >
                 다음 단계로
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </Link>
+          </Link>
           </div>
         </div>
       </Card>

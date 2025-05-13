@@ -7,15 +7,27 @@ import { Badge } from '../../modules/Badge';
 import MapComponent from './Map-component';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { differenceInCalendarDays } from 'date-fns';
 
-export default function AccommodationSelection({ destination }) {
+
+export default function AccommodationSelection({ destination, startDate, endDate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([0, 500000]);
-  const [selectedHotels, setSelectedHotels] = useState({
-    day1: '',
-    day2: '',
-    day3: '',
-  });
+  const dayCount =
+  startDate && endDate
+    ? differenceInCalendarDays(new Date(endDate), new Date(startDate)) + 1
+    : 3;
+
+const dayKeys = Array.from({ length: dayCount }, (_, i) => `day${i + 1}`);
+
+const [selectedHotels, setSelectedHotels] = useState(() => {
+  const initial = {};
+  for (let i = 1; i <= dayCount; i++) {
+    initial[`day${i}`] = '';
+  }
+  return initial;
+});
+
 
   const [activeDay, setActiveDay] = useState('day1');
   const [hoveredHotel, setHoveredHotel] = useState(null);
@@ -727,58 +739,29 @@ export default function AccommodationSelection({ destination }) {
             {/* 요일 선택 탭과 검색창을 같은 컬럼에 배치 */}
             <div className="mb-3 bg-white rounded-lg">
               <div className="flex space-x-2 mb-2">
+              {dayKeys.map((dayKey, idx) => (
                 <Button
-                  variant={activeDay === 'day1' ? 'default' : 'outline'}
+                key={dayKey}
+                  variant={activeDay ===  dayKey? 'default' : 'outline'}
                   className={
-                    activeDay === 'day1'
+                    activeDay === dayKey
                       ? 'bg-traveling-purple text-white'
                       : 'border-traveling-text/30 text-traveling-text'
                   }
-                  onClick={() => setActiveDay('day1')}
+                  onClick={() => setActiveDay(dayKey)}
                 >
-                  1일차
-                  {selectedHotels.day1 && (
-                    <span className="ml-2 text-xs">✓</span>
-                  )}
+                  {idx + 1}일차
+                  {selectedHotels[dayKey] && <span className="ml-2 text-xs">✓</span>}
                 </Button>
-                <Button
-                  variant={activeDay === 'day2' ? 'default' : 'outline'}
-                  className={
-                    activeDay === 'day2'
-                      ? 'bg-traveling-purple text-white'
-                      : 'border-traveling-text/30 text-traveling-text'
-                  }
-                  onClick={() => setActiveDay('day2')}
-                >
-                  2일차
-                  {selectedHotels.day2 && (
-                    <span className="ml-2 text-xs">✓</span>
-                  )}
-                </Button>
-                <Button
-                  variant={activeDay === 'day3' ? 'default' : 'outline'}
-                  className={
-                    activeDay === 'day3'
-                      ? 'bg-traveling-purple text-white'
-                      : 'border-traveling-text/30 text-traveling-text'
-                  }
-                  onClick={() => setActiveDay('day3')}
-                >
-                  3일차
-                  {selectedHotels.day3 && (
-                    <span className="ml-2 text-xs">✓</span>
-                  )}
-                </Button>
+              ))}
               </div>
+
+                
+             
               <div className="text-sm text-traveling-text/70 mb-3">
                 <p>
-                  현재 선택:{' '}
-                  {activeDay === 'day1'
-                    ? '1일차'
-                    : activeDay === 'day2'
-                    ? '2일차'
-                    : '3일차'}{' '}
-                  숙소
+                  현재 선택: {dayKeys.indexOf(activeDay) + 1}일차 숙소
+                  
                 </p>
               </div>
 

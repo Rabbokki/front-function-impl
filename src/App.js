@@ -6,7 +6,7 @@ import { store } from './store';
 import Home from './pages/Home';
 import TravelPlannerPage from './pages/travel-planner/TravelMain';
 import Step1 from './pages/travel-planner/destination/Step1';
-import Step2 from './pages/travel-planner/destination/Step2';
+import Step2Page from './pages/travel-planner/destination/Step2';
 import Step3 from './pages/travel-planner/destination/Step3';
 import Step4 from './pages/travel-planner/destination/Step4';
 import Step5 from './pages/travel-planner/destination/Step5';
@@ -49,7 +49,7 @@ function App() {
           />
           <Route
             path="/travel-planner/:destination/step2"
-            element={<Step2 />}
+            element={<Step2Page />}
           />
           <Route
             path="/travel-planner/:destination/step3"
