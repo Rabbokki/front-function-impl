@@ -415,7 +415,7 @@ function SeatSelection({ passengerCount, selectedSeats, setPassengerCount, setSe
   );
 }
 
-function PassengerInfo({ passengerCount, setTabValue }) {
+function PassengerInfo({ passengerCount, setTabValue, setPassengerData, setContactData }) {
   const [passengers, setPassengers] = useState(
     Array.from({ length: passengerCount }, () => ({
       firstName: "",
@@ -445,10 +445,12 @@ function PassengerInfo({ passengerCount, setTabValue }) {
     const updatedPassengers = [...passengers];
     updatedPassengers[index][field] = value;
     setPassengers(updatedPassengers);
+    setPassengerData(updatedPassengers); // 부모 컴포넌트로 데이터 전달
   };
 
   const handleContactChange = (field, value) => {
     setContact((prev) => ({ ...prev, [field]: value }));
+    setContactData({ ...contact, [field]: value }); // 부모 컴포넌트로 데이터 전달
   };
 
   const validatePassengerInfo = () => {
@@ -615,7 +617,7 @@ function PassengerInfo({ passengerCount, setTabValue }) {
   );
 }
 
-function PaymentInfo({ flight, passengerCount, selectedSeats, formatPrice, handleBooking, setTabValue }) {
+function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, contactData, formatPrice, handleBooking, setTabValue }) {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [cardDetails, setCardDetails] = useState({
@@ -832,6 +834,8 @@ export default function FlightDetailContent({ flightId }) {
   const [flight, setFlight] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [passengerCount, setPassengerCount] = useState(1);
+  const [passengerData, setPassengerData] = useState([]);
+  const [contactData, setContactData] = useState({ email: "", phone: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
@@ -909,9 +913,41 @@ export default function FlightDetailContent({ flightId }) {
     }).format(price);
   };
 
-  const handleBooking = () => {
-    console.log("예약 완료:", { flight, selectedSeats, passengerCount });
-    navigate("/mypage");
+  const handleBooking = async () => {
+    console.log("예약 완료:", { flight, selectedSeats, passengerCount, passengerData, contactData });
+
+    const totalPrice =
+      parseFloat(flight.price) * passengerCount +
+      parseFloat(flight.price) * passengerCount * 0.1 +
+      selectedSeats.length * 20000;
+
+    const bookingData = {
+      flightId: flight.id,
+      carrier: flight.carrier,
+      carrierCode: flight.carrierCode,
+      flightNumber: flight.flightNumber,
+      departureAirport: flight.departureAirport,
+      arrivalAirport: flight.arrivalAirport,
+      departureTime: flight.departureTime,
+      arrivalTime: flight.arrivalTime,
+      returnDepartureAirport: flight.returnDepartureAirport || null,
+      returnArrivalAirport: flight.returnArrivalAirport || null,
+      returnDepartureTime: flight.returnDepartureTime || null,
+      returnArrivalTime: flight.returnArrivalTime || null,
+      passengerCount,
+      selectedSeats,
+      totalPrice,
+    };
+
+    try {
+      const response = await axiosInstance.post("/api/flights/book", bookingData);
+      console.log("예약 성공:", response.data);
+      alert("예약이 완료되었습니다!");
+      navigate("/mypage");
+    } catch (error) {
+      console.error("예약 실패:", error);
+      alert("예약 처리 중 오류가 발생했습니다: " + (error.response?.data?.message || error.message));
+    }
   };
 
   if (loading) {
@@ -981,11 +1017,15 @@ export default function FlightDetailContent({ flightId }) {
             <PassengerInfo
               passengerCount={passengerCount}
               setTabValue={setTabValue}
+              setPassengerData={setPassengerData}
+              setContactData={setContactData}
             />
             <PaymentInfo
               flight={flight}
               passengerCount={passengerCount}
               selectedSeats={selectedSeats}
+              passengerData={passengerData}
+              contactData={contactData}
               formatPrice={formatPrice}
               handleBooking={handleBooking}
               setTabValue={setTabValue}
