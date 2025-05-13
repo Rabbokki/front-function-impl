@@ -15,6 +15,9 @@ import { Card, CardContent } from "../../modules/Card";
 import { FlightModal } from "./flight-modal";
 import MapComponent from "../travel-planner/Map-component";
 import { differenceInCalendarDays } from "date-fns";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 
 
 function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate }) {
@@ -469,6 +472,59 @@ const removePlaceFromItinerary = (day, placeId) => {
     });
   };
 
+  const handleSavePlan = async () => {
+    const accountId = localStorage.getItem("accountId");
+    const country = "Japan"; // 필요에 따라 destination 매핑 가능
+    const city = destination;
+  
+    const places = [];
+    const accommodations = [];
+  
+    Object.entries(itinerary).forEach(([day, data]) => {
+      data.places.forEach((place) => {
+        places.push({
+          day: `day${day}`,
+          name: place.name,
+          category: place.type,
+          description: place.description,
+          time: place.time,
+          lat: place.position?.lat || 0,
+          lng: place.position?.lng || 0,
+        });
+      });
+  
+      if (data.accommodation) {
+        accommodations.push({
+          day: `day${day}`,
+          name: data.accommodation.name,
+          description: data.accommodation.description,
+          lat: 0,
+          lng: 0,
+        });
+      }
+    });
+  
+    const planData = {
+      accountId: Number(accountId),
+      startDate,
+      endDate,
+      country,
+      city,
+      transportation: "대중교통", // 나중에 수정 가능
+      places,
+      accommodations,
+    };
+  
+    try {
+      await axios.post("http://localhost:8080/api/travel-plans", planData);
+      alert("여행 일정이 저장되었습니다!");
+      navigate("/mypage");
+    } catch (error) {
+      console.error("저장 실패", error);
+      alert("저장 중 오류 발생");
+    }
+  };
+  
   return (
     <div className="space-y-6">
       {isLoading ? (
@@ -652,7 +708,7 @@ const removePlaceFromItinerary = (day, placeId) => {
           </div>
 
           <div className="flex justify-end">
-            <Button className="bg-traveling-purple">여행 일정 저장하기</Button>
+            <Button className="bg-traveling-purple" onClick={handleSavePlan}>여행 일정 저장하기</Button>
           </div>
         </>
       )}
