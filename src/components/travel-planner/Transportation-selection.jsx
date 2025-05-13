@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../modules/Button";
 import { Card } from "../../modules/Card";
 
-const TransportationSelection = ({ destination }) => {
+const TransportationSelection = ({ destination, startDate, endDate }) => {
   const [selectedTransportation, setSelectedTransportation] = useState(null);
   const navigate = useNavigate();
 
@@ -106,14 +106,23 @@ const TransportationSelection = ({ destination }) => {
               >
                 닫기
               </Button>
-              <Link to={selectedTransportation ? `/travel-planner/${destination}/step5` : "#"}>
+            
                 <Button
                   className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
                   disabled={!selectedTransportation}
+                  onClick={() => {
+                    if (selectedTransportation) {
+                      localStorage.setItem("startDate", startDate);
+                      localStorage.setItem("endDate", endDate);
+                      navigate(`/travel-planner/${destination}/step5`);
+                      
+                  
+                }
+              }}
                 >
                   일정 생성
                 </Button>
-              </Link>
+              
             </div>
           </div>
         </div>

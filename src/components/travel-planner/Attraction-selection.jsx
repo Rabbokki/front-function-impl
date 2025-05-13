@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, MapPin, Star, Plus, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from "../../modules/Button";
 import { Input } from "../../modules/Input";
@@ -12,20 +12,40 @@ import {
   TabsTrigger,
 } from "../../modules/Tabs";
 import MapComponent from '../travel-planner/Map-component';
-import {ReviewForm} from '../travel-planner/Review-form';
+import { ReviewForm } from '../travel-planner/Review-form';
+import { differenceInCalendarDays } from 'date-fns';
 
-const AttractionSelection = ({ destination }) => {
-    const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAttractions, setSelectedAttractions] = useState({
-    day1: [],
-    day2: [],
-    day3: [],
-  });
-  const [activeDay, setActiveDay] = useState("day1");
+const AttractionSelection = ({ destination, startDate, endDate }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 날짜 기반 dayKeys 계산 
+  const parseDate = (d) => {
+    const date = new Date(d);
+    return isNaN(date) ? null : date;
+  };
+
+  const parsedStart = parseDate(startDate);
+  const parsedEnd = parseDate(endDate);
+
+  const dayKeys = useMemo(() => {
+    const days = differenceInCalendarDays(parsedEnd, parsedStart) + 1;
+    return Array.from({ length: days }, (_, i) => `day${i + 1}`);
+  }, [parsedStart, parsedEnd]);
+
+  const initialSelectedAttractions = useMemo(() => {
+    const initial = {};
+    dayKeys.forEach((key) => (initial[key] = []));
+    return initial;
+  }, [dayKeys]);
+  
+
+  const [selectedAttractions, setSelectedAttractions] = useState(initialSelectedAttractions);
+
+  //  activeDay를 dayKeys[0]으로 설정
+  const [activeDay, setActiveDay] = useState(dayKeys[0]);
   const [hoveredAttraction, setHoveredAttraction] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
-
   const attractionsData = {
     osaka: {
       name: "오사카",
@@ -527,7 +547,7 @@ const AttractionSelection = ({ destination }) => {
 
         <div className="sticky top-0 z-10 bg-white py-3 mb-4 border-b">
           <div className="flex space-x-2">
-            {["day1", "day2", "day3"].map((day, idx) => (
+          {dayKeys.map((day, idx) => (
               <Button
                 key={day}
                 onClick={() => setActiveDay(day)}
@@ -698,7 +718,7 @@ const AttractionSelection = ({ destination }) => {
         <div className="mt-6 p-4 bg-traveling-background/30 rounded-lg">
           <h4 className="font-medium mb-2">선택된 장소 요약</h4>
           <div className="space-y-2">
-            {["day1", "day2", "day3"].map((day, idx) => (
+          {dayKeys.map((day, idx) => (
               <div className="flex justify-between items-center" key={day}>
                 <span>{idx + 1}일차:</span>
                 <Badge className="bg-traveling-purple/20 text-traveling-purple">
