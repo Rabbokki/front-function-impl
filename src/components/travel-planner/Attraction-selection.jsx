@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, MapPin, Star, Plus, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from "../../modules/Button";
 import { Input } from "../../modules/Input";
 import { Card, CardContent } from "../../modules/Card";
 import { Badge } from "../../modules/Badge";
+import { Link } from 'react-router-dom';
 import {
   Tabs,
   TabsContent,
@@ -11,36 +12,41 @@ import {
   TabsTrigger,
 } from "../../modules/Tabs";
 import MapComponent from '../travel-planner/Map-component';
-import {ReviewForm} from '../travel-planner/Review-form';
-import { differenceInCalendarDays } from "date-fns";
-import { useNavigate } from 'react-router-dom';
+import { ReviewForm } from '../travel-planner/Review-form';
+import { differenceInCalendarDays } from 'date-fns';
 
 const AttractionSelection = ({ destination, startDate, endDate }) => {
-  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
-    const [searchQuery, setSearchQuery] = useState("");
-   //  날짜 수 계산
-   const dayCount = startDate && endDate
-   ? differenceInCalendarDays(new Date(endDate), new Date(startDate)) + 1
-   : 3;
+  // 날짜 기반 dayKeys 계산 
+  const parseDate = (d) => {
+    const date = new Date(d);
+    return isNaN(date) ? null : date;
+  };
 
- //  "day1", "day2", ... 만들기
- const dayKeys = Array.from({ length: dayCount }, (_, i) => `day${i + 1}`);
+  const parsedStart = parseDate(startDate);
+  const parsedEnd = parseDate(endDate);
 
- // 초기 selectedAttractions 만들기
- const initialAttractions = dayKeys.reduce((acc, key) => {
-   acc[key] = [];
-   return acc;
- }, {});
- const [selectedAttractions, setSelectedAttractions] = useState(initialAttractions);
+  const dayKeys = useMemo(() => {
+    const days = differenceInCalendarDays(parsedEnd, parsedStart) + 1;
+    return Array.from({ length: days }, (_, i) => `day${i + 1}`);
+  }, [parsedStart, parsedEnd]);
 
- // activeDay도 day1이 아니라 dayKeys[0]으로
- const [activeDay, setActiveDay] = useState(dayKeys[0]);
- const [hoveredAttraction, setHoveredAttraction] = useState(null);
- const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
- const [selectedPlace, setSelectedPlace] = useState(null);
+  const initialSelectedAttractions = useMemo(() => {
+    const initial = {};
+    dayKeys.forEach((key) => (initial[key] = []));
+    return initial;
+  }, [dayKeys]);
+  
 
- const attractionsData = {
+  const [selectedAttractions, setSelectedAttractions] = useState(initialSelectedAttractions);
+
+  //  activeDay를 dayKeys[0]으로 설정
+  const [activeDay, setActiveDay] = useState(dayKeys[0]);
+  const [hoveredAttraction, setHoveredAttraction] = useState(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const attractionsData = {
     osaka: {
       name: "오사카",
       center: { lat: 34.6937, lng: 135.5023 },
@@ -526,8 +532,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
     setSelectedPlace({ name: attraction.name, type: attraction.category });
     setIsReviewModalOpen(true);
   };
-  
-  console.log("생성된 dayKeys:", dayKeys);
 
   if (!cityData) return <div>선택된 도시 정보가 없습니다.</div>;
 
@@ -543,7 +547,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
 
         <div className="sticky top-0 z-10 bg-white py-3 mb-4 border-b">
           <div className="flex space-x-2">
-            {dayKeys.map((day, idx) => (
+          {dayKeys.map((day, idx) => (
               <Button
                 key={day}
                 onClick={() => setActiveDay(day)}
@@ -563,7 +567,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
             ))}
           </div>
           <p className="mt-2 text-sm text-traveling-text/70">
-            현재 선택: {dayKeys.indexOf(activeDay) + 1}일차 방문 장소
+            현재 선택: {activeDay === "day1" ? "1일차" : activeDay === "day2" ? "2일차" : "3일차"} 방문 장소
           </p>
         </div>
 
@@ -714,7 +718,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         <div className="mt-6 p-4 bg-traveling-background/30 rounded-lg">
           <h4 className="font-medium mb-2">선택된 장소 요약</h4>
           <div className="space-y-2">
-            {dayKeys.map((day, idx) => (
+          {dayKeys.map((day, idx) => (
               <div className="flex justify-between items-center" key={day}>
                 <span>{idx + 1}일차:</span>
                 <Badge className="bg-traveling-purple/20 text-traveling-purple">
@@ -726,20 +730,15 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         </div>
 
         <div className="mt-8 flex justify-end">
-          
+          <Link to={isAllDaysSelected() ? `/travel-planner/${destination}/step3` : "#"}>
             <Button
               className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
               disabled={!isAllDaysSelected()}
-              onClick={() => {
-                  navigate(`/travel-planner/${destination}/step3`, {
-                    state: { startDate, endDate }, //날짜 넘겨주기
-                });
-            }}
-          
             >
               다음 단계로
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
+          </Link>
         </div>
 
         {selectedPlace && isReviewModalOpen && (
