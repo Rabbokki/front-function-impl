@@ -63,9 +63,7 @@ function App() {
             }
           />
 
-          <Route path="/place/:placeId" element={<Layout />}>
-            <Route index element={<PlaceDetail />} />
-          </Route>
+          <Route path="/place/:id" element={<AttractionDetailPage />} />
 
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/flight-search" element={<FlightSearchPage />} />

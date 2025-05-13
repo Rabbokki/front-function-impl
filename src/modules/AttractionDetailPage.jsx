@@ -1,60 +1,111 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Star, MapPin, Globe, Phone, Clock, Camera, MessageSquare } from 'lucide-react';
+import {
+  Star,
+  MapPin,
+  Globe,
+  Phone,
+  Clock,
+  MessageSquare,
+} from 'lucide-react';
 import { Button } from '../modules/Button';
 import { Badge } from '../modules/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../modules/Tabs';
 
 function AttractionDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams(); // placeId가 전달됨
   const navigate = useNavigate();
-  const [place, setPlace] = useState(null);
+  const [basicPlace, setBasicPlace] = useState(null);
+  const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState('intro');
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('allPlaces')) || [];
-    const found = stored[parseInt(id)];
-    setPlace(found);
-  }, [id]);
+  // ✅ 1. localStorage에서 placeId로 기본 정보 찾기
+useEffect(() => {
+  const stored = JSON.parse(localStorage.getItem('allPlaces')) || [];
 
-  if (!place) {
-    return <p className="text-center mt-10">명소 정보를 불러오는 중입니다...</p>;
+  console.log('📦 localStorage allPlaces:', stored);
+  console.log('🔍 현재 URL id:', id);
+
+  const found = stored.find((p) => p.placeId?.trim() === id?.trim());
+  console.log('✅ 찾은 명소:', found);
+
+  setBasicPlace(found);
+}, [id]);
+
+
+  // ✅ 2. 상세정보 API 요청
+  useEffect(() => {
+    if (!basicPlace?.placeId) return;
+
+    fetch(`/api/places/detail?placeId=${basicPlace.placeId}`)
+      .then((res) => res.json())
+      .then((data) => setDetail(data))
+      .catch((err) => console.error('❌ 상세 정보 불러오기 실패:', err));
+  }, [basicPlace]);
+
+  if (!basicPlace) {
+    return (
+      <p className="text-center mt-10 text-red-500">
+        해당 명소를 찾을 수 없습니다.
+      </p>
+    );
   }
 
   return (
     <div className="max-w-5xl mx-auto mt-6">
       <img
-        src={place.image || '/placeholder.svg'}
-        alt={place.name}
+        src={basicPlace.image || '/placeholder.svg'}
+        alt={basicPlace.name}
         className="w-full h-[300px] object-cover rounded-xl"
       />
 
       <div className="mt-6 px-4">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold">{place.name}</h2>
-            <Badge className="bg-gray-200 text-gray-700 mt-1">{place.category || '관광지'}</Badge>
+            <h2 className="text-2xl font-bold">{detail?.name || basicPlace.name}</h2>
+            <Badge className="bg-gray-200 text-gray-700 mt-1">
+              {basicPlace.category || '관광지'}
+            </Badge>
           </div>
           <div className="flex items-center gap-1 text-yellow-500">
             <Star className="fill-yellow-400 h-5 w-5" />
-            <span className="font-semibold">{place.rating ?? 'N/A'}</span>
+            <span className="font-semibold">{detail?.rating ?? 'N/A'}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2"><MapPin className="h-4 w-4" />{place.address}</div>
-          <div className="flex items-center gap-2"><Phone className="h-4 w-4" />{place.phone || '전화번호 없음'}</div>
-          <div className="flex items-center gap-2"><Clock className="h-4 w-4" />{place.hours || '운영 시간 정보 없음'}</div>
-          <div className="flex items-center gap-2"><Globe className="h-4 w-4" />
-            <a href={place.website || '#'} target="_blank" rel="noreferrer" className="text-blue-500 underline">
-              웹사이트 방문
-            </a>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            {detail?.formatted_address || basicPlace.address}
+          </div>
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            {detail?.international_phone_number || '전화번호 없음'}
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            {detail?.opening_hours?.weekday_text?.[0] || '운영 시간 정보 없음'}
+          </div>
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            {detail?.website ? (
+              <a
+                href={detail.website}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 underline"
+              >
+                웹사이트 방문
+              </a>
+            ) : '웹사이트 없음'}
           </div>
         </div>
 
         <div className="flex gap-2 mt-6">
           <Button>+ 여행에 추가</Button>
-          <Button variant="outline"><MessageSquare className="h-4 w-4 mr-1" /> 리뷰 작성</Button>
+          <Button variant="outline">
+            <MessageSquare className="h-4 w-4 mr-1" /> 리뷰 작성
+          </Button>
           <Button variant="ghost">공유</Button>
         </div>
 
@@ -68,13 +119,13 @@ function AttractionDetailPage() {
           <TabsContent value="intro">
             <h3 className="text-lg font-semibold mb-2">소개</h3>
             <p className="text-gray-700 leading-relaxed">
-              {place.description || '이 명소에 대한 소개 글이 없습니다.'}
+              {basicPlace.description || '이 명소에 대한 소개 글이 없습니다.'}
             </p>
           </TabsContent>
 
           <TabsContent value="photos">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[place.image, place.image, place.image].map((img, i) => (
+              {[basicPlace.image, basicPlace.image, basicPlace.image].map((img, i) => (
                 <img
                   key={i}
                   src={img || '/placeholder.svg'}

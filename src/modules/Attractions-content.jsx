@@ -36,7 +36,7 @@ function AttractionsContent() {
   }, []);
 
   const loadPlaces = async (cityId) => {
-    const { lat, lng, name: cityName } = cityMeta[cityId]; // ✅ 구조분해 할당으로 lat/lng/cityName 가져오기
+    const { lat, lng, name: cityName } = cityMeta[cityId]; 
     setSelectedCity(cityId);
     setSearchQuery('');
 
@@ -93,6 +93,12 @@ function AttractionsContent() {
 
     setFilteredAttractions(filtered);
   }, [searchQuery, selectedCity, allPlaces]);
+
+   useEffect(() => {
+    if (allPlaces.length > 0) {
+      localStorage.setItem('allPlaces', JSON.stringify(allPlaces));
+    }
+  }, [allPlaces]);
 
   const openReviewModal = (attraction) => {
     setSelectedPlace({
@@ -207,7 +213,7 @@ function AttractionsContent() {
                       <span className="text-xs">리뷰</span>
                     </Button>
                   </div>
-                  <Link to={`/place/${idx}`}>
+                  <Link to={`/place/${attraction.placeId}`}>
                     <Button
                       size="sm"
                       className="bg-traveling-purple text-white"
