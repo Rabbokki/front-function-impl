@@ -328,23 +328,38 @@ export function DestinationInfo({ destination }) {
           </div>
 
           <div className="mt-8 flex justify-end">
-            <Link 
-              to={
-              selectedDates.length > 0 
-              ? plannerType === "manual"
-               ? `/travel-planner/${destination}/step2` 
-              : `/ai-planner/${destination}` 
-              : "#"
-            }
-              >
+           
               <Button
                className="bg-traveling-purple text-white hover:bg-traveling-purple/90" 
                disabled={selectedDates.length === 0}
-               >
+               onClick={() => {
+                if (selectedDates.length > 0) {
+                  const sorted = [...selectedDates].sort();
+                  const startDate = sorted[0];
+                  const endDate = sorted[sorted.length - 1];
+          
+                  // 선택사항: localStorage 저장
+                  localStorage.setItem("startDate", startDate);
+                  localStorage.setItem("endDate", endDate);
+          
+                  if (plannerType === "manual") {
+                    navigate(`/travel-planner/${destination}/step2`, {
+                      state: { startDate, endDate },
+                    });
+                  } else {
+                    navigate(`/ai-planner/${destination}`, {
+                      state: { startDate, endDate },
+                    });
+                  }
+                }
+              }}
+            >
+               
                 다음 단계로
+
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </Link>
+            
           </div>
         </div>
       </Card>
