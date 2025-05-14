@@ -1,4 +1,4 @@
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar";
 import TransportationSelection from "../../../components/travel-planner/Transportation-selection";
 import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
@@ -8,8 +8,8 @@ const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice",
 
 export default function Step4Page() {
   const { destination } = useParams();
-  const location = useLocation();
-  const { startDate, endDate } = location.state || {};
+  const startDate = localStorage.startDate;
+  const endDate = localStorage.endDate;
 
   if (!supportedCities.includes(destination)) {
     return <div>404 - 지원하지 않는 도시입니다.</div>;
