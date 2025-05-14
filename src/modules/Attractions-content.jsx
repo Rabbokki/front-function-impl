@@ -16,36 +16,63 @@ function AttractionsContent() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
-  // 1. 초기 더미 데이터 로드
+  const cityMeta = {
+    all: { name: '전체', lat: null, lng: null },
+    tokyo: { name: '도쿄', lat: 35.6895, lng: 139.6917 },
+    osaka: { name: '오사카', lat: 34.6937, lng: 135.5023 },
+    fukuoka: { name: '후쿠오카', lat: 33.5902, lng: 130.4017 },
+    paris: { name: '파리', lat: 48.8566, lng: 2.3522 },
+    rome: { name: '로마', lat: 41.9028, lng: 12.4964 },
+    venice: { name: '베니스', lat: 45.4408, lng: 12.3155 },
+  };
+
+  const cities = Object.entries(cityMeta).map(([id, meta]) => ({
+    id,
+    name: meta.name,
+  }));
+
   useEffect(() => {
-    fetch('/api/places/nearby?lat=35.6895&lng=139.6917')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setPlaces(data);
-          setAllPlaces(data);
-          setFilteredAttractions(data);
-        } else {
-          console.error('❌ API 응답 오류:', data);
-          fallbackToDummy();
-        }
-      })
-      .catch((err) => {
-        console.error('❌ API 실패:', err);
-        fallbackToDummy();
-      });
+    loadPlaces('tokyo');
   }, []);
 
-  function fallbackToDummy() {
-    fetch('/data/places.json')
-      .then((res) => res.json())
-      .then((data) => {
+  const loadPlaces = async (cityId) => {
+    const { lat, lng, name: cityName } = cityMeta[cityId]; 
+    setSelectedCity(cityId);
+    setSearchQuery('');
+
+    if (cityId === 'all') {
+      setFilteredAttractions(allPlaces);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/places/nearby?lat=${lat}&lng=${lng}&city=${encodeURIComponent(
+          cityName
+        )}&cityId=${cityId}`
+      );
+
+      const data = await res.json();
+      if (Array.isArray(data)) {
         setPlaces(data);
-        setAllPlaces(data);
+        setAllPlaces((prev) => {
+          const merged = [...prev, ...data];
+          const unique = Array.from(
+            new Map(
+              merged.map((item) => [item.name + item.cityId, item])
+            ).values()
+          );
+          return unique;
+        });
         setFilteredAttractions(data);
-      });
-  }
-  // 2. 필터링 및 검색 처리
+      } else {
+        console.error('❌ API 응답 오류:', data);
+      }
+    } catch (err) {
+      console.error('❌ 도시 로딩 실패:', err);
+    }
+  };
+
   useEffect(() => {
     const filtered = allPlaces.filter(
       (attraction) =>
@@ -64,45 +91,14 @@ function AttractionsContent() {
             .includes(searchQuery.toLowerCase()))
     );
 
-    if (searchQuery && filtered.length === 0) {
-      fetch(`/api/places/search?keyword=${encodeURIComponent(searchQuery)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            setPlaces(data);
-            setAllPlaces(data);
-            setFilteredAttractions(data);
-          } else {
-            console.warn('⚠️ 예상치 못한 응답:', data);
-            setFilteredAttractions([]); // 빈 배열로 처리해서 map 오류 방지
-          }
-        })
-        .catch((err) => {
-          console.error('❌ 검색 API 오류:', err);
-          setFilteredAttractions([]); // 오류 시도 방지
-        });
-    } else {
-      setFilteredAttractions(filtered);
-    }
+    setFilteredAttractions(filtered);
   }, [searchQuery, selectedCity, allPlaces]);
 
-  useEffect(() => {
-    if (filteredAttractions.length > 0) {
-      console.log('🖼️ 첫 번째 장소 이미지:', filteredAttractions[0].image);
-    } else {
-      console.log('📭 필터링된 명소가 없습니다.');
+   useEffect(() => {
+    if (allPlaces.length > 0) {
+      localStorage.setItem('allPlaces', JSON.stringify(allPlaces));
     }
-  }, [filteredAttractions]);
-
-  const cities = [
-    { id: 'all', name: '전체' },
-    { id: 'tokyo', name: '도쿄' },
-    { id: 'osaka', name: '오사카' },
-    { id: 'fukuoka', name: '후쿠오카' },
-    { id: 'paris', name: '파리' },
-    { id: 'rome', name: '로마' },
-    { id: 'venice', name: '베니스' },
-  ];
+  }, [allPlaces]);
 
   const openReviewModal = (attraction) => {
     setSelectedPlace({
@@ -111,6 +107,10 @@ function AttractionsContent() {
     });
     setIsReviewModalOpen(true);
   };
+
+  useEffect(() => {
+    localStorage.setItem('allPlaces', JSON.stringify(allPlaces));
+  }, [allPlaces]);
 
   return (
     <div className="space-y-6">
@@ -148,7 +148,7 @@ function AttractionsContent() {
                     ? 'bg-traveling-purple text-white'
                     : 'border-traveling-text/30 text-traveling-text/70 hover:bg-traveling-background'
                 }
-                onClick={() => setSelectedCity(city.id)}
+                onClick={() => loadPlaces(city.id)}
               >
                 {city.name}
               </Button>
@@ -165,15 +165,9 @@ function AttractionsContent() {
             >
               <div className="relative h-48 w-full">
                 <img
-                  src={
-                    attraction.image
-                      ? attraction.image.startsWith('places/')
-                        ? `/api/places/photo?name=${encodeURIComponent(
-                            attraction.image
-                          )}`
-                        : attraction.image
-                      : '/placeholder.svg'
-                  }
+                  src={attraction.image || '/placeholder.svg'}
+                  alt={attraction.name}
+                  className="w-full h-[180px] object-cover rounded-t-xl"
                 />
               </div>
               <CardContent className="p-4">
@@ -200,9 +194,7 @@ function AttractionsContent() {
 
                 <p className="mb-4 flex items-center text-sm text-traveling-text/70">
                   <MapPin className="mr-1 h-4 w-4 text-traveling-text/70" />
-                  {attraction.address ||
-                    attraction.vicinity ||
-                    '주소 정보 없음'}
+                  {attraction.address || '주소 정보 없음'}
                 </p>
 
                 <div className="flex items-center justify-between">
@@ -221,10 +213,10 @@ function AttractionsContent() {
                       <span className="text-xs">리뷰</span>
                     </Button>
                   </div>
-                  <Link to={`/place/${attraction.id || idx}`}>
+                  <Link to={`/place/${attraction.placeId}`}>
                     <Button
                       size="sm"
-                      className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+                      className="bg-traveling-purple text-white"
                     >
                       상세보기
                     </Button>
@@ -234,6 +226,7 @@ function AttractionsContent() {
             </Card>
           ))}
         </div>
+
         {filteredAttractions.length === 0 && (
           <p className="text-center text-traveling-text/60 mt-4">
             검색 결과가 없습니다.

@@ -32,6 +32,7 @@ import PlaceDetail from './modules/Place-detail.jsx';
 import Layout from './Layout';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AttractionDetailPage from './modules/AttractionDetailPage';
 
 function PlaceDetailWrapper() {
   const { placeId } = useParams();
@@ -62,9 +63,7 @@ function App() {
             }
           />
 
-          <Route path="/place/:placeId" element={<Layout />}>
-            <Route index element={<PlaceDetail />} />
-          </Route>
+          <Route path="/place/:id" element={<AttractionDetailPage />} />
 
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/flight-search" element={<FlightSearchPage />} />
@@ -88,6 +87,8 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/attraction-content" element={<AttractionsContent />} />
+          <Route path="/place/:id" element={<AttractionDetailPage />} />
 
           <Route
             path="/travel-planner/:destination/step1"
