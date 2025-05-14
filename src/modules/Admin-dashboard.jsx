@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from "react-redux";
+
+import { getAllUsers } from "../hooks/reducer/admin/adminThunk";
+
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '../modules/Tabs';
+
 import {
   Card,
   CardContent,
@@ -12,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '../modules/Card';
+
 import { Button } from '../modules/Button';
 import { Input } from '../modules/Input';
 import { Label } from '../modules/Label';
@@ -22,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../modules/Select';
+
 import { Badge } from '../modules/Badge';
 import { Avatar, AvatarFallback } from "../modules/Avatar";
 import {
@@ -113,8 +120,16 @@ function ActivityItem({ title, description, time, icon }) {
 }
 
 export function AdminDashboard() {
+  const dispatch = useDispatch();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [chartPeriod, setChartPeriod] = useState('month');
+
+  const users = useSelector((state) => state.admin.users);
+
+  useEffect(() => {
+    dispatch(getAllUsers());
+  }, [])
 
   const generateDummyData = () => {
     const data = [];
