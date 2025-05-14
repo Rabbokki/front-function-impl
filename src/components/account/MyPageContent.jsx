@@ -12,7 +12,8 @@ import {
   Plane,
   Hotel, 
   Bus,
-  Train
+  Train,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
@@ -32,7 +33,6 @@ import { ko } from 'date-fns/locale';
 
 function MyPageContent() {
   const [activeTab, setActiveTab] = useState('my-trips');
-
   const [userInfo, setUserInfo] = useState({
     email: '',
     nickname: '',
@@ -40,7 +40,7 @@ function MyPageContent() {
     level: '',
     levelExp: 0,
   });
-
+  const [bookings, setBookings] = useState([]);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showExpModal, setShowExpModal] = useState(false);
 
@@ -78,7 +78,20 @@ function MyPageContent() {
       }
     };
 
+    const fetchBookings = async () => {
+      try {
+        const res = await axiosInstance.get('/api/flights/my-bookings');
+        console.log('예약 목록:', res.data);
+        if (res.data.success) {
+          setBookings(res.data.data);
+        }
+      } catch (error) {
+        console.error('예약 목록 요청 실패:', error);
+      }
+    };
+
     fetchUserInfo();
+    fetchBookings();
   }, []);
 
   const myTrips = [
@@ -181,120 +194,65 @@ function MyPageContent() {
     },
   ];
 
-  const myBookings = [
-    {
-      id: 1,
-      type: "항공권",
-      title: "인천 → 도쿄 (나리타)",
-      airline: "대한항공",
-      flightNumber: "KE703",
-      departureDate: "2025.05.15 08:30",
-      arrivalDate: "2025.05.15 10:45",
-      status: "예약 완료",
-      passengers: 2,
-      price: "₩580,000",
-      color: "#93c5fd",
-      icon: Plane,
-    },
-    {
-      id: 2,
-      type: "항공권",
-      title: "도쿄 (나리타) → 인천",
-      airline: "아시아나항공",
-      flightNumber: "OZ104",
-      departureDate: "2025.05.18 19:20",
-      arrivalDate: "2025.05.18 22:00",
-      status: "예약 완료",
-      passengers: 2,
-      price: "₩620,000",
-      color: "#93c5fd",
-      icon: Plane,
-    },
-    {
-      id: 3,
-      type: "숙소",
-      title: "호텔 미라코스타",
-      location: "도쿄, 일본",
-      checkIn: "2025.05.15",
-      checkOut: "2025.05.18",
-      roomType: "디럭스 더블룸",
-      guests: 2,
-      status: "예약 완료",
-      price: "₩960,000",
-      color: "#a78bfa",
-      icon: Hotel,
-    },
-    {
-      id: 4,
-      type: "교통",
-      title: "나리타 공항 → 도쿄역 리무진 버스",
-      departureDate: "2025.05.15 11:30",
-      arrivalDate: "2025.05.15 13:00",
-      passengers: 2,
-      status: "예약 완료",
-      price: "₩30,000",
-      color: "#6ee7b7",
-      icon: Bus,
-    },
-    {
-      id: 5,
-      type: "교통",
-      title: "도쿄 → 교토 신칸센",
-      departureDate: "2025.05.16 09:00",
-      arrivalDate: "2025.05.16 11:30",
-      passengers: 2,
-      status: "예약 완료",
-      price: "₩280,000",
-      color: "#fce7f3",
-      icon: Train,
-    },
-  ]
   const formatRelativeTime = (string) => {
-    const now = new Date()
-    // 데모를 위해 현재 시간을 2025년으로 설정
-    now.setFullYear(2025)
-
-    const date = new Date(string)
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    const now = new Date();
+    now.setFullYear(2025);
+    const date = new Date(string);
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return "방금 전"
+      return '방금 전';
     } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60)
-      return `${minutes}분 전`
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes}분 전`;
     } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600)
-      return `${hours}시간 전`
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours}시간 전`;
     } else if (diffInSeconds < 604800) {
-      const days = Math.floor(diffInSeconds / 86400)
-      return `${days}일 전`
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days}일 전`;
     } else if (diffInSeconds < 2592000) {
-      const weeks = Math.floor(diffInSeconds / 604800)
-      return `${weeks}주 전`
+      const weeks = Math.floor(diffInSeconds / 604800);
+      return `${weeks}주 전`;
     } else if (diffInSeconds < 31536000) {
-      const months = Math.floor(diffInSeconds / 2592000)
-      return `${months}개월 전`
+      const months = Math.floor(diffInSeconds / 2592000);
+      return `${months}개월 전`;
     } else {
-      const years = Math.floor(diffInSeconds / 31536000)
-      return `${years}년 전`
+      const years = Math.floor(diffInSeconds / 31536000);
+      return `${years}년 전`;
     }
-  }
+  };
 
-  
-
-  // 예약 상태에 따른 배지 색상 결정
   const getStatusBadgeColor = (string) => {
     switch (string) {
-      case "예약 완료":
-        return "bg-[#93c5fd] text-white"
-      case "이용 완료":
-        return "bg-[#adb5bd] text-white"
-      case "취소됨":
-        return "bg-[#ff9a9e] text-white"
+      case 'RESERVED':
+        return 'bg-[#93c5fd] text-white';
+      case 'CANCELLED':
+        return 'bg-[#ff9a9e] text-white';
       default:
-        return "bg-[#93c5fd] text-white"
+        return 'bg-[#93c5fd] text-white';
     }
-  }
+  };
+
+  const getAirportName = (code) => {
+    const airportMap = {
+      ICN: '인천',
+      NRT: '나리타',
+      HND: '하네다',
+      HKG: '홍콩',
+      CDG: '파리 샤를드골',
+      LHR: '런던 히드로',
+    };
+    return airportMap[code] || code;
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-md">
@@ -315,7 +273,7 @@ function MyPageContent() {
           <div className="mt-2">
             <div className="flex items-center">
               <span className="text-sm text-[#495057]">
-                여행 레벨: {userInfo.level}
+                여행 레벨: {currentLevel.label}
               </span>
               <Badge
                 onClick={() => setShowLevelModal(true)}
@@ -500,70 +458,97 @@ function MyPageContent() {
           </div>
         </TabsContent>
 
-        <TabsContent value="my-bookings">
+        <TabsContent value="bookings">
           <div className="space-y-4">
-            {myBookings.map((booking) => (
-              <Card key={booking.id} className="overflow-hidden bg-[#f8f9fa] hover:bg-[#e0f2fe]/20">
-                <div className="absolute left-0 top-0 h-full w-1" style={{ backgroundColor: booking.color }}></div>
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
-                  <div className="flex items-start">
-                    <div className="mr-3 rounded-full bg-[#e0f2fe] p-2">
-                      <booking.icon className="h-5 w-5" style={{ color: booking.color }} />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-[#4338ca]">{booking.title}</CardTitle>
-                      {booking.type === "항공권" && (
+            {bookings.length > 0 ? (
+              bookings.map((booking) => (
+                <Card
+                  key={booking.id}
+                  className="overflow-hidden bg-[#f8f9fa] hover:bg-[#e0f2fe]/20"
+                >
+                  <div
+                    className="absolute left-0 top-0 h-full w-1"
+                    style={{ backgroundColor: '#93c5fd' }}
+                  ></div>
+                  <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
+                    <div className="flex items-start">
+                      <div className="mr-3 rounded-full bg-[#e0f2fe] p-2">
+                        <Plane className="h-5 w-5" style={{ color: '#93c5fd' }} />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-[#4338ca]">
+                          {getAirportName(booking.departureAirport)} →{' '}
+                          {getAirportName(booking.arrivalAirport)}
+                        </CardTitle>
                         <div className="mt-1 space-y-1 text-sm text-[#495057]">
                           <p>
-                            {booking.airline} {booking.flightNumber}
+                            {booking.carrier} {booking.flightNumber}
                           </p>
-                          <p>출발: {booking.departureDate}</p>
-                          <p>도착: {booking.arrivalDate}</p>
-                          <p>탑승객: {booking.passengers}명</p>
-                        </div>
-                      )}
-                      {booking.type === "숙소" && (
-                        <div className="mt-1 space-y-1 text-sm text-[#495057]">
-                          <p>위치: {booking.location}</p>
-                          <p>체크인: {booking.checkIn}</p>
-                          <p>체크아웃: {booking.checkOut}</p>
                           <p>
-                            객실: {booking.roomType}, 인원: {booking.guests}명
+                            출발:{' '}
+                            {format(
+                              new Date(booking.departureTime),
+                              'yyyy.MM.dd HH:mm',
+                              { locale: ko }
+                            )}
                           </p>
+                          <p>
+                            도착:{' '}
+                            {format(
+                              new Date(booking.arrivalTime),
+                              'yyyy.MM.dd HH:mm',
+                              { locale: ko }
+                            )}
+                          </p>
+                          <p>탑승객: {booking.passengerCount}명</p>
                         </div>
-                      )}
-                      {booking.type === "교통" && (
-                        <div className="mt-1 space-y-1 text-sm text-[#495057]">
-                          <p>출발: {booking.departureDate}</p>
-                          <p>도착: {booking.arrivalDate}</p>
-                          <p>인원: {booking.passengers}명</p>
-                        </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <Badge className={getStatusBadgeColor(booking.status)}>{booking.status}</Badge>
-                    <p className="mt-2 font-medium text-[#4338ca]">{booking.price}</p>
-                  </div>
-                </CardHeader>
-                <CardFooter className="flex justify-end pb-4 pl-6 pt-2">
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" className="border-[#93c5fd] text-[#4338ca] hover:bg-[#e0f2fe]">
-                      상세보기
-                    </Button>
-                    {booking.status === "예약 완료" && (
+                    <div className="flex flex-col items-end">
+                      <Badge className={getStatusBadgeColor(booking.status)}>
+                        {booking.status === 'RESERVED' ? '예약 완료' : '취소됨'}
+                      </Badge>
+                      <p className="mt-2 font-medium text-[#4338ca]">
+                        {formatPrice(booking.totalPrice)}
+                      </p>
+                    </div>
+                  </CardHeader>
+                  <CardFooter className="flex justify-end pb-4 pl-6 pt-2">
+                    <div className="flex space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-[#ff9a9e] text-[#ff9a9e] hover:bg-[#fce7f3]"
+                        className="border-[#93c5fd] text-[#4338ca] hover:bg-[#e0f2fe]"
                       >
-                        예약 취소
+                        상세보기
                       </Button>
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
+                      {booking.status === 'RESERVED' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-[#ff9a9e] text-[#ff9a9e] hover:bg-[#fce7f3]"
+                        >
+                          예약 취소
+                        </Button>
+                      )}
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-[#495057]">예약 내역이 없습니다.</p>
+                <Link to="/flight-search">
+                  <Button
+                    size="sm"
+                    className="mt-4 border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
+                  >
+                    항공권 검색하기
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -691,7 +676,7 @@ function MyPageContent() {
           </div>
         </TabsContent>
       </Tabs>
-      {/* 레벨 안내 */}
+
       {showLevelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="rounded-lg bg-white p-6 w-[90%] max-w-md shadow-xl">
@@ -731,7 +716,6 @@ function MyPageContent() {
         </div>
       )}
 
-      {/* 경험치 안내 */}
       {showExpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="rounded-lg bg-white p-6 w-[90%] max-w-md shadow-xl">
@@ -766,7 +750,6 @@ function MyPageContent() {
 }
 
 export default MyPageContent;
-
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------------

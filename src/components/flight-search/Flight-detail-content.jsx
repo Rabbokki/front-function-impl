@@ -13,6 +13,7 @@ import axiosInstance from "../../api/axiosInstance";
 
 function FlightInfoSection({ flight, formatPrice, isRoundTrip, formattedTimes, setTabValue }) {
   const navigate = useNavigate();
+
   const parseDuration = (duration) => {
     if (!duration) return { hours: 0, minutes: 0 };
     const durationMatch = duration.match(/PT(\d+)H(?:(\d+)M)?/);
@@ -333,7 +334,7 @@ function SeatSelection({ passengerCount, selectedSeats, setPassengerCount, setSe
           </div>
         </div>
         <div className="mb-6">
-          <div className="mb-4 flex justify-center space-x-4 text-sm">
+          <div className="mb-4 flex justify-center Programmable Search Engine-x-4 text-sm">
             <div className="flex items-center">
               <div className="mr-2 h-4 w-4 rounded-sm bg-traveling-mint" />
               <span>이용 가능</span>
@@ -445,12 +446,12 @@ function PassengerInfo({ passengerCount, setTabValue, setPassengerData, setConta
     const updatedPassengers = [...passengers];
     updatedPassengers[index][field] = value;
     setPassengers(updatedPassengers);
-    setPassengerData(updatedPassengers); // 부모 컴포넌트로 데이터 전달
+    setPassengerData(updatedPassengers);
   };
 
   const handleContactChange = (field, value) => {
     setContact((prev) => ({ ...prev, [field]: value }));
-    setContactData({ ...contact, [field]: value }); // 부모 컴포넌트로 데이터 전달
+    setContactData({ ...contact, [field]: value });
   };
 
   const validatePassengerInfo = () => {
@@ -913,42 +914,65 @@ export default function FlightDetailContent({ flightId }) {
     }).format(price);
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return null;
+    return new Date(dateString).toISOString().split('.')[0];
+  };
+
   const handleBooking = async () => {
     console.log("예약 완료:", { flight, selectedSeats, passengerCount, passengerData, contactData });
 
     const totalPrice =
-      parseFloat(flight.price) * passengerCount +
-      parseFloat(flight.price) * passengerCount * 0.1 +
-      selectedSeats.length * 20000;
+        parseFloat(flight.price) * passengerCount +
+        parseFloat(flight.price) * passengerCount * 0.1 +
+        selectedSeats.length * 20000;
 
     const bookingData = {
-      flightId: flight.id,
-      carrier: flight.carrier,
-      carrierCode: flight.carrierCode,
-      flightNumber: flight.flightNumber,
-      departureAirport: flight.departureAirport,
-      arrivalAirport: flight.arrivalAirport,
-      departureTime: flight.departureTime,
-      arrivalTime: flight.arrivalTime,
-      returnDepartureAirport: flight.returnDepartureAirport || null,
-      returnArrivalAirport: flight.returnArrivalAirport || null,
-      returnDepartureTime: flight.returnDepartureTime || null,
-      returnArrivalTime: flight.returnArrivalTime || null,
-      passengerCount,
-      selectedSeats,
-      totalPrice,
+        flightId: flight.id,
+        carrier: flight.carrier,
+        carrierCode: flight.carrierCode,
+        flightNumber: flight.flightNumber,
+        departureAirport: flight.departureAirport,
+        arrivalAirport: flight.arrivalAirport,
+        departureTime: formatDateTime(flight.departureTime),
+        arrivalTime: formatDateTime(flight.arrivalTime),
+        returnDepartureAirport: flight.returnDepartureAirport || null,
+        returnArrivalAirport: flight.returnArrivalAirport || null,
+        returnDepartureTime: formatDateTime(flight.returnDepartureTime) || null,
+        returnArrivalTime: formatDateTime(flight.returnArrivalTime) || null,
+        passengerCount,
+        selectedSeats,
+        totalPrice,
+        passengers: passengerData.map((p) => ({
+            firstName: p.firstName,
+            lastName: p.lastName,
+            birthDate: p.birthDate,
+            gender: p.gender,
+            nationality: p.nationality,
+            passportNumber: p.passport,
+        })),
+        contact: {
+            email: contactData.email,
+            phone: contactData.phone,
+        },
     };
 
     try {
-      const response = await axiosInstance.post("/api/flights/book", bookingData);
-      console.log("예약 성공:", response.data);
-      alert("예약이 완료되었습니다!");
-      navigate("/mypage");
+        console.log("예약 요청 데이터:", JSON.stringify(bookingData, null, 2));
+        const response = await axiosInstance.post("/api/flights/book", bookingData, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+        });
+        console.log("예약 성공:", response.data);
+        alert("예약이 완료되었습니다!");
+        navigate("/mypage");
     } catch (error) {
-      console.error("예약 실패:", error);
-      alert("예약 처리 중 오류가 발생했습니다: " + (error.response?.data?.message || error.message));
+        console.error("예약 실패:", error);
+        const errorMessage = error.response?.data?.message || error.message || "알 수 없는 오류가 발생했습니다.";
+        alert(`예약 처리 중 오류가 발생했습니다: ${errorMessage}`);
     }
-  };
+};
 
   if (loading) {
     return <div className="flex justify-center py-12">로딩 중...</div>;
