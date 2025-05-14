@@ -47,6 +47,15 @@ function App() {
           <Route path="/" element={<Home />} />
 
           <Route
+            path="/admin"
+            element={
+              <PrivateRoute requiredRole="ADMIN">
+                <AdminPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
             path="/mypage"
             element={
               <PrivateRoute>
@@ -64,7 +73,6 @@ function App() {
           />
 
           <Route path="/place/:id" element={<AttractionDetailPage />} />
-
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/flight-search" element={<FlightSearchPage />} />
           <Route path="/flight-detail/:id" element={<FlightDetailPage />} />
@@ -86,9 +94,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/attraction-content" element={<AttractionsContent />} />
-          <Route path="/place/:id" element={<AttractionDetailPage />} />
+
 
           <Route
             path="/travel-planner/:destination/step1"

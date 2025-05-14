@@ -9,8 +9,7 @@ import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginAccount } from '../../hooks/reducer/account/accountThunk';
-import axiosInstance from '../../api/axiosInstance';
+import { loginAccount, getAccountDetails } from '../../hooks/reducer/account/accountThunk';
 
 function LoginForm() {
   const dispatch = useDispatch();
@@ -48,13 +47,7 @@ function LoginForm() {
         ? localStorage.getItem("accessToken")
         : sessionStorage.getItem("accessToken");
   
-      const meResponse = await axiosInstance.get("/api/accounts/mypage", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      const user = meResponse.data;
+      const user = await dispatch(getAccountDetails()).unwrap();
   
       if (rememberMe) {
         localStorage.setItem("user", JSON.stringify(user));

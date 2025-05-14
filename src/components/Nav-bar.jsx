@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
+import { logoutAccount } from '../hooks/reducer/account/accountThunk'
 
 export function NavBar() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem('accessToken') || !!sessionStorage.getItem('accessToken')
   );
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    sessionStorage.removeItem('accessToken');
-    sessionStorage.removeItem('refreshToken');
+  const handleLogout = async () => {
+    const resultAction = await dispatch(logoutAccount);
+    console.log('로그아옷 성공: ', resultAction)
     setIsLoggedIn(false);
     alert('로그아웃 되었습니다!');
     navigate('/');

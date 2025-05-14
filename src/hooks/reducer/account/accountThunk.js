@@ -46,7 +46,9 @@ export const getAccountDetails = createAsyncThunk(
 
 // 로그아웃 요청
 
-export const logoutAccount = () => (dispatch) => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
+export const logoutAccount = () => {
+  ["accessToken", "refreshToken", "user"].forEach((key) => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
 };

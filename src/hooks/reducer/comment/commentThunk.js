@@ -31,6 +31,7 @@ export const getCommentsByPostId = createAsyncThunk(
   async (postId, thunkAPI) => {
     try {
       const response = await axiosInstance.get(`${API_BASE_URL}/posts/${postId}/comments`);
+      console.log('getting comments')
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.error || '댓글 조회 실패';
