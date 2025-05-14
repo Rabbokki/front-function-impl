@@ -26,6 +26,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerated, setIsGenerated] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("시작 날: ", startDate)
