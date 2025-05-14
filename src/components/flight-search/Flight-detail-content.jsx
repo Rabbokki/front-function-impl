@@ -9,6 +9,7 @@ import { Label } from "../../modules/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../modules/Select";
 import { ArrowLeft, ArrowRight, Plane, Users, Luggage, Calendar } from "lucide-react";
 import { format, toZonedTime } from "date-fns-tz";
+import axiosInstance from "../../api/axiosInstance";
 
 function FlightInfoSection({ flight, formatPrice, isRoundTrip, formattedTimes, setTabValue }) {
   const navigate = useNavigate();
@@ -517,7 +518,7 @@ function PassengerInfo({ passengerCount, setTabValue }) {
                 <input
                   id={`passenger-${index}-birth`}
                   className="w-full rounded-md border border-traveling-text/20 p-2 text-sm"
-                  placeholder="YYYY-MM-DD"
+                  placeholder="생년월일 8자리 (예: 2000-12-31)"
                   value={passenger.birthDate}
                   onChange={(e) => handlePassengerChange(index, "birthDate", e.target.value)}
                 />

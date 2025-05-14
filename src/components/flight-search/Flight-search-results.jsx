@@ -244,10 +244,10 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
   const arrivalTimeFormatted = format(
     toZonedTime(
       parseDate(flight.arrivalTime),
-      getAirportTimezone(flight.arrivalAirport, flight.arrivalTimeZone)
+      getAirportTimezone(flight.arrivalAirport, flight.departureTimeZone)
     ),
     "hh:mm a",
-    { timeZone: getAirportTimezone(flight.arrivalAirport, flight.arrivalTimeZone) }
+    { timeZone: getAirportTimezone(flight.arrivalAirport, flight.departureTimeZone) }
   );
   const outboundDuration = parseDuration(flight.duration);
 
@@ -294,7 +294,7 @@ function FlightCard({ flight, navigate, isRoundTrip }) {
     outboundArrival: {
       raw: flight.arrivalTime,
       formatted: arrivalTimeFormatted,
-      timeZone: getAirportTimezone(flight.arrivalAirport, flight.arrivalTimeZone),
+      timeZone: getAirportTimezone(flight.arrivalAirport, flight.departureTimeZone),
       airport: flight.arrivalAirport,
     },
     returnDeparture: hasReturn
@@ -488,25 +488,20 @@ export default function FlightSearchResults() {
       }
 
       try {
-        console.log("API 요청 데이터:", {
+        const requestData = {
           origin: fromIata,
           destination: toIata,
           departureDate: params.date,
           returnDate: params.tripType === "roundtrip" ? params.return : null,
           realTime: true,
-        });
+        };
+        console.log("API 요청 데이터:", requestData);
         const response = await axios.post(
-          "http://localhost:8080/api/flights/search",
-          {
-            origin: fromIata,
-            destination: toIata,
-            departureDate: params.date,
-            returnDate: params.tripType === "roundtrip" ? params.return : null,
-            realTime: true,
-          },
+          "/api/flights/search",
+          requestData,
           {
             headers: { "Content-Type": "application/json" },
-            timeout: 10000,
+            timeout: 20000, // 타임아웃 20초로 증가하여 서버 지연 수용
           }
         );
         console.log("API 응답 전체:", JSON.stringify(response.data, null, 2));
@@ -585,9 +580,11 @@ export default function FlightSearchResults() {
           setFilteredFlights([]);
         }
       } catch (err) {
-        console.error("API 오류:", err.message, err.response?.data);
+        console.error("API 오류:", err.message, err.response?.data, err.response?.status);
         let errorMessage = "항공편 정보를 가져오는 데 실패했습니다. 다시 시도해주세요.";
-        if (err.response?.status === 400) {
+        if (err.code === "ECONNABORTED") {
+          errorMessage = "서버 응답 시간이 초과되었습니다. 네트워크 상태를 확인하거나 나중에 다시 시도해주세요.";
+        } else if (err.response?.status === 400) {
           errorMessage = "잘못된 요청입니다. 검색 조건을 확인해주세요.";
         } else if (err.response?.status === 500) {
           errorMessage = "서버 오류가 발생했습니다. 나중에 다시 시도해주세요.";
