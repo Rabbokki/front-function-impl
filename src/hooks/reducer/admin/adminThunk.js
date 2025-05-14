@@ -16,3 +16,29 @@ export const getAllUsers = createAsyncThunk('admin/getAllUsers', async (_, thunk
     return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
   }
 });
+
+export const updateUser = createAsyncThunk(
+  'admin/updateUser',
+  async ({ accountId, formData }, thunkAPI) => {
+    try {
+      const response = await axiosInstance.patch(`${API_BASE_URL}/users/update/${accountId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
+      });
+      return response.data; // 수정된 account 데이터 반환
+    } catch (error) {
+      const errorMessage = error.response?.data || '유저 수정 실패';
+      return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+    }
+  }
+);
+
+export const deleteUser = createAsyncThunk('admin/deleteUser', async (accountId, thunkAPI) => {
+  try {
+    await axiosInstance.delete(`${API_BASE_URL}/users/delete/${accountId}`, { withCredentials: true });
+    return accountId; // 삭제된 게시글 ID 반환
+  } catch (error) {
+    const errorMessage = error.response?.data || '유저 삭제 실패';
+    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+  }
+});

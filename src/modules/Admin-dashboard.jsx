@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 
-import { getAllUsers } from "../hooks/reducer/admin/adminThunk";
+import { getAllUsers, deleteUser } from "../hooks/reducer/admin/adminThunk";
+
+import { AdminViewUser } from './Admin-view-user';
 
 import {
   Tabs,
@@ -30,7 +32,7 @@ import {
 } from '../modules/Select';
 
 import { Badge } from '../modules/Badge';
-import { Avatar, AvatarFallback } from "../modules/Avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../modules/Avatar";
 import {
   Users,
   FileText,
@@ -124,12 +126,18 @@ export function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [chartPeriod, setChartPeriod] = useState('month');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false);
 
   const users = useSelector((state) => state.admin.users);
 
   useEffect(() => {
     dispatch(getAllUsers());
   }, [])
+
+  useEffect(() => {
+    console.log("users is: ", users);
+  }, [users])
 
   const generateDummyData = () => {
     const data = [];
@@ -179,6 +187,28 @@ export function AdminDashboard() {
       return `${date.getMonth() + 1}월`;
     }
   };
+
+  const openUserDetailModal = (user) => {
+    setSelectedUser(user);
+    setIsUserDetailModalOpen(true);
+  }
+
+  const handleUserDelete = async (user) => {
+    if (!window.confirm(`정말 ${user.name} 삭제 하겠습니가?`)) return;
+
+    dispatch(deleteUser(user.id))
+      .then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          alert("삭제 성공 했습니다.");
+          dispatch(getAllUsers())
+        } else {
+          alert("삭제 실패 했습니다");
+        }
+      })
+      .catch((error) => {
+        console.error("삭제 실패:", error);
+      });
+  }
 
   return (
     <div className="space-y-6">
@@ -457,6 +487,9 @@ export function AdminDashboard() {
                         사용자
                       </th>
                       <th className="text-left py-3 px-4 font-medium">
+                        닉내임
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium">
                         이메일
                       </th>
                       <th className="text-left py-3 px-4 font-medium">
@@ -467,45 +500,21 @@ export function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        name: '김여행',
-                        email: 'travel.kim@example.com',
-                        date: '2023-04-25',
-                        status: 'active',
-                      },
-                      {
-                        name: '이모험',
-                        email: 'adventure.lee@example.com',
-                        date: '2023-04-24',
-                        status: 'active',
-                      },
-                      {
-                        name: '박세계',
-                        email: 'world.park@example.com',
-                        date: '2023-04-23',
-                        status: 'pending',
-                      },
-                      {
-                        name: '최탐험',
-                        email: 'explorer.choi@example.com',
-                        date: '2023-04-22',
-                        status: 'active',
-                      },
-                    ].map((user, i) => (
+                    {users?.map((user, i) => (
                       <tr key={user.email} className="border-b">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                              <AvatarFallback>
-                                {user.name.substring(0, 1)}
-                              </AvatarFallback>
+                              <AvatarImage src={user.imgUrl || '/placeholder.svg?height=96&width=96'} />
                             </Avatar>
                             <span>{user.name}</span>
                           </div>
                         </td>
+                        <td className="py-3 px-4">{user.nickname}</td>
                         <td className="py-3 px-4">{user.email}</td>
-                        <td className="py-3 px-4">{user.date}</td>
+                        <td className="py-3 px-4">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
                         <td className="py-3 px-4">
                           {user.status === 'active' ? (
                             <Badge
@@ -536,20 +545,22 @@ export function AdminDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
+                              onClick={() => openUserDetailModal(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 text-red-500"
+                              onClick={() => handleUserDelete(user)}
                             >
-                              <MoreVertical className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )) || null }
                   </tbody>
                 </table>
               </div>
@@ -587,6 +598,9 @@ export function AdminDashboard() {
                         사용자
                       </th>
                       <th className="text-left py-3 px-4 font-medium">
+                        닉내임
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium">
                         이메일
                       </th>
                       <th className="text-left py-3 px-4 font-medium">
@@ -598,79 +612,23 @@ export function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        name: '김여행',
-                        email: 'travel.kim@example.com',
-                        date: '2023-04-25',
-                        role: 'user',
-                        status: 'active',
-                      },
-                      {
-                        name: '이모험',
-                        email: 'adventure.lee@example.com',
-                        date: '2023-04-24',
-                        role: 'user',
-                        status: 'active',
-                      },
-                      {
-                        name: '박세계',
-                        email: 'world.park@example.com',
-                        date: '2023-04-23',
-                        role: 'user',
-                        status: 'pending',
-                      },
-                      {
-                        name: '최탐험',
-                        email: 'explorer.choi@example.com',
-                        date: '2023-04-22',
-                        role: 'user',
-                        status: 'active',
-                      },
-                      {
-                        name: '정글로벌',
-                        email: 'global.jung@example.com',
-                        date: '2023-04-21',
-                        role: 'admin',
-                        status: 'active',
-                      },
-                      {
-                        name: '한여행자',
-                        email: 'traveler.han@example.com',
-                        date: '2023-04-20',
-                        role: 'user',
-                        status: 'inactive',
-                      },
-                      {
-                        name: '윤세계인',
-                        email: 'citizen.yoon@example.com',
-                        date: '2023-04-19',
-                        role: 'user',
-                        status: 'active',
-                      },
-                      {
-                        name: '송여정',
-                        email: 'journey.song@example.com',
-                        date: '2023-04-18',
-                        role: 'user',
-                        status: 'active',
-                      },
-                    ].map((user, i) => (
+                    {users?.map((user, i) => (
                       <tr key={i} className="border-b">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                              <AvatarFallback>
-                                {user.name.substring(0, 1)}
-                              </AvatarFallback>
+                              <AvatarImage src={user.imgUrl || '/placeholder.svg?height=96&width=96'} />
                             </Avatar>
                             <span>{user.name}</span>
                           </div>
                         </td>
+                        <td className="py-3 px-4">{user.nickname}</td>
                         <td className="py-3 px-4">{user.email}</td>
-                        <td className="py-3 px-4">{user.date}</td>
                         <td className="py-3 px-4">
-                          {user.role === 'admin' ? (
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4">
+                          {user.role === 'ADMIN' ? (
                             <Badge className="bg-traveling-purple text-white">
                               관리자
                             </Badge>
@@ -720,6 +678,7 @@ export function AdminDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
+                              onClick={() => openUserDetailModal(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -727,13 +686,14 @@ export function AdminDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-red-500"
+                              onClick={() => handleUserDelete(user)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )) || null}
                   </tbody>
                 </table>
               </div>
@@ -1311,6 +1271,16 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {selectedUser && (
+        <AdminViewUser
+          isOpen={isUserDetailModalOpen}
+          onClose={() => setIsUserDetailModalOpen(false)}
+          user={selectedUser}
+          onUserUpdated={() => dispatch(getAllUsers())}
+        />
+      )}
+
     </div>
   );
 }
