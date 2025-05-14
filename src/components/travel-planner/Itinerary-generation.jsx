@@ -506,18 +506,18 @@ const removePlaceFromItinerary = (day, placeId) => {
     });
   
     const planData = {
-      accountId: Number(accountId),
+      accountId: Number(localStorage.getItem("accountId")),
       startDate,
       endDate,
       country,
       city,
-      transportation: "대중교통", // 나중에 수정 가능
+       transportation: localStorage.getItem("transportation"),
       places,
       accommodations,
     };
   
     try {
-      await axios.post("http://localhost:8080/api/travel-plans", planData);
+      await axios.post("/api/travel-plans", planData);
       alert("여행 일정이 저장되었습니다!");
       navigate("/mypage");
     } catch (error) {

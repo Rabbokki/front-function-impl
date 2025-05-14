@@ -9,9 +9,10 @@ export default function Step5Page() {
   const { destination } = useParams();
   const [searchParams] = useSearchParams();
 
-  // ✅ 날짜를 localStorage에서 읽어오기
+  // 날짜를 localStorage에서 읽어오기
   const startDate = localStorage.getItem("startDate");
   const endDate = localStorage.getItem("endDate");
+  const transportation = localStorage.getItem("transportation");
 
   console.log("🧪 Step5 (localStorage) startDate:", startDate, "endDate:", endDate);
 
@@ -31,6 +32,7 @@ export default function Step5Page() {
           isAiMode={isAiMode}
           startDate={startDate}
           endDate={endDate}
+          transportation={localStorage.getItem("transportation")}
         />
       </div>
     </main>

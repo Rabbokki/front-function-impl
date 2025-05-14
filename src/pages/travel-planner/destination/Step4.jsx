@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar";
 import TransportationSelection from "../../../components/travel-planner/Transportation-selection";
@@ -10,6 +11,8 @@ export default function Step4Page() {
   const { destination } = useParams();
   const startDate = localStorage.startDate;
   const endDate = localStorage.endDate;
+  const [transportation, setTransportation] = useState("TRANSPORTATION");
+
 
   if (!supportedCities.includes(destination)) {
     return <div>404 - 지원하지 않는 도시입니다.</div>;
@@ -24,6 +27,8 @@ export default function Step4Page() {
          destination={destination}
          startDate={startDate}
          endDate={endDate}
+         transportation={transportation}         
+         setTransportation={setTransportation} 
          />
       </div>
     </main>
