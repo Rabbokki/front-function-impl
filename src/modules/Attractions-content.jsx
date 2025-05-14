@@ -31,6 +31,7 @@ function AttractionsContent() {
     name: meta.name,
   }));
 
+
   // 전체 도시 한 번에 불러오기
   useEffect(() => {
     const loadAllCities = async () => {
@@ -177,7 +178,7 @@ function AttractionsContent() {
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />
                       <span className="text-xs">
-                        리뷰 {attraction.reviewCount || 0}
+                        리뷰 {(attraction.reviewCount || 0).toLocaleString()}
                       </span>
                     </Button>
                   </div>

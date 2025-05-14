@@ -43,6 +43,7 @@ function MyPageContent() {
   const [bookings, setBookings] = useState([]);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showExpModal, setShowExpModal] = useState(false);
+  const [savedItems, setSavedItems] = useState([]);
 
   const levelInfo = {
     BEGINNER: { label: '여행 새싹', min: 0, max: 99 },
@@ -121,48 +122,23 @@ function MyPageContent() {
     },
   ];
 
-  const savedItems = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      type: '명소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      type: '맛집',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '호텔 미라코스타',
-      type: '숙소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.14',
-      color: '#4dabf7',
-    },
-    {
-      id: 4,
-      title: '방콕 왕궁',
-      type: '명소',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ff6b6b',
-    },
-    {
-      id: 5,
-      title: '팟타이 맛집',
-      type: '맛집',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ffd43b',
-    },
-  ];
+
+useEffect(() => {
+  const accessToken = localStorage.getItem('accessToken');
+
+  async function fetchSavedItems() {
+    const res = await fetch('/api/saved-places', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await res.json();
+    console.log("✅ 저장 목록:", data);
+    setSavedItems(data);
+  }
+
+  fetchSavedItems();
+}, []);
 
   const myReviews = [
     {
@@ -566,7 +542,7 @@ function MyPageContent() {
                 <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
                   <div>
                     <CardTitle className="text-lg text-[#1e3a8a]">
-                      {item.title}
+                        {item.city}, {item.country}
                     </CardTitle>
                     <div className="mt-1 flex items-center text-sm text-[#495057]">
                       <MapPin className="mr-1 h-3 w-3 text-[#4dabf7]" />
