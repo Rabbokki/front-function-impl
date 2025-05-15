@@ -41,6 +41,7 @@ function MyPageContent() {
     levelExp: 0,
   });
   const [bookings, setBookings] = useState([]);
+  const [myTrips, setMyTrips] = useState([]);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showExpModal, setShowExpModal] = useState(false);
 
@@ -90,36 +91,55 @@ function MyPageContent() {
       }
     };
 
+    const fetchAiPlans = async () => {
+      try {
+        const res = await axiosInstance.get('/api/aiplan/my-plans');
+        console.log('AI 일정 목록:', res.data);
+        const trips = res.data.map(plan => ({
+          id: plan.id,
+          title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
+          date: `${plan.startDate} - ${plan.endDate}`,
+          status: plan.status,
+          planType: plan.planType, // planType 추가
+          image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
+          color: getColorForDestination(plan.destination)
+        }));
+        setMyTrips(trips);
+      } catch (error) {
+        console.error('AI 일정 목록 요청 실패:', error);
+        setMyTrips([]);
+      }
+    };
+
     fetchUserInfo();
     fetchBookings();
+    fetchAiPlans();
   }, []);
 
-  const myTrips = [
-    {
-      id: 1,
-      title: '도쿄 3박 4일',
-      date: '2025.05.15 - 2025.05.18',
-      status: '예정',
-      image: '도쿄',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '제주도 가족여행',
-      date: '2025.03.10 - 2025.03.13',
-      status: '완료',
-      image: '제주도',
-      color: '#51cf66',
-    },
-    {
-      id: 3,
-      title: '방콕 5일',
-      date: '2024.12.24 - 2024.12.28',
-      status: '완료',
-      image: '방콕',
-      color: '#ffd43b',
-    },
-  ];
+  const destinationMap = {
+    tokyo: '도쿄',
+    jeju: '제주도',
+    bangkok: '방콕',
+    paris: '파리',
+    rome: '로마',
+    venice: '베니스',
+    fukuoka: '후쿠오카',
+    singapore: '싱가포르'
+  };
+
+  const getColorForDestination = (destination) => {
+    const colors = {
+      tokyo: '#ff6b6b',
+      jeju: '#51cf66',
+      bangkok: '#ffd43b',
+      paris: '#4dabf7',
+      rome: '#ff9a9e',
+      venice: '#93c5fd',
+      fukuoka: '#adb5bd',
+      singapore: '#f3d9fa'
+    };
+    return colors[destination.toLowerCase()] || '#4dabf7';
+  };
 
   const savedItems = [
     {
@@ -362,85 +382,170 @@ function MyPageContent() {
 
         <TabsContent value="my-trips">
           <div className="grid gap-6 md:grid-cols-3">
-            {myTrips.map((trip) => (
-              <Card
-                key={trip.id}
-                className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
-              >
-                <div className="relative h-40 w-full bg-[#e7f5ff]">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" className="h-20 w-20">
-                      {trip.image === '도쿄' && (
-                        <>
-                          <path d="M50,80 L30,40 L70,40 Z" fill="#ff6b6b" />
-                          <rect
-                            x="45"
-                            y="20"
-                            width="10"
-                            height="20"
-                            fill="#ff6b6b"
-                          />
-                        </>
-                      )}
-                      {trip.image === '제주도' && (
-                        <>
-                          <path
-                            d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
-                            fill="#51cf66"
-                          />
-                          <path
-                            d="M50,30 L55,45 L70,45 L60,55 L65,70 L50,60 L35,70 L40,55 L30,45 L45,45 Z"
-                            fill="#ffd43b"
-                          />
-                        </>
-                      )}
-                      {trip.image === '방콕' && (
-                        <>
-                          <path
-                            d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
-                            fill="#ffd43b"
-                          />
-                          <path
-                            d="M40,65 L60,65 L55,80 L45,80 Z"
-                            fill="#ffd43b"
-                          />
-                        </>
-                      )}
-                    </svg>
+            {myTrips.length > 0 ? (
+              myTrips.map((trip) => (
+                <Card
+                  key={trip.id}
+                  className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
+                >
+                  <div className="relative h-40 w-full bg-[#e7f5ff]">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg viewBox="0 0 100 100" className="h-20 w-20">
+                        {trip.image === '도쿄' && (
+                          <>
+                            <path d="M50,80 L30,40 L70,40 Z" fill="#ff6b6b" />
+                            <rect
+                              x="45"
+                              y="20"
+                              width="10"
+                              height="20"
+                              fill="#ff6b6b"
+                            />
+                          </>
+                        )}
+                        {trip.image === '제주도' && (
+                          <>
+                            <path
+                              d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
+                              fill="#51cf66"
+                            />
+                            <path
+                              d="M50,30 L55,45 L70,45 L60,55 L65,70 L50,60 L35,70 L40,55 L30,45 L45,45 Z"
+                              fill="#ffd43b"
+                            />
+                          </>
+                        )}
+                        {trip.image === '방콕' && (
+                          <>
+                            <path
+                              d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
+                              fill="#ffd43b"
+                            />
+                            <path
+                              d="M40,65 L60,65 L55,80 L45,80 Z"
+                              fill="#ffd43b"
+                            />
+                          </>
+                        )}
+                        {trip.image === '파리' && (
+                          <>
+                            <path
+                              d="M50,80 L40,40 L60,40 Z"
+                              fill="#4dabf7"
+                            />
+                            <rect
+                              x="45"
+                              y="20"
+                              width="10"
+                              height="20"
+                              fill="#4dabf7"
+                            />
+                          </>
+                        )}
+                        {trip.image === '로마' && (
+                          <>
+                            <path
+                              d="M50,80 L30,40 L70,40 Z"
+                              fill="#ff9a9e"
+                            />
+                            <circle
+                              cx="50"
+                              cy="30"
+                              r="10"
+                              fill="#ff9a9e"
+                            />
+                          </>
+                        )}
+                        {trip.image === '베니스' && (
+                          <>
+                            <path
+                              d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
+                              fill="#93c5fd"
+                            />
+                            <path
+                              d="M50,30 L60,50 L50,70 L40,50 Z"
+                              fill="#ffffff"
+                            />
+                          </>
+                        )}
+                        {trip.image === '후쿠오카' && (
+                          <>
+                            <path
+                              d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
+                              fill="#adb5bd"
+                            />
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="10"
+                              fill="#adb5bd"
+                            />
+                          </>
+                        )}
+                        {trip.image === '싱가포르' && (
+                          <>
+                            <path
+                              d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
+                              fill="#f3d9fa"
+                            />
+                            <rect
+                              x="45"
+                              y="30"
+                              width="10"
+                              height="40"
+                              fill="#ffffff"
+                            />
+                          </>
+                        )}
+                      </svg>
+                    </div>
+                    <Badge
+                      className={`absolute right-2 top-2 ${
+                        trip.status === '예정' ? 'bg-[#4dabf7]' : 'bg-[#adb5bd]'
+                      } text-white`}
+                    >
+                      {trip.planType || 'MY'} {/* planType 표시, 기본값 MY */}
+                    </Badge>
                   </div>
-                  <Badge
-                    className={`absolute right-2 top-2 ${
-                      trip.status === '예정' ? 'bg-[#4dabf7]' : 'bg-[#adb5bd]'
-                    } text-white`}
-                  >
-                    {trip.status}
-                  </Badge>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-medium text-[#1e3a8a]">{trip.title}</h3>
-                  <div className="mt-2 flex items-center text-sm text-[#495057]">
-                    <Calendar className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                    <span>{trip.date}</span>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between bg-[#e7f5ff]/30 p-4">
+                  <CardContent className="p-4">
+                    <h3 className="font-medium text-[#1e3a8a]">{trip.title}</h3>
+                    <div className="mt-2 flex items-center text-sm text-[#495057]">
+                      <Calendar className="mr-1 h-3 w-3 text-[#4dabf7]" />
+                      <span>{trip.date}</span>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between bg-[#e7f5ff]/30 p-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
+                    >
+                      상세보기
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
+                    >
+                      수정하기
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-8">
+                <p className="text-[#495057]">저장된 여행 일정이 없습니다.</p>
+                <Link to="/travel-planner">
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
+                    className="mt-4 border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
                   >
-                    상세보기
+                    여행 계획 시작하기
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                  >
-                    수정하기
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                </Link>
+              </div>
+            )}
 
             <Link to="/travel-planner" className="block h-full">
               <Card className="flex h-full min-h-[220px] items-center justify-center bg-[#f8f9fa]/50 border-dashed border-[#d0ebff] transition-transform duration-200 hover:scale-[1.02]">

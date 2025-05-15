@@ -189,6 +189,7 @@ import { Textarea } from "../../modules/Textarea";
 import { Slider } from "../../modules/Slider";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axiosInstance from "../../api/axiosInstance";
 
 export function AIPlannerContent({ destination }) {
   const [preferences, setPreferences] = useState("");
@@ -216,13 +217,14 @@ export function AIPlannerContent({ destination }) {
     try {
       const startDate = localStorage.getItem("startDate");
       const endDate = localStorage.getItem("endDate");
-      const jwtToken = localStorage.getItem("jwtToken");
+      const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
 
       if (!startDate || !endDate) {
         throw new Error("출발 날짜 또는 종료 날짜가 설정되지 않았습니다.");
       }
-      if (!jwtToken) {
-        throw new Error("로그인이 필요합니다. JWT 토큰이 없습니다.");
+      if (!accessToken) {
+        navigate("/login");
+        throw new Error("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
       }
 
       const requestData = {
@@ -235,26 +237,13 @@ export function AIPlannerContent({ destination }) {
       };
       console.log("Request Data:", JSON.stringify(requestData, null, 2));
 
-      const response = await fetch("http://localhost:8080/api/aiplan/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify(requestData),
-      });
+      const response = await axiosInstance.post("/api/aiplan/generate", requestData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`일정 생성에 실패했습니다: ${errorData.message || response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log("Response Data:", JSON.stringify(data, null, 2));
+      console.log("Response Data:", JSON.stringify(response.data, null, 2));
       setIsGenerating(false);
 
       navigate(`/travel-planner/${cleanedDestination}/step5?ai=true`, {
-        state: { itinerary: data.itinerary, destination: cleanedDestination },
+        state: { itinerary: response.data.itinerary, destination: cleanedDestination },
       });
     } catch (error) {
       console.error("일정 생성 오류:", error.message, error.stack);
