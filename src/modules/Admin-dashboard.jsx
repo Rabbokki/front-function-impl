@@ -5,6 +5,8 @@ import { getAllUsers, deleteUser } from "../hooks/reducer/admin/adminThunk";
 
 import { AdminViewUser } from './Admin-view-user';
 
+import Hangul from 'hangul-js';
+
 import {
   Tabs,
   TabsContent,
@@ -126,18 +128,42 @@ export function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [chartPeriod, setChartPeriod] = useState('month');
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false);
 
+  // 유저
   const users = useSelector((state) => state.admin.users);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  //유저 수정 할데
+  const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
+
+  //유저 search 할데
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState(users);
+
+  //유저 summary 볼데
+  const [viewAllUsers, setViewAllUsers] = useState(false);
+  const [userPage, setUserPage] = useState(1);
+  const usersPerPage = 8;
+  const totalUserPages = Math.ceil(users.length / usersPerPage)
+  const userIndexStart = (userPage - 1) * usersPerPage;
+  const userIndexEnd = userIndexStart + usersPerPage;
+  const paginatedUsers = viewAllUsers
+    ? filteredUsers
+    : filteredUsers.slice(userIndexStart, userIndexEnd);
+  const isFirstUserPage = userPage === 1;
+  const isLastUserPage = userIndexEnd >= filteredUsers.length;
 
   useEffect(() => {
     dispatch(getAllUsers());
   }, [])
-
+  
   useEffect(() => {
     console.log("users is: ", users);
   }, [users])
+
+  useEffect(() => {
+    setFilteredUsers(users);
+  }, [users]);
 
   const generateDummyData = () => {
     const data = [];
@@ -188,9 +214,36 @@ export function AdminDashboard() {
     }
   };
 
-  const openUserDetailModal = (user) => {
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const filtered = users.filter((user) => {
+      return (
+        Hangul.search(user.name, value) !== -1 ||
+        Hangul.search(user.nickname, value) !== -1 ||
+        Hangul.search(user.email, value) !== -1
+      );
+    });
+
+    setFilteredUsers(filtered);
+    setUserPage(1);
+  };
+
+  const toggleViewAllUsers = () => {
+    setViewAllUsers((prev) => !prev);
+    setUserPage(1);
+  }
+
+  const paginateUsers = (e, increment) => {
+    e.preventDefault();
+    setUserPage((prev) => prev + increment);
+  }
+
+  const openUserEditModal = (user) => {
     setSelectedUser(user);
-    setIsUserDetailModalOpen(true);
+    setIsUserEditModalOpen(true);
   }
 
   const handleUserDelete = async (user) => {
@@ -474,8 +527,8 @@ export function AdminDashboard() {
                 <CardTitle>최근 가입 사용자</CardTitle>
                 <CardDescription>최근 가입한 사용자 목록</CardDescription>
               </div>
-              <Button variant="outline" size="sm">
-                모두 보기
+              <Button variant="outline" size="sm" onClick={toggleViewAllUsers}>
+                {viewAllUsers ? '간단히 보기' : '모두 보기'}
               </Button>
             </CardHeader>
             <CardContent>
@@ -495,13 +548,12 @@ export function AdminDashboard() {
                       <th className="text-left py-3 px-4 font-medium">
                         가입일
                       </th>
-                      <th className="text-left py-3 px-4 font-medium">상태</th>
                       <th className="text-right py-3 px-4 font-medium">작업</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users?.map((user, i) => (
-                      <tr key={user.email} className="border-b">
+                    {paginatedUsers?.map((user, i) => (
+                      <tr key={i} className="border-b">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
@@ -513,24 +565,7 @@ export function AdminDashboard() {
                         <td className="py-3 px-4">{user.nickname}</td>
                         <td className="py-3 px-4">{user.email}</td>
                         <td className="py-3 px-4">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4">
-                          {user.status === 'active' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200"
-                            >
-                              활성
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                            >
-                              대기중
-                            </Badge>
-                          )}
+                          {new Date(user.createdAt).toISOString().slice(0, 10)}
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -538,14 +573,7 @@ export function AdminDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openUserDetailModal(user)}
+                              onClick={() => openUserEditModal(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -564,6 +592,22 @@ export function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
+              {!viewAllUsers && (
+                <div className="flex items-center justify-between mt-4">
+                  <p className="text-sm text-gray-500">
+                    총 {users.length}명의 사용자 중 {userIndexStart + 1}-
+                    {Math.min(userIndexEnd, users.length)} 표시
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={isFirstUserPage} onClick={(e) => paginateUsers(e, -1)}>
+                      이전
+                    </Button>
+                    <Button variant="outline" size="sm" disabled={isLastUserPage} onClick={(e) => paginateUsers(e, 1)}>
+                      다음
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -581,6 +625,8 @@ export function AdminDashboard() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       type="search"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
                       placeholder="사용자 검색..."
                       className="pl-8 w-full sm:w-[240px]"
                     />
@@ -607,12 +653,11 @@ export function AdminDashboard() {
                         가입일
                       </th>
                       <th className="text-left py-3 px-4 font-medium">역할</th>
-                      <th className="text-left py-3 px-4 font-medium">상태</th>
                       <th className="text-right py-3 px-4 font-medium">작업</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users?.map((user, i) => (
+                    {paginatedUsers?.map((user, i) => (
                       <tr key={i} className="border-b">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
@@ -625,7 +670,7 @@ export function AdminDashboard() {
                         <td className="py-3 px-4">{user.nickname}</td>
                         <td className="py-3 px-4">{user.email}</td>
                         <td className="py-3 px-4">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {new Date(user.createdAt).toISOString().slice(0, 10)}
                         </td>
                         <td className="py-3 px-4">
                           {user.role === 'ADMIN' ? (
@@ -641,44 +686,13 @@ export function AdminDashboard() {
                             </Badge>
                           )}
                         </td>
-                        <td className="py-3 px-4">
-                          {user.status === 'active' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200"
-                            >
-                              활성
-                            </Badge>
-                          ) : user.status === 'pending' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                            >
-                              대기중
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-red-50 text-red-700 border-red-200"
-                            >
-                              비활성
-                            </Badge>
-                          )}
-                        </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openUserDetailModal(user)}
+                              onClick={() => openUserEditModal(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -697,19 +711,22 @@ export function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-gray-500">
-                  총 8명의 사용자 중 1-8 표시
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    이전
-                  </Button>
-                  <Button variant="outline" size="sm" disabled>
-                    다음
-                  </Button>
+              {!viewAllUsers && (
+                <div className="flex items-center justify-between mt-4">
+                  <p className="text-sm text-gray-500">
+                    총 {users.length}명의 사용자 중 {userIndexStart + 1}-
+                    {Math.min(userIndexEnd, users.length)} 표시
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={isFirstUserPage} onClick={(e) => paginateUsers(e, -1)}>
+                      이전
+                    </Button>
+                    <Button variant="outline" size="sm" disabled={isLastUserPage} onClick={(e) => paginateUsers(e, 1)}>
+                      다음
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1274,8 +1291,8 @@ export function AdminDashboard() {
 
       {selectedUser && (
         <AdminViewUser
-          isOpen={isUserDetailModalOpen}
-          onClose={() => setIsUserDetailModalOpen(false)}
+          isOpen={isUserEditModalOpen}
+          onClose={() => setIsUserEditModalOpen(false)}
           user={selectedUser}
           onUserUpdated={() => dispatch(getAllUsers())}
         />
