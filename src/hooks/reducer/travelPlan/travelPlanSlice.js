@@ -6,6 +6,7 @@ const initialState = {
   success: false,
   error: null,
   myPlans: [],
+  travelPlans: [],
 };
 
 const travelPlanSlice = createSlice({

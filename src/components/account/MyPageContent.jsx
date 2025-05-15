@@ -1,5 +1,6 @@
 // css 이쁘던거 원래코드
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
   Calendar,
@@ -30,6 +31,8 @@ import { Badge } from '../../modules/Badge';
 import axiosInstance from '../../api/axiosInstance';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { fetchMyTravelPlans } from '../../hooks/reducer/travelPlan/travelPlanThunk';
+
 
 function MyPageContent() {
   const [activeTab, setActiveTab] = useState('my-trips');
@@ -60,6 +63,14 @@ function MyPageContent() {
       (currentLevel.max - currentLevel.min + 1)) *
       100
   );
+
+  const dispatch = useDispatch();
+  const travelPlans = useSelector((state) => state.travelPlan.travelPlans || []);
+
+  const savedItems = [];
+  const myReviews = [];
+
+
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -92,107 +103,10 @@ function MyPageContent() {
 
     fetchUserInfo();
     fetchBookings();
-  }, []);
+    dispatch(fetchMyTravelPlans());
+  }, [dispatch]);
 
-  const myTrips = [
-    {
-      id: 1,
-      title: '도쿄 3박 4일',
-      date: '2025.05.15 - 2025.05.18',
-      status: '예정',
-      image: '도쿄',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '제주도 가족여행',
-      date: '2025.03.10 - 2025.03.13',
-      status: '완료',
-      image: '제주도',
-      color: '#51cf66',
-    },
-    {
-      id: 3,
-      title: '방콕 5일',
-      date: '2024.12.24 - 2024.12.28',
-      status: '완료',
-      image: '방콕',
-      color: '#ffd43b',
-    },
-  ];
-
-  const savedItems = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      type: '명소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      type: '맛집',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '호텔 미라코스타',
-      type: '숙소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.14',
-      color: '#4dabf7',
-    },
-    {
-      id: 4,
-      title: '방콕 왕궁',
-      type: '명소',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ff6b6b',
-    },
-    {
-      id: 5,
-      title: '팟타이 맛집',
-      type: '맛집',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ffd43b',
-    },
-  ];
-
-  const myReviews = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      rating: 4.5,
-      date: '2025.03.20',
-      content:
-        '도쿄 전경을 한눈에 볼 수 있어서 좋았습니다. 입장료가 조금 비싸지만 볼만한 가치가 있어요.',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      rating: 5,
-      date: '2025.03.19',
-      content:
-        '정말 맛있었습니다! 줄이 길었지만 기다릴 만한 가치가 있었어요. 돈코츠 라멘의 진수를 맛볼 수 있습니다.',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '제주 협재해변',
-      rating: 4,
-      date: '2025.03.12',
-      content:
-        '물이 맑고 모래가 고운 해변이에요. 날씨가 좋으면 에메랄드빛 바다를 볼 수 있습니다.',
-      color: '#51cf66',
-    },
-  ];
+  const myTrips = travelPlans;
 
   const formatRelativeTime = (string) => {
     const now = new Date();
