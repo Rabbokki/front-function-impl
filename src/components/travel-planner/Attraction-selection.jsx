@@ -14,38 +14,30 @@ import {
 import MapComponent from '../travel-planner/Map-component';
 import { ReviewForm } from '../travel-planner/Review-form';
 import { differenceInCalendarDays } from 'date-fns';
+import { generateDayKeys, saveToLocalStorage, getFromLocalStorage } from "../../utils";
 
-const AttractionSelection = ({ destination, startDate, endDate }) => {
+const AttractionSelection = ({ destination }) => {
   const [searchQuery, setSearchQuery] = useState("");
-
-  // 날짜 기반 dayKeys 계산 
-  const parseDate = (d) => {
-    const date = new Date(d);
-    return isNaN(date) ? null : date;
-  };
-
-  const parsedStart = parseDate(startDate);
-  const parsedEnd = parseDate(endDate);
-
-  const dayKeys = useMemo(() => {
-    const days = differenceInCalendarDays(parsedEnd, parsedStart) + 1;
-    return Array.from({ length: days }, (_, i) => `day${i + 1}`);
-  }, [parsedStart, parsedEnd]);
-
-  const initialSelectedAttractions = useMemo(() => {
+  const [selectedAttractions, setSelectedAttractions] = useState(() => {
+    const saved = getFromLocalStorage("travelPlan")?.selectedAttractions;
+    if (saved) return saved;
     const initial = {};
     dayKeys.forEach((key) => (initial[key] = []));
     return initial;
-  }, [dayKeys]);
-  
-
-  const [selectedAttractions, setSelectedAttractions] = useState(initialSelectedAttractions);
-
-  //  activeDay를 dayKeys[0]으로 설정
-  const [activeDay, setActiveDay] = useState(dayKeys[0]);
+  });
+  const [activeDay, setActiveDay] = useState("day1");
   const [hoveredAttraction, setHoveredAttraction] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [customAttractions, setCustomAttractions] = useState([]);
+
+  const travelPlan = getFromLocalStorage("travelPlan") || {};
+  const { startDate, endDate } = travelPlan;
+  const dayKeys = useMemo(() => generateDayKeys(startDate, endDate), [startDate, endDate]);
+
+  if (!startDate || !endDate) {
+    return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;
+  }
   const attractionsData = {
     osaka: {
       name: "오사카",
@@ -496,32 +488,49 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       ],
     },
   };
-  const cityData = attractionsData[destination];
-  console.log("cityData:", cityData);
-  console.log("destination:", destination);
-  const filteredAttractions = cityData?.attractions?.filter(
+  const cityData = attractionsData[destination] || {};
+  const allAttractions = [...(cityData.attractions || []), ...customAttractions];
+  const filteredAttractions = allAttractions.filter(
     (attraction) =>
       attraction.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       attraction.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
       attraction.address.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  );
 
   const toggleAttraction = (attractionId) => {
     setSelectedAttractions((prev) => {
       const currentDaySelections = [...prev[activeDay]];
-      return currentDaySelections.includes(attractionId)
-        ? { ...prev, [activeDay]: currentDaySelections.filter((id) => id !== attractionId) }
-        : { ...prev, [activeDay]: [...currentDaySelections, attractionId] };
+      const updated = currentDaySelections.includes(attractionId)
+        ? currentDaySelections.filter((id) => id !== attractionId)
+        : [...currentDaySelections, attractionId];
+      const newSelections = { ...prev, [activeDay]: updated };
+      saveToLocalStorage("travelPlan", { ...travelPlan, selectedAttractions: newSelections });
+      return newSelections;
     });
+  };
+
+  const addCustomAttraction = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newAttraction = {
+      id: `custom-${Date.now()}`,
+      name: formData.get("name"),
+      category: formData.get("category") || "기타",
+      address: formData.get("address"),
+      rating: 0,
+      likes: 0,
+      image: "/placeholder.svg",
+      position: cityData.center, // 기본 위치
+    };
+    setCustomAttractions((prev) => [...prev, newAttraction]);
+    e.target.reset();
   };
 
   const mapMarkers = filteredAttractions.map((attraction) => ({
     id: attraction.id,
     position: attraction.position,
     title: attraction.name,
-    selected:
-      selectedAttractions[activeDay].includes(attraction.id) ||
-      hoveredAttraction === attraction.id,
+    selected: selectedAttractions[activeDay].includes(attraction.id) || hoveredAttraction === attraction.id,
   }));
 
   const isAllDaysSelected = () => {
@@ -533,7 +542,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
     setIsReviewModalOpen(true);
   };
 
-  if (!cityData) return <div>선택된 도시 정보가 없습니다.</div>;
+  if (!cityData.name) return <div className="text-red-600 p-4">선택된 도시 정보가 없습니다.</div>;
 
   return (
     <div className="space-y-6">
@@ -547,7 +556,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
 
         <div className="sticky top-0 z-10 bg-white py-3 mb-4 border-b">
           <div className="flex space-x-2">
-          {dayKeys.map((day, idx) => (
+            {dayKeys.map((day, idx) => (
               <Button
                 key={day}
                 onClick={() => setActiveDay(day)}
@@ -567,7 +576,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
             ))}
           </div>
           <p className="mt-2 text-sm text-traveling-text/70">
-            현재 선택: {activeDay === "day1" ? "1일차" : activeDay === "day2" ? "2일차" : "3일차"} 방문 장소
+            현재 선택: {activeDay === "day1" ? "1일차" : `${dayKeys.indexOf(activeDay) + 1}일차`} 방문 장소
           </p>
         </div>
 
@@ -578,7 +587,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                 <TabsTrigger value="attraction-select">장소 선택</TabsTrigger>
                 <TabsTrigger value="new-attraction">신규 장소 등록</TabsTrigger>
               </TabsList>
-              
               <TabsContent value="attraction-select" className="mt-6">
                 <div className="mb-6">
                   <div className="relative">
@@ -592,7 +600,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                     <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-traveling-text/50" />
                   </div>
                 </div>
-
                 <div className="mb-4 flex flex-wrap gap-2">
                   {["추천 장소", "명소", "식당", "카페"].map((label) => (
                     <Button
@@ -605,10 +612,9 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                     </Button>
                   ))}
                 </div>
-
                 <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2">
                   {filteredAttractions.map((attraction) => (
-                    <Card 
+                    <Card
                       key={attraction.id}
                       className={`overflow-hidden transition-all ${
                         selectedAttractions[activeDay].includes(attraction.id)
@@ -674,9 +680,8 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                   ))}
                 </div>
               </TabsContent>
-
               <TabsContent value="new-attraction" className="mt-6">
-                <div className="rounded-lg bg-traveling-background p-6">
+                <form onSubmit={addCustomAttraction} className="rounded-lg bg-traveling-background p-6">
                   <div className="mb-6 flex flex-col items-center justify-center">
                     <div className="mb-4 rounded-full bg-traveling-purple/20 p-4">
                       <Plus className="h-8 w-8 text-traveling-purple" />
@@ -686,25 +691,24 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                       방문하고 싶은 장소가 목록에 없나요? 직접 추가해보세요!
                     </p>
                   </div>
-
                   <div className="space-y-4">
-                    <Input placeholder="장소명" className="bg-white border-traveling-text/30" />
-                    <Input placeholder="카테고리" className="bg-white border-traveling-text/30" />
-                    <Input placeholder="주소" className="bg-white border-traveling-text/30" />
+                    <Input name="name" placeholder="장소명" className="bg-white border-traveling-text/30" required />
+                    <Input name="category" placeholder="카테고리" className="bg-white border-traveling-text/30" />
+                    <Input name="address" placeholder="주소" className="bg-white border-traveling-text/30" required />
                     <textarea
+                      name="memo"
                       placeholder="메모"
                       className="w-full rounded-md border border-traveling-text/30 bg-white p-2 text-traveling-text"
                       rows={3}
                     ></textarea>
-                    <Button className="w-full bg-traveling-purple text-white hover:bg-traveling-purple/90">
+                    <Button type="submit" className="w-full bg-traveling-purple text-white hover:bg-traveling-purple/90">
                       장소 추가하기
                     </Button>
                   </div>
-                </div>
+                </form>
               </TabsContent>
             </Tabs>
           </div>
-
           <div className="h-[700px] rounded-lg overflow-hidden">
             <MapComponent
               center={cityData.center}
@@ -718,7 +722,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         <div className="mt-6 p-4 bg-traveling-background/30 rounded-lg">
           <h4 className="font-medium mb-2">선택된 장소 요약</h4>
           <div className="space-y-2">
-          {dayKeys.map((day, idx) => (
+            {dayKeys.map((day, idx) => (
               <div className="flex justify-between items-center" key={day}>
                 <span>{idx + 1}일차:</span>
                 <Badge className="bg-traveling-purple/20 text-traveling-purple">
@@ -747,6 +751,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
             onClose={() => setIsReviewModalOpen(false)}
             placeName={selectedPlace.name}
             placeType={selectedPlace.type}
+            // TODO: 백엔드 연동 시 리뷰 저장 로직 추가
           />
         )}
       </div>

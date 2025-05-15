@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Brain } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card } from "../../modules/Card";
+import { saveToLocalStorage } from "../../utils";
 
 // 도시별 데이터
 const cityData = {
@@ -160,7 +161,6 @@ export function DestinationInfo({ destination }) {
 
   const defaultCityKey = "osaka";
   const city = cityData[destination] ?? cityData[defaultCityKey];
-
   const navigate = useNavigate();
 
   if (!city) {
@@ -170,9 +170,6 @@ export function DestinationInfo({ destination }) {
       </div>
     );
   }
-
-  const skyscannerUrl = `https://www.skyscanner.co.kr/transport/flights/sela/${city.airport}`;
-  const bookingUrl = `https://www.booking.com/searchresults.ko.html?ss=${encodeURIComponent(city.name)}`;
 
   const generateCalendar = (year, month) => {
     const firstDay = new Date(year, month, 1).getDay();
@@ -246,10 +243,33 @@ export function DestinationInfo({ destination }) {
     return `${format(start)} - ${format(end)} (${sorted.length}일)`;
   };
 
+  const handleNext = () => {
+    if (selectedDates.length > 0) {
+      const sorted = [...selectedDates].sort();
+      const startDate = sorted[0];
+      const endDate = sorted[sorted.length - 1];
+
+      // 데이터 저장
+      saveToLocalStorage("travelPlan", {
+        destination,
+        startDate,
+        endDate,
+        plannerType,
+      });
+
+      if (plannerType === "manual") {
+        navigate(`/travel-planner/${destination}/step2`);
+      } else {
+        // TODO: AI 플래너 구현 시 활성화
+        console.warn("AI Planner is not implemented yet.");
+        navigate(`/ai-planner/${destination}`);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
-        {/* 여행 계획 유형 선택 버튼 */}
         <div className="mb-8 grid grid-cols-2 gap-4">
           <Button
             className={`flex h-24 flex-col items-center justify-center gap-2 text-lg ${
@@ -267,15 +287,12 @@ export function DestinationInfo({ destination }) {
               plannerType === "ai"
                 ? "bg-traveling-purple text-white"
                 : "bg-traveling-background text-traveling-text hover:bg-traveling-purple/20"
-           }`}
-            onClick={() => {
-              setPlannerType("ai");
-            }}
+            }`}
+            onClick={() => setPlannerType("ai")}
           >
             <Brain className="h-6 w-6" />
             AI 추천 일정 만들기
-        </Button>
-
+          </Button>
         </div>
 
         <div className="mt-8">
@@ -290,17 +307,12 @@ export function DestinationInfo({ destination }) {
             {[days, nextMonthDays].map((monthDays, i) => (
               <div key={i}>
                 <div className="mb-4 flex items-center justify-between">
-                  <button onClick={i === 0 ? handlePrevMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>
-                    &lt;
-                  </button>
+                  <button onClick={i === 0 ? handlePrevMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>&lt;</button>
                   <h3 className="text-lg font-bold text-traveling-text">
                     {i === 0 ? currentYear : currentMonth === 11 ? currentYear + 1 : currentYear}년 {months[(currentMonth + i) % 12]}
                   </h3>
-                  <button onClick={i === 0 ? handleNextMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>
-                    &gt;
-                  </button>
+                  <button onClick={i === 0 ? handleNextMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>&gt;</button>
                 </div>
-
                 <div className="grid grid-cols-7">
                   {weekdays.map((day, idx) => (
                     <div key={idx} className={`p-2 text-center text-sm font-medium ${idx === 0 ? "text-red-500" : idx === 6 ? "text-blue-500" : "text-traveling-text"}`}>{day}</div>
@@ -327,31 +339,14 @@ export function DestinationInfo({ destination }) {
           </div>
 
           <div className="mt-8 flex justify-end">
-           
-              <Button
-               className="bg-traveling-purple text-white hover:bg-traveling-purple/90" 
-               disabled={selectedDates.length === 0}
-               onClick={() => {
-                if (selectedDates.length > 0) {
-                  const sorted = [...selectedDates].sort();
-                  const startDate = sorted[0];
-                  const endDate = sorted[sorted.length - 1];
-          
-                  // 선택사항: localStorage 저장
-                  localStorage.setItem("startDate", startDate);
-                  localStorage.setItem("endDate", endDate);
-          
-                  if (plannerType === "manual") navigate(`/travel-planner/${destination}/step2`);
-                  else navigate(`/ai-planner/${destination}`);
-                }
-              }}
+            <Button
+              className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+              disabled={selectedDates.length === 0}
+              onClick={handleNext}
             >
-               
-                다음 단계로
-
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            
+              다음 단계로
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </Card>
