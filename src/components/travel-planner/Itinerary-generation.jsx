@@ -17,6 +17,9 @@ import MapComponent from "../travel-planner/Map-component";
 import { differenceInCalendarDays } from "date-fns";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { saveTravelPlan } from "../../hooks/reducer/travelPlan/travelPlanThunk";
+
 
 
 
@@ -26,7 +29,10 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerated, setIsGenerated] = useState(false);
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
 
   useEffect(() => {
     console.log("시작 날: ", startDate)
@@ -473,58 +479,60 @@ const removePlaceFromItinerary = (day, placeId) => {
     });
   };
 
-  const handleSavePlan = async () => {
-    const accountId = localStorage.getItem("accountId");
-    const country = "Japan"; // 필요에 따라 destination 매핑 가능
-    const city = destination;
-  
-    const places = [];
-    const accommodations = [];
-  
-    Object.entries(itinerary).forEach(([day, data]) => {
-      data.places.forEach((place) => {
-        places.push({
-          day: `day${day}`,
-          name: place.name,
-          category: place.type,
-          description: place.description,
-          time: place.time,
-          lat: place.position?.lat || 0,
-          lng: place.position?.lng || 0,
-        });
+ const handleSavePlan = () => {
+  const country = "Japan"; // 필요하면 destination으로 동적으로 변경 가능
+  const city = destination;
+
+  const places = [];
+  const accommodations = [];
+
+  Object.entries(itinerary).forEach(([day, data]) => {
+    data.places.forEach((place) => {
+      places.push({
+        day: `day${day}`,
+        name: place.name,
+        category: place.type,
+        description: place.description,
+        time: place.time,
+        lat: place.position?.lat || 0,
+        lng: place.position?.lng || 0,
       });
-  
-      if (data.accommodation) {
-        accommodations.push({
-          day: `day${day}`,
-          name: data.accommodation.name,
-          description: data.accommodation.description,
-          lat: 0,
-          lng: 0,
-        });
-      }
     });
-  
-    const planData = {
-      accountId: Number(localStorage.getItem("accountId")),
-      startDate,
-      endDate,
-      country,
-      city,
-       transportation: localStorage.getItem("transportation"),
-      places,
-      accommodations,
-    };
-  
-    try {
-      await axios.post("/api/travel-plans", planData);
+
+    if (data.accommodation) {
+      accommodations.push({
+        day: `day${day}`,
+        name: data.accommodation.name,
+        description: data.accommodation.description,
+        lat: 0,
+        lng: 0,
+      });
+    }
+  });
+
+  const planData = {
+    accountId: Number(localStorage.getItem("accountId")),
+    startDate,
+    endDate,
+    country,
+    city,
+    transportation: localStorage.getItem("transportation"),
+    places,
+    accommodations,
+  };
+
+  dispatch(saveTravelPlan(planData))
+    .unwrap()
+    .then(() => {
       alert("여행 일정이 저장되었습니다!");
       navigate("/mypage");
-    } catch (error) {
+    })
+    .catch((error) => {
       console.error("저장 실패", error);
       alert("저장 중 오류 발생");
-    }
-  };
+    });
+};
+
   
   return (
     <div className="space-y-6">
