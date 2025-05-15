@@ -18,8 +18,6 @@ import { differenceInCalendarDays } from "date-fns";
 import axios from "axios";
 import axiosInstance from "../../api/axiosInstance";
 import { useNavigate,useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { saveTravelPlan } from "../../hooks/reducer/travelPlan/travelPlanThunk";
 
 function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate }) {
   const [selectedDay, setSelectedDay] = useState(1);
@@ -27,16 +25,8 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerated, setIsGenerated] = useState(false);
-
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-
-  useEffect(() => {
-    console.log("시작 날: ", startDate)
-    console.log("끝 날: ", endDate)
-  }, [])
 
   const isInitialized = useRef(false);
   const [itinerary, setItinerary] = useState({});
@@ -443,7 +433,6 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate
     });
   };
 
-<<<<<<< HEAD
   const handleSavePlan = async () => {
     try {
       const startDate = localStorage.getItem('startDate');
@@ -497,63 +486,6 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate
     }
   };
 
-=======
- const handleSavePlan = () => {
-  const country = "Japan"; // 필요하면 destination으로 동적으로 변경 가능
-  const city = destination;
-
-  const places = [];
-  const accommodations = [];
-
-  Object.entries(itinerary).forEach(([day, data]) => {
-    data.places.forEach((place) => {
-      places.push({
-        day: `day${day}`,
-        name: place.name,
-        category: place.type,
-        description: place.description,
-        time: place.time,
-        lat: place.position?.lat || 0,
-        lng: place.position?.lng || 0,
-      });
-    });
-
-    if (data.accommodation) {
-      accommodations.push({
-        day: `day${day}`,
-        name: data.accommodation.name,
-        description: data.accommodation.description,
-        lat: 0,
-        lng: 0,
-      });
-    }
-  });
-
-  const planData = {
-    accountId: Number(localStorage.getItem("accountId")),
-    startDate,
-    endDate,
-    country,
-    city,
-    transportation: localStorage.getItem("transportation"),
-    places,
-    accommodations,
-  };
-
-  dispatch(saveTravelPlan(planData))
-    .unwrap()
-    .then(() => {
-      alert("여행 일정이 저장되었습니다!");
-      navigate("/mypage");
-    })
-    .catch((error) => {
-      console.error("저장 실패", error);
-      alert("저장 중 오류 발생");
-    });
-};
-
-  
->>>>>>> feature-yyyjjj
   return (
     <div className="space-y-6">
       {isLoading ? (
@@ -1450,4 +1382,3 @@ export default ItineraryGeneration;
 // }
 
 // export default ItineraryGeneration;
-
