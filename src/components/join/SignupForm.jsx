@@ -224,30 +224,32 @@ export function SignupForm() {
       <Card className="bg-white p-6 shadow-md">
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col items-center space-y-2 mb-6">
-            <div className="relative h-28 w-28 rounded-full border-4 border-[#4dabf7] bg-[#e7f5ff] overflow-hidden">
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="프로필 미리보기"
-                  className="h-full w-full object-cover"
+            <div className="relative h-28 w-28">
+              <div className="rounded-full border-4 border-[#4dabf7] bg-[#e7f5ff] overflow-hidden h-full w-full">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="프로필 미리보기"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-[#1e3a8a] text-sm">
+                    프로필 미리보기
+                  </span>
+                )}
+                <label htmlFor="profileImageUpload">
+                  <div className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-[#4dabf7] hover:bg-[#339af0] cursor-pointer shadow-md">
+                    <Camera className="h-4 w-4 text-white" />
+                  </div>
+                </label>
+                <input
+                  id="profileImageUpload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
                 />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-[#1e3a8a] text-sm">
-                  프로필 미리보기
-                </span>
-              )}
-              <label htmlFor="profileImageUpload">
-                <div className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#4dabf7] hover:bg-[#339af0] cursor-pointer">
-                  <Camera className="h-4 w-4 text-white" />
-                </div>
-              </label>
-              <input
-                id="profileImageUpload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
+              </div>
             </div>
             <p className="text-sm text-[#495057]">프로필 이미지를 선택하세요</p>
           </div>
