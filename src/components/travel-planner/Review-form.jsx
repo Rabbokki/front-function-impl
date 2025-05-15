@@ -14,8 +14,9 @@ import {
 export function ReviewForm({
   isOpen,
   onClose,
-  placeName = '도쿄 스카이트리',
-  placeType = '관광지',
+  placeName = '로딩 중',
+  placeType = '카테고리 없음',
+  placeId, 
 }) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -55,10 +56,38 @@ export function ReviewForm({
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    console.log({ rating, summary, review, hashtags, photos });
-    onClose();
-  };
+const handleSubmit = async () => {
+  try {
+    // ✅ 1. 로그인된 유저 정보 가져오기
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const accountId = user.id;
+    const nickname = user.nickname;
+
+    // ✅ 2. 서버로 리뷰 전송
+    const response = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        placeId,
+        accountId,
+        rating,
+        content: review,
+        nickname, 
+      }),
+    });
+
+    if (response.ok) {
+      alert('리뷰가 등록되었습니다!');
+      onClose();
+    } else {
+      alert('리뷰 등록에 실패했습니다.');
+    }
+  } catch (error) {
+    console.error('리뷰 등록 실패:', error);
+  }
+};
+
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

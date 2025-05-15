@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { logoutAccount } from '../hooks/reducer/account/accountThunk'
 
 export function NavBar() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem('accessToken') || !!sessionStorage.getItem('accessToken')
   );
 
-  const handleLogout = async () => {
-    const resultAction = await dispatch(logoutAccount);
-    console.log('로그아옷 성공: ', resultAction)
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
     setIsLoggedIn(false);
     alert('로그아웃 되었습니다!');
     navigate('/');
@@ -29,7 +28,7 @@ export function NavBar() {
   }, []);
 
   return (
-    <header className="w-full bg-traveling-bg py-4">
+    <header className="w-full bg-traveling-bg py-4 ">
       <div className="container mx-auto flex items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
           <div className="relative h-10 w-10">
