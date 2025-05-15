@@ -72,6 +72,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/profile-edit"
+            element={
+              <PrivateRoute>
+                <ProfileEditPage />
+              </PrivateRoute>
+            }
+          />
+
           <Route path="/place/:id" element={<AttractionDetailPage />} />
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/flight-search" element={<FlightSearchPage />} />
@@ -94,7 +103,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
-
 
           <Route
             path="/travel-planner/:destination/step1"
@@ -119,7 +127,6 @@ function App() {
           <Route path="/ai-planner/:destination" element={<AIPlannerPage />} />
 
           <Route path="/attractions" element={<AttractionsContent />} />
-          <Route path="/place/:placeId" element={<PlaceDetailWrapper />} />
 
           <Route path="/not-found" element={<div>404 Not Found</div>} />
         </Routes>
