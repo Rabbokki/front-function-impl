@@ -1,5 +1,6 @@
 // css 이쁘던거 원래코드
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
   Calendar,
@@ -30,6 +31,8 @@ import { Badge } from '../../modules/Badge';
 import axiosInstance from '../../api/axiosInstance';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { fetchMyTravelPlans } from '../../hooks/reducer/travelPlan/travelPlanThunk';
+
 
 function MyPageContent() {
   const [activeTab, setActiveTab] = useState('my-trips');
@@ -61,6 +64,14 @@ function MyPageContent() {
       (currentLevel.max - currentLevel.min + 1)) *
       100
   );
+
+  const dispatch = useDispatch();
+  const travelPlans = useSelector((state) => state.travelPlan.travelPlans || []);
+
+  const savedItems = [];
+  const myReviews = [];
+
+
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -113,6 +124,7 @@ function MyPageContent() {
 
     fetchUserInfo();
     fetchBookings();
+<<<<<<< HEAD
     fetchAiPlans();
   }, []);
 
@@ -213,6 +225,12 @@ function MyPageContent() {
       color: '#51cf66',
     },
   ];
+=======
+    dispatch(fetchMyTravelPlans());
+  }, [dispatch]);
+
+  const myTrips = travelPlans;
+>>>>>>> feature-yyyjjj
 
   const formatRelativeTime = (string) => {
     const now = new Date();

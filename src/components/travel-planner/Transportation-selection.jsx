@@ -3,8 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../../modules/Button";
 import { Card } from "../../modules/Card";
 
-const TransportationSelection = ({ destination, startDate, endDate }) => {
-  const [selectedTransportation, setSelectedTransportation] = useState(null);
+const TransportationSelection = ({ 
+  destination,
+   startDate, 
+   endDate,
+   transportation,
+   setTransportation,
+   }) => {
+ 
   const navigate = useNavigate();
 
   const cityData = {
@@ -40,11 +46,11 @@ const TransportationSelection = ({ destination, startDate, endDate }) => {
             <div className="grid grid-cols-2 gap-4">
               <div
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-6 transition-all ${
-                  selectedTransportation === "public"
+                  transportation === "TRANSPORTATION"
                     ? "border-traveling-purple bg-traveling-purple/10"
                     : "border-gray-200 bg-white hover:border-traveling-purple/50"
                 }`}
-                onClick={() => setSelectedTransportation("public")}
+                onClick={() => setTransportation("TRANSPORTATION")}
               >
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black text-white">
                   <svg
@@ -71,11 +77,11 @@ const TransportationSelection = ({ destination, startDate, endDate }) => {
 
               <div
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-6 transition-all ${
-                  selectedTransportation === "car"
+                  transportation === "CAR"
                     ? "border-traveling-purple bg-traveling-purple/10"
                     : "border-gray-200 bg-white hover:border-traveling-purple/50"
                 }`}
-                onClick={() => setSelectedTransportation("car")}
+                onClick={() => setTransportation("CAR")}
               >
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-300 text-gray-600">
                   <svg
@@ -109,11 +115,12 @@ const TransportationSelection = ({ destination, startDate, endDate }) => {
             
                 <Button
                   className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
-                  disabled={!selectedTransportation}
+                  disabled={!transportation}
                   onClick={() => {
-                    if (selectedTransportation) {
+                    if (transportation) {
                       localStorage.setItem("startDate", startDate);
                       localStorage.setItem("endDate", endDate);
+                      localStorage.setItem("transportation", transportation);
                       navigate(`/travel-planner/${destination}/step5`);
                       
                   

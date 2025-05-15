@@ -12,11 +12,13 @@ axiosInstance.interceptors.request.use(
     localStorage.getItem('accessToken') ||
     sessionStorage.getItem('accessToken');
 
-    if (token) {
-      config.headers['Access_Token'] = `${token}`;
+      const isAuthRequest = config.url.includes("/login") || config.url.includes("/signup");
+
+    if (token && !isAuthRequest) {
+      config.headers['Authorization'] = `Bearer ${token}`;
       console.log('✅ accessToken 포함됨:', token);
     } else {
-      console.warn('❌ accessToken 없음');
+      console.warn('🚫 토큰 없음 또는 인증 요청이므로 Authorization 생략');
     }
     return config;
   },
