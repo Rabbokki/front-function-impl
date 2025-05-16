@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
+import { usePagination } from '../hooks/Use-pagination';
 import { updateUser, getPostsByUserId, deletePostByUserId } from '../hooks/reducer/admin/adminThunk';
 
 import { Button } from './Button';
@@ -40,21 +41,19 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
 
-  const [postPage, setPostPage] = useState(1);
-  const postsPerPage = 8;
   const [viewAllPosts, setViewAllPosts] = useState(false);
   const [filteredPosts, setFilteredPosts] = useState(posts);
-
-  const totalPostPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const postIndexStart = (postPage - 1) * postsPerPage;
-  const postIndexEnd = postIndexStart + postsPerPage;
-
-  const paginatedPosts = viewAllPosts
-    ? filteredPosts
-    : filteredPosts.slice(postIndexStart, postIndexEnd);
-
-  const isFirstPostPage = postPage === 1;
-  const isLastPostPage = postIndexEnd >= filteredPosts.length;
+  const itemsPerPage = 8;
+  const {
+    paginatedData: paginatedPosts,
+    currentPage: postPage,
+    isFirstPage: isFirstPostPage,
+    isLastPage: isLastPostPage,
+    pageStart: postPageStart,
+    pageEnd: postPageEnd,
+    paginate: paginatePosts,
+    resetPagination: resetPostPagination,
+  } = usePagination(posts, itemsPerPage);
 
   useEffect(() => {
     if (user?.id) {
@@ -81,11 +80,6 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
       setProfileImage(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
-  };
-
-  const paginatePosts = (e, increment) => {
-    e.preventDefault();
-    setPostPage((prev) => prev + increment);
   };
 
   const handleSubmit = async (e) => {
@@ -128,7 +122,7 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
     } catch (err) {
       console.error("삭제 실패:", err);
       alert("게시물 삭제에 실패했습니다.");
-  }
+    }
   }
 
   return (
@@ -216,8 +210,16 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
 
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-4 bg-[#e7f5ff]">
-              <TabsTrigger value="details">상세</TabsTrigger>
-              <TabsTrigger value="posts">게시물</TabsTrigger>
+              <TabsTrigger
+                value="details"
+                className="border-r border-gray-300 last:border-r-0">
+                  상세
+              </TabsTrigger>
+              <TabsTrigger
+                value="posts"
+                className="border-r border-gray-300 last:border-r-0">
+                  게시물
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details">
@@ -251,6 +253,7 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
                   <tr>
                     <th className="p-2 border w-10">ID</th>
                     <th className="p-2 border">제목</th>
+                    <th className="p-2 border">카테고리</th>
                     <th className="p-2 border">작성일</th>
                     <th className="p-2 border">수정일</th>
                     <th className="p-2 border">조회수</th>
@@ -272,6 +275,7 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
                             {post.title}
                           </Link>
                         </td>
+                        <td className="p-2 border text-center">{post.category}</td>
                         <td className="p-2 border text-center">{new Date(post.createdAt).toISOString().slice(0, 10)}</td>
                         <td className="p-2 border text-center">{new Date(post.updatedAt).toISOString().slice(0, 10)}</td>
                         <td className="p-2 border text-center">{post.views}</td>
@@ -291,7 +295,7 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="p-4 text-center text-gray-400">게시물이 없습니다.</td>
+                      <td colSpan="9" className="p-4 text-center text-gray-400">게시물이 없습니다.</td>
                     </tr>
                   )}
                 </tbody>
@@ -299,15 +303,15 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
               {!viewAllPosts && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-gray-500">
-                    총 {filteredPosts.length}개의 게시물 중 {postIndexStart + 1}-
-                    {Math.min(postIndexEnd, filteredPosts.length)} 표시
+                    총 {filteredPosts.length}개의 게시물 중 {postPageStart + 1}-
+                    {Math.min(postPageEnd, filteredPosts.length)} 표시
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={isFirstPostPage}
-                      onClick={(e) => paginatePosts(e, -1)}
+                      onClick={() => paginatePosts(-1)}
                     >
                       이전
                     </Button>
@@ -315,7 +319,7 @@ export function AdminViewUser({ isOpen, onClose, user, onUserUpdated }) {
                       variant="outline"
                       size="sm"
                       disabled={isLastPostPage}
-                      onClick={(e) => paginatePosts(e, 1)}
+                      onClick={() => paginatePosts(1)}
                     >
                       다음
                     </Button>

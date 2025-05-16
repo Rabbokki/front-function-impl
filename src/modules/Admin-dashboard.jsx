@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from 'react-router-dom';
 
-import { getAllUsers, deleteUser } from "../hooks/reducer/admin/adminThunk";
-
+import { usePagination } from '../hooks/Use-pagination';
+import { useSortData } from '../hooks/Use-sort-data';
+import { getAllUsers, deleteUser, deletePostByUserId } from "../hooks/reducer/admin/adminThunk";
+import { getAllPosts } from '../hooks/reducer/post/postThunk';
 import { AdminViewUser } from './Admin-view-user';
 
 import Hangul from 'hangul-js';
@@ -23,6 +26,7 @@ import {
 } from '../modules/Card';
 
 import { Button } from '../modules/Button';
+import { SortArrows } from './Sort-arrows';
 import { Input } from '../modules/Input';
 import { Label } from '../modules/Label';
 import {
@@ -131,39 +135,89 @@ export function AdminDashboard() {
 
   // 유저
   const users = useSelector((state) => state.admin.users);
+  const { items: sortedUsers, requestSort: requestUserSort, sortConfig: sortUserConfig } = useSortData(users, { key: 'createdAt', direction: 'desc' });
   const [selectedUser, setSelectedUser] = useState(null);
 
   //유저 수정 할데
   const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
 
   //유저 search 할데
-  const [searchTerm, setSearchTerm] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState(users);
 
+  const itemsPerPage  = 8;
   //유저 summary 볼데
-  const [viewAllUsers, setViewAllUsers] = useState(false);
-  const [userPage, setUserPage] = useState(1);
-  const usersPerPage = 8;
-  const totalUserPages = Math.ceil(users.length / usersPerPage)
-  const userIndexStart = (userPage - 1) * usersPerPage;
-  const userIndexEnd = userIndexStart + usersPerPage;
-  const paginatedUsers = viewAllUsers
-    ? filteredUsers
-    : filteredUsers.slice(userIndexStart, userIndexEnd);
-  const isFirstUserPage = userPage === 1;
-  const isLastUserPage = userIndexEnd >= filteredUsers.length;
+  const {
+    paginatedData: paginatedUsers,
+    currentPage: userPage,
+    isFirstPage: isFirstUserPage,
+    isLastPage: isLastUserPage,
+    pageStart: userPageStart,
+    pageEnd: userPageEnd,
+    paginate: paginateUsers,
+    resetPagination: resetUserPagination,
+  } = usePagination(filteredUsers, itemsPerPage);
+
+  const displayedUsers = paginatedUsers;
+
+  //게시글
+  const posts = useSelector((state) => state.posts.posts);
+  const { items: sortedPosts, requestSort: requestPostSort, sortConfig: sortPostConfig } = useSortData(posts, { key: 'createdAt', direction: 'desc' });
+  const [categoryActiveTab, setCategoryActiveTab] = useState("ALL")
+  const [postSearchTerm, setPostSearchTerm] = useState(null)
+  const [filteredPosts, setFilteredPosts] = useState(posts);
+  const {
+    paginatedData: paginatedPosts,
+    currentPage: postPage,
+    isFirstPage: isFirstPostPage,
+    isLastPage: isLastPostPage,
+    pageStart: postPageStart,
+    pageEnd: postPageEnd,
+    paginate: paginatePosts,
+    resetPagination: resetPostPagination,
+  } = usePagination(filteredPosts, itemsPerPage);
 
   useEffect(() => {
     dispatch(getAllUsers());
+    dispatch(getAllPosts(({ category: categoryActiveTab, search: postSearchTerm })));
   }, [])
   
   useEffect(() => {
-    console.log("users is: ", users);
-  }, [users])
+    console.log("users is: ", users)
+  }, [users]);
 
   useEffect(() => {
-    setFilteredUsers(users);
-  }, [users]);
+    // When users or searchTerm changes, update filteredUsers
+    const filtered = sortedUsers.filter((user) => {
+      return (
+        Hangul.search(user.name, userSearchTerm) !== -1 ||
+        Hangul.search(user.nickname, userSearchTerm) !== -1 ||
+        Hangul.search(user.email, userSearchTerm) !== -1
+      );
+    });
+    setFilteredUsers(filtered);
+    resetUserPagination();
+  }, [sortedUsers, userSearchTerm]);
+
+  useEffect(() => {
+    const filtered = sortedPosts.filter((post) => {
+      const title = post?.title || '';
+      const userName = post?.userName || '';
+      const term = postSearchTerm || '';
+
+      return (
+        Hangul.search(title, term) !== -1 ||
+        Hangul.search(userName, term) !== -1
+      );
+    });
+
+    setFilteredPosts(filtered);
+    resetUserPagination();
+  }, [sortedPosts, postSearchTerm]);
+
+  useEffect(() => {
+    console.log("posts is: ", posts)
+  }, [posts])
 
   const generateDummyData = () => {
     const data = [];
@@ -214,32 +268,13 @@ export function AdminDashboard() {
     }
   };
 
-
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-
-    const filtered = users.filter((user) => {
-      return (
-        Hangul.search(user.name, value) !== -1 ||
-        Hangul.search(user.nickname, value) !== -1 ||
-        Hangul.search(user.email, value) !== -1
-      );
-    });
-
-    setFilteredUsers(filtered);
-    setUserPage(1);
+  const handleUserSearchChange = (e) => {
+    setUserSearchTerm(e.target.value);
   };
 
-  const toggleViewAllUsers = () => {
-    setViewAllUsers((prev) => !prev);
-    setUserPage(1);
-  }
-
-  const paginateUsers = (e, increment) => {
-    e.preventDefault();
-    setUserPage((prev) => prev + increment);
-  }
+  const handlePostSearchChange = (e) => {
+    setPostSearchTerm(e.target.value);
+  };
 
   const openUserEditModal = (user) => {
     setSelectedUser(user);
@@ -261,6 +296,19 @@ export function AdminDashboard() {
       .catch((error) => {
         console.error("삭제 실패:", error);
       });
+  }
+
+  const handlePostDelete = async (post) => {
+    if (!window.confirm(`정말 ${post.title} 삭제 하겠습니가?`)) return;
+
+    try {
+      await dispatch(deletePostByUserId({ postId: post.id, accountId: post.userId })).unwrap();
+      alert("게시물이 삭제되었습니다!");
+      dispatch(getAllPosts(({ category: categoryActiveTab, search: postSearchTerm })));
+    } catch (err) {
+      console.error("삭제 실패:", err);
+      alert("게시물 삭제에 실패했습니다.");
+    }
   }
 
   return (
@@ -520,118 +568,25 @@ export function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>최근 가입 사용자</CardTitle>
-                <CardDescription>최근 가입한 사용자 목록</CardDescription>
-              </div>
-              <Button variant="outline" size="sm" onClick={toggleViewAllUsers}>
-                {viewAllUsers ? '간단히 보기' : '모두 보기'}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">
-                        사용자
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        닉내임
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        이메일
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        가입일
-                      </th>
-                      <th className="text-right py-3 px-4 font-medium">작업</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedUsers?.map((user, i) => (
-                      <tr key={i} className="border-b">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.imgUrl || '/placeholder.svg?height=96&width=96'} />
-                            </Avatar>
-                            <span>{user.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">{user.nickname}</td>
-                        <td className="py-3 px-4">{user.email}</td>
-                        <td className="py-3 px-4">
-                          {new Date(user.createdAt).toISOString().slice(0, 10)}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openUserEditModal(user)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                              onClick={() => handleUserDelete(user)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    )) || null }
-                  </tbody>
-                </table>
-              </div>
-              {!viewAllUsers && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-gray-500">
-                    총 {users.length}명의 사용자 중 {userIndexStart + 1}-
-                    {Math.min(userIndexEnd, users.length)} 표시
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" disabled={isFirstUserPage} onClick={(e) => paginateUsers(e, -1)}>
-                      이전
-                    </Button>
-                    <Button variant="outline" size="sm" disabled={isLastUserPage} onClick={(e) => paginateUsers(e, 1)}>
-                      다음
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4 mt-6">
           <Card>
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <CardTitle>사용자 관리</CardTitle>
-                  <CardDescription>모든 사용자를 관리합니다</CardDescription>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input
-                      type="search"
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      placeholder="사용자 검색..."
-                      className="pl-8 w-full sm:w-[240px]"
-                    />
-                  </div>
-                  <Button>사용자 추가</Button>
+            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle>사용자 관리</CardTitle>
+                <CardDescription>모든 사용자을 관리합니다</CardDescription>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="search"
+                    value={userSearchTerm}
+                    onChange={handleUserSearchChange}
+                    placeholder="사용자 검색..."
+                    className="pl-8 w-full sm:w-[240px]"
+                  />
                 </div>
               </div>
             </CardHeader>
@@ -640,93 +595,84 @@ export function AdminDashboard() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">
-                        사용자
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        사용자 <span style={{ marginLeft: '6px' }}>{SortArrows('name', sortUserConfig, requestUserSort)}</span>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        닉내임
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        닉내임 <span style={{ marginLeft: '6px' }}>{SortArrows('nickname', sortUserConfig, requestUserSort)}</span>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        이메일
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        이메일 <span style={{ marginLeft: '6px' }}>{SortArrows('email', sortUserConfig, requestUserSort)}</span>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        가입일
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium">역할</th>
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        가입일 
+                      </th><span style={{ marginLeft: '6px' }}>{SortArrows('createdAt', sortUserConfig, requestUserSort)}</span>
                       <th className="text-right py-3 px-4 font-medium">작업</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedUsers?.map((user, i) => (
-                      <tr key={i} className="border-b">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.imgUrl || '/placeholder.svg?height=96&width=96'} />
-                            </Avatar>
-                            <span>{user.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">{user.nickname}</td>
-                        <td className="py-3 px-4">{user.email}</td>
-                        <td className="py-3 px-4">
-                          {new Date(user.createdAt).toISOString().slice(0, 10)}
-                        </td>
-                        <td className="py-3 px-4">
-                          {user.role === 'ADMIN' ? (
-                            <Badge className="bg-traveling-purple text-white">
-                              관리자
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-50 text-gray-700 border-gray-200"
-                            >
-                              일반
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openUserEditModal(user)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                              onClick={() => handleUserDelete(user)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                    {displayedUsers && displayedUsers.length > 0 ? (
+                      displayedUsers.map((user, i) => (
+                        <tr key={i} className="border-b">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.imgUrl || '/placeholder.svg?height=96&width=96'} />
+                              </Avatar>
+                              <span>{user.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">{user.nickname}</td>
+                          <td className="py-3 px-4">{user.email}</td>
+                          <td className="py-3 px-4">
+                            {new Date(user.createdAt).toISOString().slice(0, 10)}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openUserEditModal(user)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500"
+                                onClick={() => handleUserDelete(user)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : ( 
+                      <tr>
+                        <td colSpan={6} className="text-center py-4 text-sm text-gray-500">
+                          유저 정보가 멊습니다.
                         </td>
                       </tr>
-                    )) || null}
+                    )}
                   </tbody>
                 </table>
               </div>
-              {!viewAllUsers && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-gray-500">
-                    총 {users.length}명의 사용자 중 {userIndexStart + 1}-
-                    {Math.min(userIndexEnd, users.length)} 표시
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" disabled={isFirstUserPage} onClick={(e) => paginateUsers(e, -1)}>
-                      이전
-                    </Button>
-                    <Button variant="outline" size="sm" disabled={isLastUserPage} onClick={(e) => paginateUsers(e, 1)}>
-                      다음
-                    </Button>
-                  </div>
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-gray-500">
+                  총 {users.length}명의 사용자 중 {userPageStart + 1}-
+                  {Math.min(userPageEnd, users.length)} 표시
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled={isFirstUserPage} onClick={() => paginateUsers(-1)}>
+                    이전
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={isLastUserPage} onClick={() => paginateUsers(1)}>
+                    다음
+                  </Button>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -744,21 +690,23 @@ export function AdminDashboard() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       type="search"
+                      value={postSearchTerm}
+                      onChange={handlePostSearchChange}
                       placeholder="게시글 검색..."
                       className="pl-8 w-full sm:w-[240px]"
                     />
                   </div>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="카테고리" />
+                  <Select value={categoryActiveTab} onValueChange={setCategoryActiveTab}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="게시판을 선택하세요" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">모든 카테고리</SelectItem>
-                      <SelectItem value="tips">꿀팁 게시판</SelectItem>
-                      <SelectItem value="free">자유게시판</SelectItem>
-                      <SelectItem value="mate">여행메이트</SelectItem>
+                    <SelectContent className="z-50 bg-white shadow-md">
+                      <SelectItem value="ALL">모든 카테고리</SelectItem>
+                      <SelectItem value="TIPS">꿀팁 게시판</SelectItem>
+                      <SelectItem value="FREE">자유게시판</SelectItem>
+                      <SelectItem value="MATE">여행메이트</SelectItem>
                     </SelectContent>
-                  </Select>
+                </Select>
                 </div>
               </div>
             </CardHeader>
@@ -767,172 +715,110 @@ export function AdminDashboard() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">제목</th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        작성자
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        제목 <span style={{ marginLeft: '6px' }}>{SortArrows('title', sortPostConfig, requestPostSort)}</span>
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        작성자 <span style={{ marginLeft: '6px' }}>{SortArrows('name', sortPostConfig, requestPostSort)}</span>
                       </th>
                       <th className="text-left py-3 px-4 font-medium">
                         카테고리
                       </th>
-                      <th className="text-left py-3 px-4 font-medium">
-                        작성일
+                      <th className="text-left py-3 px-4 font-medium cursor-pointer select-none">
+                        작성일 <span style={{ marginLeft: '6px' }}>{SortArrows('createdAt', sortPostConfig, requestPostSort)}</span>
                       </th>
                       <th className="text-left py-3 px-4 font-medium">상태</th>
                       <th className="text-right py-3 px-4 font-medium">작업</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        title: '도쿄 여행 꿀팁 모음',
-                        author: '김여행',
-                        category: 'tips',
-                        date: '2023-04-25',
-                        status: 'published',
-                      },
-                      {
-                        title: '오사카 맛집 추천해주세요',
-                        author: '이모험',
-                        category: 'free',
-                        date: '2023-04-24',
-                        status: 'published',
-                      },
-                      {
-                        title: '5월 유럽 여행 동행 구합니다',
-                        author: '박세계',
-                        category: 'mate',
-                        date: '2023-04-23',
-                        status: 'published',
-                      },
-                      {
-                        title: '방콕 호텔 추천',
-                        author: '최탐험',
-                        category: 'tips',
-                        date: '2023-04-22',
-                        status: 'published',
-                      },
-                      {
-                        title: '여행 준비물 체크리스트',
-                        author: '정글로벌',
-                        category: 'tips',
-                        date: '2023-04-21',
-                        status: 'draft',
-                      },
-                      {
-                        title: '제주도 렌트카 꿀팁',
-                        author: '한여행자',
-                        category: 'tips',
-                        date: '2023-04-20',
-                        status: 'published',
-                      },
-                      {
-                        title: '싱가포르 3박 4일 일정 공유',
-                        author: '윤세계인',
-                        category: 'free',
-                        date: '2023-04-19',
-                        status: 'published',
-                      },
-                      {
-                        title: '파리 여행 후기',
-                        author: '송여정',
-                        category: 'free',
-                        date: '2023-04-18',
-                        status: 'reported',
-                      },
-                    ].map((post, i) => (
-                      <tr key={post.title} className="border-b">
-                        <td className="py-3 px-4">
-                          <div className="font-medium">{post.title}</div>
-                        </td>
-                        <td className="py-3 px-4">{post.author}</td>
-                        <td className="py-3 px-4">
-                          {post.category === 'tips' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-200"
+                    {paginatedPosts && paginatedPosts.length > 0 ? (
+                      paginatedPosts?.map((post, i) => (
+                        <tr key={post.title} className="border-b">
+                          <td className="py-3 px-4">
+                            <Link
+                              to={`/community/post/${post.id}`}
+                              className="text-blue-600 underline hover:text-blue-800"
                             >
-                              꿀팁
-                            </Badge>
-                          ) : post.category === 'free' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200"
-                            >
-                              자유
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-purple-50 text-purple-700 border-purple-200"
-                            >
-                              메이트
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">{post.date}</td>
-                        <td className="py-3 px-4">
-                          {post.status === 'published' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200"
-                            >
-                              게시됨
-                            </Badge>
-                          ) : post.status === 'draft' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-50 text-gray-700 border-gray-200"
-                            >
-                              임시저장
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-red-50 text-red-700 border-red-200"
-                            >
-                              신고됨
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                              {post.title}
+                            </Link>
+                          </td>
+                          <td className="py-3 px-4">{post.userName}</td>
+                          <td className="py-3 px-4">
+                            {post.category === 'TIPS' ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-50 text-blue-700 border-blue-200"
+                              >
+                                꿀팁
+                              </Badge>
+                            ) : post.category === 'FREE' ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
+                                자유
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="bg-purple-50 text-purple-700 border-purple-200"
+                              >
+                                메이트
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">{new Date(post.createdAt).toISOString().slice(0, 10)}</td>
+                          <td className="py-3 px-4">
+                            {!post.reported ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
+                                게시됨
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="bg-red-50 text-red-700 border-red-200"
+                              >
+                                신고됨
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500"
+                                onClick={() => handlePostDelete(post)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="text-center py-4 text-sm text-gray-500">
+                          게시 정보가 멊습니다.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-gray-500">
-                  총 8개의 게시글 중 1-8 표시
+                  총 {posts.length}개의 게시글 중 {postPageStart + 1}-{Math.min(postPageEnd, posts.length)} 표시
                 </p>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
+                  <Button variant="outline" size="sm" disabled={isFirstPostPage} onClick={() => paginatePosts(-1)}>
                     이전
                   </Button>
-                  <Button variant="outline" size="sm" disabled>
+                  <Button variant="outline" size="sm" disabled={isLastPostPage} onClick={() => paginatePosts(1)}>
                     다음
                   </Button>
                 </div>

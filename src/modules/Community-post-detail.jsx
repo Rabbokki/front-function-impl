@@ -275,7 +275,7 @@ export function CommunityPostDetail({ postId }) {
               <AvatarImage src={localPost.userImgUrl || '/placeholder.svg?height=96&width=96'} />
               <AvatarFallback>익</AvatarFallback>
             </Avatar>
-            <span className="mr-3">{localPost.userName}</span>
+            <span className="mr-3">{localPost.userNickname}</span>
             <Clock className="mr-1 h-3 w-3 text-[#4dabf7]" />
             <span>{new Date().toLocaleDateString()}</span>
           </div>
@@ -355,7 +355,7 @@ export function CommunityPostDetail({ postId }) {
                     <ThumbsUp className="mr-1 h-3 w-3" />
                     {comment.likeCount || 0}
                   </Button>
-                  {comment.author === currentUser.nickname && (
+                  {comment.author === currentUser?.nickname && (
                     <Button
                       size="sm"
                       className="text-xs text-[#868e96] opacity-70 hover:opacity-100 transition-opacity"
