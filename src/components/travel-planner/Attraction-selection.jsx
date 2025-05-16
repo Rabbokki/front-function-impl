@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, MapPin, Star, Plus, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from "../../modules/Button";
 import { Input } from "../../modules/Input";
@@ -16,25 +16,42 @@ import { ReviewForm } from '../travel-planner/Review-form';
 import { differenceInCalendarDays } from 'date-fns';
 import { generateDayKeys, saveToLocalStorage, getFromLocalStorage } from "../../utils";
 
-const AttractionSelection = ({ destination }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAttractions, setSelectedAttractions] = useState(() => {
-    const saved = getFromLocalStorage("travelPlan")?.selectedAttractions;
-    if (saved) return saved;
-    const initial = {};
-    dayKeys.forEach((key) => (initial[key] = []));
-    return initial;
-  });
+const AttractionSelection = ({ destination, startDate, endDate }) => {
   const [activeDay, setActiveDay] = useState("day1");
   const [hoveredAttraction, setHoveredAttraction] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [customAttractions, setCustomAttractions] = useState([]);
+  
+    const dayKeys = useMemo(() => {
+    if (!startDate || !endDate) return [];
+    return generateDayKeys(startDate, endDate);
+  }, [startDate, endDate]);
 
-  const travelPlan = getFromLocalStorage("travelPlan") || {};
-  const { startDate, endDate } = travelPlan;
-  const dayKeys = useMemo(() => generateDayKeys(startDate, endDate), [startDate, endDate]);
+  const [selectedAttractions, setSelectedAttractions] = useState(() => {
+    const saved = getFromLocalStorage("travelPlan")?.selectedAttractions;
+    if (saved && Object.keys(saved).length > 0) {
+      const validSaved = {};
+      dayKeys.forEach((key) => {
+        validSaved[key] = Array.isArray(saved[key]) ? saved[key] : [];
+      });
+      return validSaved;
+    }
+    const initial = {};
+    dayKeys.forEach((key) => (initial[key] = []));
+    return initial;
+  });
 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // activeDay가 유효한지 확인
+  useEffect(() => {
+    if (!dayKeys.includes(activeDay)) {
+      setActiveDay(dayKeys[0] || "day1");
+    }
+  }, [dayKeys, activeDay]);
+
+  // 렌더링 조건 분기 (return은 여기서)
   if (!startDate || !endDate) {
     return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;
   }
@@ -499,12 +516,17 @@ const AttractionSelection = ({ destination }) => {
 
   const toggleAttraction = (attractionId) => {
     setSelectedAttractions((prev) => {
-      const currentDaySelections = [...prev[activeDay]];
+      const currentDaySelections = Array.isArray(prev[activeDay]) ? [...prev[activeDay]] : [];
       const updated = currentDaySelections.includes(attractionId)
         ? currentDaySelections.filter((id) => id !== attractionId)
         : [...currentDaySelections, attractionId];
       const newSelections = { ...prev, [activeDay]: updated };
-      saveToLocalStorage("travelPlan", { ...travelPlan, selectedAttractions: newSelections });
+      saveToLocalStorage("travelPlan", {
+        ...getFromLocalStorage("travelPlan"),
+        selectedAttractions: newSelections,
+        startDate,
+        endDate,
+      });
       return newSelections;
     });
   };
@@ -530,11 +552,14 @@ const AttractionSelection = ({ destination }) => {
     id: attraction.id,
     position: attraction.position,
     title: attraction.name,
-    selected: selectedAttractions[activeDay].includes(attraction.id) || hoveredAttraction === attraction.id,
+    selected:
+      (Array.isArray(selectedAttractions[activeDay]) &&
+       selectedAttractions[activeDay].includes(attraction.id)) ||
+      hoveredAttraction === attraction.id,
   }));
 
   const isAllDaysSelected = () => {
-    return Object.values(selectedAttractions).every((attractions) => attractions.length > 0);
+    return dayKeys.every((day) => Array.isArray(selectedAttractions[day]) && selectedAttractions[day].length > 0);
   };
 
   const openReviewModal = (attraction) => {
@@ -567,7 +592,7 @@ const AttractionSelection = ({ destination }) => {
                 }
               >
                 {idx + 1}일차
-                {selectedAttractions[day].length > 0 && (
+                {Array.isArray(selectedAttractions[day]) && selectedAttractions[day].length > 0 && (
                   <Badge className="ml-2 bg-white text-traveling-purple">
                     {selectedAttractions[day].length}
                   </Badge>
@@ -580,6 +605,7 @@ const AttractionSelection = ({ destination }) => {
           </p>
         </div>
 
+        {/* 나머지 JSX는 기존 코드와 동일 */}
         <div className="grid gap-6 lg:grid-cols-2">
           <div>
             <Tabs defaultValue="attraction-select">
@@ -617,6 +643,7 @@ const AttractionSelection = ({ destination }) => {
                     <Card
                       key={attraction.id}
                       className={`overflow-hidden transition-all ${
+                        Array.isArray(selectedAttractions[activeDay]) &&
                         selectedAttractions[activeDay].includes(attraction.id)
                           ? "border-2 border-traveling-purple"
                           : "border border-gray-200"
@@ -662,16 +689,25 @@ const AttractionSelection = ({ destination }) => {
                               </Button>
                             </div>
                             <Button
-                              variant={selectedAttractions[activeDay].includes(attraction.id) ? "default" : "outline"}
+                              variant={
+                                Array.isArray(selectedAttractions[activeDay]) &&
+                                selectedAttractions[activeDay].includes(attraction.id)
+                                  ? "default"
+                                  : "outline"
+                              }
                               size="sm"
                               className={
+                                Array.isArray(selectedAttractions[activeDay]) &&
                                 selectedAttractions[activeDay].includes(attraction.id)
                                   ? "bg-traveling-purple text-white hover:bg-traveling-purple/90"
                                   : "border-traveling-purple text-traveling-purple hover:bg-traveling-purple/10"
                               }
                               onClick={() => toggleAttraction(attraction.id)}
                             >
-                              {selectedAttractions[activeDay].includes(attraction.id) ? "선택됨" : "선택하기"}
+                              {Array.isArray(selectedAttractions[activeDay]) &&
+                              selectedAttractions[activeDay].includes(attraction.id)
+                                ? "선택됨"
+                                : "선택하기"}
                             </Button>
                           </div>
                         </CardContent>
@@ -726,7 +762,7 @@ const AttractionSelection = ({ destination }) => {
               <div className="flex justify-between items-center" key={day}>
                 <span>{idx + 1}일차:</span>
                 <Badge className="bg-traveling-purple/20 text-traveling-purple">
-                  {selectedAttractions[day].length}개 장소
+                  {(Array.isArray(selectedAttractions[day]) ? selectedAttractions[day].length : 0)}개 장소
                 </Badge>
               </div>
             ))}

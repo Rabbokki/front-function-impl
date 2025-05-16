@@ -7,7 +7,6 @@ const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice",
 
 export default function Step2Page() {
   const { destination } = useParams();
-
   const startDate = localStorage.getItem("startDate");
   const endDate = localStorage.getItem("endDate");
 

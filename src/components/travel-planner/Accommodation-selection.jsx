@@ -8,33 +8,27 @@ import MapComponent from './Map-component';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { differenceInCalendarDays } from 'date-fns';
+import { generateDayKeys, saveToLocalStorage, getFromLocalStorage } from '../../utils';
 
-
-export default function AccommodationSelection({ destination, startDate, endDate }) {
+export default function AccommodationSelection({ destination }) {
+  const travelPlan = getFromLocalStorage("travelPlan") || {};
+  const { startDate, endDate } = travelPlan;
+  const dayKeys = generateDayKeys(startDate, endDate);
   const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 500000]);
-  const dayCount =
-  startDate && endDate
-    ? differenceInCalendarDays(new Date(endDate), new Date(startDate)) + 1
-    : 3;
-
-const dayKeys = Array.from({ length: dayCount }, (_, i) => `day${i + 1}`);
-
-const [selectedHotels, setSelectedHotels] = useState(() => {
-  const initial = {};
-  for (let i = 1; i <= dayCount; i++) {
-    initial[`day${i}`] = '';
-  }
-  return initial;
-});
-
-
-  const [activeDay, setActiveDay] = useState(() => dayKeys[0]);
+  const [selectedHotels, setSelectedHotels] = useState(() => {
+    const saved = getFromLocalStorage("travelPlan")?.selectedHotels;
+    if (saved) return saved;
+    const initial = {};
+    dayKeys.forEach((day) => (initial[day] = ''));
+    return initial;
+  });
+  const [activeDay, setActiveDay] = useState("day1");
   const [hoveredHotel, setHoveredHotel] = useState(null);
-  const [starRating, setStarRating] = useState([]);
-  const [propertyType, setPropertyType] = useState([]);
-  const [facilities, setFacilities] = useState([]);
-  const navigate = useNavigate();
+
+
+  if (!startDate || !endDate) {
+    return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;
+  }
 
   // 도시별 호텔 데이터
   const hotelsData = {
@@ -646,7 +640,7 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
     },
   };
 
-  const cityData = hotelsData[destination];
+  const cityData = hotelsData[destination] || { hotels: [] };
   const filteredHotels = cityData.hotels.filter(
     (hotel) =>
       hotel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -654,29 +648,24 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
       hotel.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const toggleStarRating = (rating) => {
-    setStarRating((prev) =>
-      prev.includes(rating)
-        ? prev.filter((r) => r !== rating)
-        : [...prev, rating]
-    );
+  const toggleHotel = (hotelId, day) => {
+    setSelectedHotels((prev) => {
+      const updated = { ...prev, [day]: prev[day] === hotelId ? '' : hotelId };
+      saveToLocalStorage("travelPlan", { ...travelPlan, selectedHotels: updated });
+      return updated;
+    });
   };
 
-  const togglePropertyType = (type) => {
-    if (propertyType.includes(type)) {
-      setPropertyType(propertyType.filter((t) => t !== type));
-    } else {
-      setPropertyType([...propertyType, type]);
-    }
+  const selectHotelForAllDays = (hotelId) => {
+    const updated = {};
+    dayKeys.forEach((day) => {
+      updated[day] = hotelId;
+    });
+    setSelectedHotels(updated);
+    saveToLocalStorage("travelPlan", { ...travelPlan, selectedHotels: updated });
   };
 
-  const toggleFacility = (facility) => {
-    if (facilities.includes(facility)) {
-      setFacilities(facilities.filter((f) => f !== facility));
-    } else {
-      setFacilities([...facilities, facility]);
-    }
-  };
+  const isAllDaysSelected = () => Object.values(selectedHotels).every((hotel) => hotel !== '');
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ko-KR', {
@@ -686,86 +675,47 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
     }).format(price);
   };
 
-  // 호텔 선택 토글 함수 수정
-  const toggleHotel = (hotelId, day) => {
-    setSelectedHotels((prev) => ({
-      ...prev,
-      [day]: prev[day] === hotelId ? '' : hotelId,
-    }));
-  };
-
-  // 전체 날짜에 동일한 호텔 선택 함수 추가
-  const selectHotelForAllDays = (hotelId) => {
-    const updated = {};
-    dayKeys.forEach((day) => {
-      updated[day] = hotelId;
-    });
-    setSelectedHotels(updated);
-  };
-
-  // 다음 단계로 넘어가기 전 유효성 검사 함수
-  const isAllDaysSelected = () =>
-    Object.values(selectedHotels).every((hotel) => hotel !== '');
-
-  // 지도에 표시할 마커 생성 부분 수정
   const mapMarkers = filteredHotels.map((hotel) => ({
     id: hotel.id,
     position: hotel.position,
     title: hotel.name,
-    selected:
-      selectedHotels[activeDay] === hotel.id || hoveredHotel === hotel.id,
+    selected: selectedHotels[activeDay] === hotel.id || hoveredHotel === hotel.id,
   }));
 
-  const handleNext = () => {
-    if (isAllDaysSelected()) {
-      navigate(`/travel-planner/${destination}/step4`);
-    }
-  };
+  if (!cityData.name) return <div className="text-red-600 p-4">선택된 도시 정보가 없습니다.</div>;
 
   return (
     <div className="space-y-4">
       <Card className="bg-white p-4 shadow-md">
         <div className="mb-4">
-          <h2 className="mb-1 text-center text-2xl font-bold text-traveling-text">
-            숙소 선택
-          </h2>
+          <h2 className="mb-1 text-center text-2xl font-bold text-traveling-text">숙소 선택</h2>
           <p className="text-center text-sm text-traveling-text/70">
             {cityData.name}에서 머무를 숙소를 선택해주세요.
           </p>
         </div>
-
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="lg:col-span-1">
-            {/* 요일 선택 탭과 검색창을 같은 컬럼에 배치 */}
             <div className="mb-3 bg-white rounded-lg">
               <div className="flex space-x-2 mb-2">
-              {dayKeys.map((dayKey, idx) => (
-                <Button
-                key={dayKey}
-                  variant={activeDay ===  dayKey? 'default' : 'outline'}
-                  className={
-                    activeDay === dayKey
-                      ? 'bg-traveling-purple text-white'
-                      : 'border-traveling-text/30 text-traveling-text'
-                  }
-                  onClick={() => setActiveDay(dayKey)}
-                >
-                  {idx + 1}일차
-                  {selectedHotels[dayKey] && <span className="ml-2 text-xs">✓</span>}
-                </Button>
-              ))}
+                {dayKeys.map((dayKey, idx) => (
+                  <Button
+                    key={dayKey}
+                    variant={activeDay === dayKey ? 'default' : 'outline'}
+                    className={
+                      activeDay === dayKey
+                        ? 'bg-traveling-purple text-white'
+                        : 'border-traveling-text/30 text-traveling-text'
+                    }
+                    onClick={() => setActiveDay(dayKey)}
+                  >
+                    {idx + 1}일차
+                    {selectedHotels[dayKey] && <span className="ml-2 text-xs">✓</span>}
+                  </Button>
+                ))}
               </div>
-
-                
-             
               <div className="text-sm text-traveling-text/70 mb-3">
-                <p>
-                  현재 선택: {dayKeys.indexOf(activeDay) + 1}일차 숙소
-                  
-                </p>
+                <p>현재 선택: {dayKeys.indexOf(activeDay) + 1}일차 숙소</p>
               </div>
-
-              {/* 검색창을 여기로 이동 */}
               <div className="relative w-full mb-3">
                 <Input
                   type="text"
@@ -777,7 +727,6 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-traveling-text/50" />
               </div>
             </div>
-
             <div className="max-h-[500px] overflow-y-auto space-y-3 pr-2">
               {filteredHotels.map((hotel) => (
                 <Card
@@ -791,7 +740,6 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                   onMouseEnter={() => setHoveredHotel(hotel.id)}
                   onMouseLeave={() => setHoveredHotel(null)}
                 >
-                  {/* 카드 내용은 그대로 유지 */}
                   <div className="flex flex-col md:flex-row">
                     <div className="relative h-48 w-full md:h-auto md:w-1/3">
                       <img
@@ -799,11 +747,8 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                         alt={hotel.name}
                         className="object-cover w-full h-full"
                       />
-
                       {hotel.discount && (
-                        <Badge className="absolute left-2 top-2 bg-traveling-pink text-white">
-                          {hotel.discount}
-                        </Badge>
+                        <Badge className="absolute left-2 top-2 bg-traveling-pink text-white">{hotel.discount}</Badge>
                       )}
                       <Button
                         variant="ghost"
@@ -811,40 +756,28 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                         className="absolute right-2 top-2 h-8 w-8 rounded-full bg-white/80 p-0 text-traveling-pink hover:bg-white hover:text-traveling-pink"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // 찜하기 기능
+                          // TODO: 찜하기 기능 구현
                         }}
                       >
                         <Heart className="h-5 w-5" />
                       </Button>
                     </div>
-
                     <div className="flex flex-1 flex-col p-4">
-                      {/* 기존 내용 유지 */}
                       <div className="mb-2 flex items-start justify-between">
                         <div>
-                          <h3 className="text-lg font-bold text-traveling-text">
-                            {hotel.name}
-                          </h3>
-                          <Badge className="mt-1 bg-traveling-background text-traveling-text/70">
-                            {hotel.type}
-                          </Badge>
+                          <h3 className="text-lg font-bold text-traveling-text">{hotel.name}</h3>
+                          <Badge className="mt-1 bg-traveling-background text-traveling-text/70">{hotel.type}</Badge>
                         </div>
                         <div className="flex items-center rounded-lg bg-traveling-background px-2 py-1">
                           <Star className="mr-1 h-4 w-4 fill-traveling-yellow text-traveling-yellow" />
-                          <span className="font-bold text-traveling-text">
-                            {hotel.rating}
-                          </span>
-                          <span className="ml-1 text-xs text-traveling-text/70">
-                            ({hotel.reviews})
-                          </span>
+                          <span className="font-bold text-traveling-text">{hotel.rating}</span>
+                          <span className="ml-1 text-xs text-traveling-text/70">({hotel.reviews})</span>
                         </div>
                       </div>
-
                       <p className="mb-2 flex items-center text-sm text-traveling-text/70">
                         <MapPin className="mr-1 h-4 w-4 text-traveling-text/70" />
                         {hotel.location}
                       </p>
-
                       <div className="mb-4 flex flex-wrap gap-2">
                         {hotel.facilities.map((facility, i) => (
                           <Badge
@@ -856,15 +789,10 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                           </Badge>
                         ))}
                       </div>
-
                       <div className="mt-auto flex items-end justify-between">
                         <div>
-                          <p className="text-sm text-traveling-text/70">
-                            1박 기준
-                          </p>
-                          <p className="text-xl font-bold text-traveling-text">
-                            {formatPrice(hotel.price)}
-                          </p>
+                          <p className="text-sm text-traveling-text/70">1박 기준</p>
+                          <p className="text-xl font-bold text-traveling-text">{formatPrice(hotel.price)}</p>
                         </div>
                         <div className="flex flex-col gap-2">
                           <Button
@@ -874,9 +802,7 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                                 : 'bg-traveling-background text-traveling-text hover:bg-traveling-background/80'
                             }
                           >
-                            {selectedHotels[activeDay] === hotel.id
-                              ? '선택됨'
-                              : '선택하기'}
+                            {selectedHotels[activeDay] === hotel.id ? '선택됨' : '선택하기'}
                           </Button>
                           <Button
                             size="sm"
@@ -896,12 +822,8 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                 </Card>
               ))}
             </div>
-
-            {/* 다음 단계로 버튼 부분 수정 */}
             <div className="mt-8 flex justify-end">
-              <Link
-                to={isAllDaysSelected() ? `/travel-planner/${destination}/step4` : '#'}
-              >
+              <Link to={isAllDaysSelected() ? `/travel-planner/${destination}/step4` : '#'}>
                 <Button
                   className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
                   disabled={!isAllDaysSelected()}
@@ -911,37 +833,24 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                 </Button>
               </Link>
             </div>
-
-            {/* 선택된 숙소 요약 정보 추가 */}
             {Object.values(selectedHotels).some((hotel) => hotel !== '') && (
               <div className="mt-4 p-4 bg-traveling-background/30 rounded-lg">
-                <h3 className="font-medium text-traveling-text mb-2">
-                  선택된 숙소 정보
-                </h3>
+                <h3 className="font-medium text-traveling-text mb-2">선택된 숙소 정보</h3>
                 <div className="space-y-2">
                   {Object.entries(selectedHotels).map(([day, hotelId]) => {
                     if (!hotelId) return null;
                     const hotel = cityData.hotels.find((h) => h.id === hotelId);
                     if (!hotel) return null;
-
                     return (
-                      <div
-                        key={day}
-                        className="flex justify-between items-center"
-                      >
+                      <div key={day} className="flex justify-between items-center">
                         <div className="flex items-center">
-                        <span className="font-medium mr-2">
-                        {dayKeys.indexOf(day) + 1}일차:
-                          </span>
+                          <span className="font-medium mr-2">{dayKeys.indexOf(day) + 1}일차:</span>
                           <span>{hotel.name}</span>
                         </div>
-                        <Badge className="bg-traveling-purple/20 text-traveling-purple">
-                          {formatPrice(hotel.price)}
-                        </Badge>
+                        <Badge className="bg-traveling-purple/20 text-traveling-purple">{formatPrice(hotel.price)}</Badge>
                       </div>
                     );
                   })}
-
                   {isAllDaysSelected() && (
                     <div className="mt-2 pt-2 border-t border-traveling-text/10 flex justify-between">
                       <span className="font-medium">총 금액:</span>
@@ -949,9 +858,7 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
                         {formatPrice(
                           Object.values(selectedHotels)
                             .map((hotelId) => {
-                              const hotel = cityData.hotels.find(
-                                (h) => h.id === hotelId
-                              );
+                              const hotel = cityData.hotels.find((h) => h.id === hotelId);
                               return hotel ? hotel.price : 0;
                             })
                             .reduce((sum, price) => sum + price, 0)
@@ -963,9 +870,7 @@ const [selectedHotels, setSelectedHotels] = useState(() => {
               </div>
             )}
           </div>
-
           <div className="lg:col-span-1">
-            {/* 지도 영역 - 더 크게 표시 */}
             <div className="h-[600px] rounded-lg overflow-hidden border border-gray-200">
               <MapComponent
                 center={cityData.center}

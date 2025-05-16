@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Brain } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card } from "../../modules/Card";
 import { saveToLocalStorage } from "../../utils";
-
+import axiosInstance from "../../api/axiosInstance";
+import { format } from 'date-fns';
 // 도시별 데이터
 const cityData = {
   osaka: {
@@ -22,7 +22,7 @@ const cityData = {
     voltage: "110V",
     adapter: "없음",
     image: "/images/destinations/osaka.jpg",
-    airport: "osaa", // 스카이스캐너 공항 코드
+    airport: "osaa",
   },
   tokyo: {
     name: "도쿄",
@@ -38,7 +38,7 @@ const cityData = {
     voltage: "110V",
     adapter: "없음",
     image: "/images/destinations/tokyo.png",
-    airport: "tyoa", // 스카이스캐너 공항 코드
+    airport: "tyoa",
   },
   fukuoka: {
     name: "후쿠오카",
@@ -54,7 +54,7 @@ const cityData = {
     voltage: "110V",
     adapter: "없음",
     image: "/images/destinations/fukuoka.png",
-    airport: "fuka", // 스카이스캐너 공항 코드
+    airport: "fuka",
   },
   jeju: {
     name: "제주",
@@ -84,7 +84,7 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/paris.png",
-    airport: "pari", // 스카이스캐너 공항 코드
+    airport: "pari",
   },
   rome: {
     name: "로마",
@@ -100,7 +100,7 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/rome.png",
-    airport: "rome", // 스카이스캐너 공항 코드
+    airport: "rome",
   },
   venice: {
     name: "베니스",
@@ -116,7 +116,7 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/venice.png",
-    airport: "veni", // 스카이스캐너 공항 코드
+    airport: "veni",
   },
   bangkok: {
     name: "방콕",
@@ -132,7 +132,7 @@ const cityData = {
     voltage: "220V",
     adapter: "필요",
     image: "/images/destinations/bangkok.png",
-    airport: "bkkt", // 스카이스캐너 공항 코드
+    airport: "bkkt",
   },
   singapore: {
     name: "싱가포르",
@@ -148,14 +148,13 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/singapore.png",
-    airport: "sins", // 스카이스캐너 공항 코드
+    airport: "sins",
   },
-  // ...다른 도시도 동일한 형식으로 추가
 };
 
 export function DestinationInfo({ destination }) {
   const [selectedDates, setSelectedDates] = useState([]);
-  const [currentMonth, setCurrentMonth] = useState(4); // 4월
+  const [currentMonth, setCurrentMonth] = useState(4);
   const [currentYear, setCurrentYear] = useState(2025);
   const [plannerType, setPlannerType] = useState("manual");
 
@@ -243,25 +242,50 @@ export function DestinationInfo({ destination }) {
     return `${format(start)} - ${format(end)} (${sorted.length}일)`;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedDates.length > 0) {
       const sorted = [...selectedDates].sort();
       const startDate = sorted[0];
       const endDate = sorted[sorted.length - 1];
 
+      // selectedAttractions와 selectedHotels 초기화
+      const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
+      const selectedAttractions = {};
+      const selectedHotels = {};
+      for (let i = 0; i < daysCount; i++) {
+        const dayKey = format(new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)), "yyyy-MM-dd");
+        selectedAttractions[dayKey] = [];
+        selectedHotels[dayKey] = "hotel1";
+      }
+
       // 데이터 저장
-      saveToLocalStorage("travelPlan", {
+      const travelPlan = {
         destination,
         startDate,
         endDate,
         plannerType,
-      });
+        selectedAttractions,
+        selectedHotels,
+        selectedTransportation: "car",
+      };
+      saveToLocalStorage("travelPlan", travelPlan);
+
+      // DB 저장
+      try {
+        await axiosInstance.post("/api/aiplan/save-initial", {
+          destination,
+          start_date: startDate,
+          end_date: endDate,
+          planType: plannerType === "ai" ? "AI" : "MY",
+        });
+        console.log("Step 1 데이터 DB 저장 성공");
+      } catch (error) {
+        console.error("Step 1 데이터 DB 저장 실패:", error.response?.data || error.message);
+      }
 
       if (plannerType === "manual") {
         navigate(`/travel-planner/${destination}/step2`);
       } else {
-        // TODO: AI 플래너 구현 시 활성화
-        console.warn("AI Planner is not implemented yet.");
         navigate(`/ai-planner/${destination}`);
       }
     }
