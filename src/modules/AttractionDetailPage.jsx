@@ -7,109 +7,109 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../modules/Tabs';
 import { NavBar } from '../components/Nav-bar';
 import { ReviewForm } from '../components/travel-planner/Review-form';
 import { Bookmark } from 'lucide-react';
+import axiosInstance from '../api/axiosInstance';
 
 function AttractionDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams(); // URL에서 placeId 추출
   const navigate = useNavigate();
+
+  // ✅ 명소 정보 및 탭 상태
   const [basicPlace, setBasicPlace] = useState(null);
   const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState('intro');
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // ✅ 리뷰 관련
   const [reviews, setReviews] = useState([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // ✅ 유저 정보
   const storedUser =
     JSON.parse(localStorage.getItem('user')) ||
     JSON.parse(sessionStorage.getItem('user'));
   const userNickname = storedUser?.nickname;
 
-  const handleDelete = (placeId) => {
-    if (!window.confirm('정말 삭제할까요?')) return;
-
-    fetch(`/api/reviews?placeId=${placeId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          alert('삭제 완료');
-          setReviews((prev) => prev.filter((r) => r.placeId !== placeId));
-        } else {
-          alert(data.error?.message || '삭제 실패');
-        }
-      })
-      .catch((err) => {
-        console.error('❌ 삭제 중 오류:', err);
-        alert('에러 발생');
-      });
-  };
-
-const handleSavePlace = async () => {
-  const accessToken = localStorage.getItem('accessToken');
-
-  try {
-    const res = await fetch('/api/saved-places', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
+  // ✅ 명소 저장 (북마크)
+  const handleSavePlace = async () => {
+    try {
+      const res = await axiosInstance.post('/api/saved-places', {
         placeId: basicPlace.placeId,
         name: basicPlace.name,
         city: basicPlace.city,
         country: basicPlace.country,
         image: basicPlace.image,
-        type: basicPlace.category || '명소',
-      }),
+        type: basicPlace.type,
+      });
+
+      if (res.data.success) {
+        alert('저장 완료!');
+      } else {
+        alert(res.data.message || '저장 실패');
+      }
+    } catch (err) {
+      console.error('❌ 저장 요청 오류:', err);
+      alert('오류 발생');
+    }
+  };
+
+  // ✅ 리뷰 삭제
+const handleDelete = async (placeId) => {
+  try {
+    const res = await axiosInstance.delete('/api/reviews', {
+      params: { placeId },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
     });
 
-    const result = await res.text(); // 또는 res.json()
-    console.log('📡 응답 상태코드:', res.status);
-    console.log('📡 응답 내용:', result);
-
-    if (res.ok) {
-      alert('저장 완료!');
+    if (res.data.success) {
+      const deletedId = res.data.data.deletedId;
+      setReviews((prev) => prev.filter((r) => r.id !== deletedId));
+      alert('리뷰 삭제 완료');
     } else {
-      alert('저장 실패');
+      alert(res.data.error?.message || '삭제 실패');
     }
   } catch (err) {
-    console.error('❌ 저장 중 오류:', err);
+    console.error('❌ 삭제 중 오류:', err);
+    alert('삭제 중 오류 발생');
   }
 };
+
+
+
+  // ✅ [1] 전체 명소 중 선택된 명소 찾기
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('allPlaces')) || [];
     const found = stored.find((p) => p.placeId === id);
-    console.log('✅ found:', found);
     setBasicPlace(found);
   }, [id]);
 
+  // ✅ [2] 해당 명소에 대한 리뷰 불러오기
   useEffect(() => {
-    if (!basicPlace || !basicPlace.placeId) return;
+    if (!basicPlace?.placeId) return;
 
     fetch(`/api/reviews?placeId=${basicPlace.placeId}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log('✅ 리뷰 응답:', data);
         if (data.success && Array.isArray(data.data)) {
-          console.log('👉 리뷰 목록:', data.response);
           setReviews(data.data);
         }
-      });
+      })
+      .catch((err) => console.error('리뷰 불러오기 실패:', err));
   }, [basicPlace]);
 
+  // ✅ [3] 명소 상세정보 불러오기
   useEffect(() => {
     if (!basicPlace?.placeId) return;
+
     fetch(`/api/places/detail?placeId=${basicPlace.placeId}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log('📍 detail 응답:', data);
         setDetail(data);
       })
       .catch((err) => console.error('❌ 상세정보 실패:', err));
   }, [basicPlace?.placeId]);
 
+  // ✅ 예외처리
   if (!basicPlace) {
     return (
       <p className="text-center mt-10 text-red-500">
@@ -300,8 +300,7 @@ const handleSavePlace = async () => {
                         <p className="text-sm font-medium">
                           {review.nickname || '익명'}
                         </p>
-
-                        {/*  내 닉네임일 때만 삭제 버튼 표시 */}
+                        {/* 내 닉네임일 때만 삭제 버튼 표시 */}
                         {review.nickname === userNickname && (
                           <button
                             onClick={() => handleDelete(review.placeId)}
