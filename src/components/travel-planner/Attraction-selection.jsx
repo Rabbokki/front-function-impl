@@ -17,43 +17,60 @@ import { differenceInCalendarDays } from 'date-fns';
 import { generateDayKeys, saveToLocalStorage, getFromLocalStorage } from "../../utils";
 
 const AttractionSelection = ({ destination, startDate, endDate }) => {
-  const [activeDay, setActiveDay] = useState("day1");
+  const [activeDay, setActiveDay] = useState(null); // 초기값 null로 설정
   const [hoveredAttraction, setHoveredAttraction] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [customAttractions, setCustomAttractions] = useState([]);
   
-    const dayKeys = useMemo(() => {
+  const dayKeys = useMemo(() => {
     if (!startDate || !endDate) return [];
     return generateDayKeys(startDate, endDate);
   }, [startDate, endDate]);
 
   const [selectedAttractions, setSelectedAttractions] = useState(() => {
-    const saved = getFromLocalStorage("travelPlan")?.selectedAttractions;
-    if (saved && Object.keys(saved).length > 0) {
-      const validSaved = {};
-      dayKeys.forEach((key) => {
-        validSaved[key] = Array.isArray(saved[key]) ? saved[key] : [];
-      });
-      return validSaved;
-    }
+    const saved = getFromLocalStorage("travelPlan")?.selectedAttractions || {};
     const initial = {};
-    dayKeys.forEach((key) => (initial[key] = []));
+    dayKeys.forEach((key) => {
+      initial[key] = Array.isArray(saved[key]) ? saved[key] : [];
+    });
+
+    // 레거시 키 (day1, day2, day3) 처리
+    const legacyKeys = ['day1', 'day2', 'day3'];
+    legacyKeys.forEach((legacyKey, index) => {
+      if (Array.isArray(saved[legacyKey]) && saved[legacyKey].length > 0 && dayKeys[index]) {
+        initial[dayKeys[index]] = [...(initial[dayKeys[index]] || []), ...saved[legacyKey]];
+      }
+    });
+
+    console.log("Initialized selectedAttractions:", initial);
+    saveToLocalStorage("travelPlan", {
+      ...getFromLocalStorage("travelPlan"),
+      selectedAttractions: initial,
+      startDate,
+      endDate,
+    });
     return initial;
   });
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // activeDay가 유효한지 확인
+  // activeDay 설정
   useEffect(() => {
-    if (!dayKeys.includes(activeDay)) {
-      setActiveDay(dayKeys[0] || "day1");
+    if (dayKeys.length > 0 && !activeDay) {
+      setActiveDay(dayKeys[0]);
+    }
+    if (activeDay && !dayKeys.includes(activeDay)) {
+      setActiveDay(dayKeys[0] || null);
     }
   }, [dayKeys, activeDay]);
 
-  // 렌더링 조건 분기 (return은 여기서)
+  // 렌더링 조건 분기
   if (!startDate || !endDate) {
     return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;
+  }
+  if (!dayKeys.length || !activeDay) {
+    return <div className="text-red-600 p-4">유효한 여행 날짜가 없습니다. Step 1로 돌아가세요.</div>;
   }
   const attractionsData = {
     osaka: {
@@ -505,7 +522,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       ],
     },
   };
-  const cityData = attractionsData[destination] || {};
+  const cityData = attractionsData[destination.toLowerCase()] || {};
   const allAttractions = [...(cityData.attractions || []), ...customAttractions];
   const filteredAttractions = allAttractions.filter(
     (attraction) =>
@@ -526,7 +543,9 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         selectedAttractions: newSelections,
         startDate,
         endDate,
+        destination: destination.toLowerCase(),
       });
+      console.log(`Toggled attraction: ${attractionId} for ${activeDay}`, newSelections);
       return newSelections;
     });
   };
@@ -542,9 +561,11 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       rating: 0,
       likes: 0,
       image: "/placeholder.svg",
-      position: cityData.center, // 기본 위치
+      position: cityData.center,
+      description: formData.get("memo") || "사용자 추가 장소",
     };
     setCustomAttractions((prev) => [...prev, newAttraction]);
+    toggleAttraction(newAttraction.id); // 자동 선택
     e.target.reset();
   };
 
@@ -601,11 +622,10 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
             ))}
           </div>
           <p className="mt-2 text-sm text-traveling-text/70">
-            현재 선택: {activeDay === "day1" ? "1일차" : `${dayKeys.indexOf(activeDay) + 1}일차`} 방문 장소
+            현재 선택: {activeDay === dayKeys[0] ? "1일차" : `${dayKeys.indexOf(activeDay) + 1}일차`} 방문 장소
           </p>
         </div>
 
-        {/* 나머지 JSX는 기존 코드와 동일 */}
         <div className="grid gap-6 lg:grid-cols-2">
           <div>
             <Tabs defaultValue="attraction-select">
@@ -673,6 +693,9 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                           <p className="text-sm text-traveling-text/70 mb-2 flex items-center">
                             <MapPin className="mr-1 h-4 w-4" />
                             {attraction.address}
+                          </p>
+                          <p className="text-sm text-traveling-text/70 mb-2">
+                            {attraction.description}
                           </p>
                           <div className="mt-auto flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-traveling-text/70">
@@ -787,7 +810,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
             onClose={() => setIsReviewModalOpen(false)}
             placeName={selectedPlace.name}
             placeType={selectedPlace.type}
-            // TODO: 백엔드 연동 시 리뷰 저장 로직 추가
           />
         )}
       </div>

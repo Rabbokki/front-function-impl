@@ -715,19 +715,16 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   const isInitialized = useRef(false);
   const [itinerary, setItinerary] = useState({});
 
-  // localStorage에서 travelPlan 가져오기
   const travelPlan = getFromLocalStorage("travelPlan") || {};
-  const { startDate: localStartDate, endDate: localEndDate, selectedAttractions, selectedHotels, selectedTransportation } = travelPlan;
+  const { startDate: localStartDate, endDate: localEndDate, selectedAttractions, selectedHotels, selectedTransportation, customAttractions = [] } = travelPlan;
 
-  // prop과 localStorage 우선순위: localStorage > prop
   const startDate = localStartDate || propStartDate;
   const endDate = localEndDate || propEndDate;
 
-  // dayKeys 생성
   const generateDayKeys = (start, end) => {
     if (!start || !end) {
-      console.warn("startDate or endDate is missing, using default day keys");
-      return ["day1", "day2", "day3"];
+      console.warn("startDate or endDate is missing");
+      return [];
     }
     const days = differenceInCalendarDays(new Date(end), new Date(start)) + 1;
     return Array.from({ length: days }, (_, i) =>
@@ -735,9 +732,6 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
     );
   };
 
-  const dayCount = startDate && endDate
-    ? differenceInCalendarDays(new Date(endDate), new Date(startDate)) + 1
-    : 3;
   const dayKeys = generateDayKeys(startDate, endDate);
 
   const cityNames = {
@@ -781,67 +775,332 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   const attractionsData = {
     osaka: {
       attractions: [
-        { id: "attraction1", name: "도톤보리", position: { lat: 34.6687, lng: 135.5013 }, description: "오사카의 활기찬 먹거리 거리", address: "Dotonbori, Chuo Ward, Osaka" },
-        { id: "attraction2", name: "오사카 성", position: { lat: 34.6853, lng: 135.5256 }, description: "역사적인 성곽", address: "1-1 Osakajo, Chuo Ward, Osaka" },
-      ],
-    },
-    jeju: {
-      attractions: [
-        { id: "attraction1", name: "한라산", position: { lat: 33.3617, lng: 126.5292 }, description: "제주의 대표적인 산", address: "Hallasan, Jeju Island" },
-        { id: "attraction2", name: "성산일출봉", position: { lat: 33.4581, lng: 126.9425 }, description: "아름다운 일출 명소", address: "Seongsan Ilchulbong, Seogwipo, Jeju" },
+        {
+          id: "dotonbori",
+          name: "도톤보리",
+          position: { lat: 34.6687, lng: 135.5031 },
+          description: "오사카의 활기찬 먹거리 거리",
+          address: "Dotonbori, Chuo Ward, Osaka, 542-0071",
+        },
+        {
+          id: "osaka-castle",
+          name: "오사카 성",
+          position: { lat: 34.6873, lng: 135.5262 },
+          description: "역사적인 성곽",
+          address: "1-1 Osakajo, Chuo Ward, Osaka, 540-0002",
+        },
+        {
+          id: "universal-studios",
+          name: "유니버설 스튜디오 재팬",
+          position: { lat: 34.6654, lng: 135.4323 },
+          description: "인기 있는 테마파크",
+          address: "2-chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031",
+        },
+        {
+          id: "umeda-wheel",
+          name: "우메다 공중정원",
+          position: { lat: 34.7052, lng: 135.4957 },
+          description: "오사카의 전경을 볼 수 있는 전망대",
+          address: "Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88",
+        },
+        {
+          id: "namba",
+          name: "난바",
+          position: { lat: 34.6659, lng: 135.5013 },
+          description: "쇼핑과 엔터테인먼트의 중심지",
+          address: "Namba, Chuo Ward, Osaka, 542-0076",
+        },
       ],
     },
     tokyo: {
       attractions: [
-        { id: "attraction1", name: "시부야 스크램블 교차로", position: { lat: 35.6595, lng: 139.7005 }, description: "도쿄의 상징적인 교차로", address: "Shibuya Crossing, Shibuya, Tokyo" },
-        { id: "attraction2", name: "도쿄 타워", position: { lat: 35.6586, lng: 139.7454 }, description: "도쿄의 랜드마크", address: "4 Chome-2-8 Shibakoen, Minato, Tokyo" },
-        { id: "tokyo-tower", name: "도쿄 타워", position: { lat: 35.6586, lng: 139.7454 }, description: "도쿄의 랜드마크", address: "4 Chome-2-8 Shibakoen, Minato, Tokyo" },
-        { id: "attraction3", name: "도쿄 스카이트리", position: { lat: 35.7101, lng: 139.8107 }, description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요", address: "1 Chome-1-2 Oshiage, Sumida, Tokyo" },
-        { id: "attraction4", name: "센소지 사원", position: { lat: 35.7148, lng: 139.7967 }, description: "도쿄에서 가장 오래된 사원", address: "2 Chome-3-1 Asakusa, Taito, Tokyo" },
-        { id: "attraction5", name: "메이지 신궁", position: { lat: 35.6764, lng: 139.6993 }, description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사", address: "1-1 Yoyogikamizonocho, Shibuya, Tokyo" },
-        { id: "attraction6", name: "하라주쿠 쇼핑", position: { lat: 35.6702, lng: 139.7025 }, description: "일본 청소년 문화의 중심지", address: "Harajuku, Shibuya, Tokyo" },
-        { id: "attraction7", name: "도쿄 디즈니랜드", position: { lat: 35.6329, lng: 139.8804 }, description: "세계적으로 유명한 테마파크", address: "1-1 Maihama, Urayasu, Chiba" },
-        { id: "attraction8", name: "우에노 공원", position: { lat: 35.7156, lng: 139.7745 }, description: "아름다운 공원과 박물관", address: "Uenokoen, Taito, Tokyo" },
-        { id: "attraction9", name: "아키하바라", position: { lat: 35.6984, lng: 139.7730 }, description: "전자제품과 애니메이션의 중심지", address: "Akihabara, Chiyoda, Tokyo" },
-        { id: "attraction10", name: "오다이바", position: { lat: 35.6190, lng: 139.7765 }, description: "도쿄 베이의 인공 섬", address: "Odaiba, Minato, Tokyo" },
-        { id: "attraction11", name: "팀랩 보더리스", position: { lat: 35.6195, lng: 139.7908 }, description: "디지털 아트 뮤지엄", address: "1-3-8 Aomi, Koto, Tokyo" },
+        {
+          id: "tokyo-tower",
+          name: "도쿄 타워",
+          position: { lat: 35.6586, lng: 139.7454 },
+          description: "도쿄의 랜드마크",
+          address: "4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011",
+        },
+        {
+          id: "shibuya-crossing",
+          name: "시부야 스크램블 교차로",
+          position: { lat: 35.6595, lng: 139.7004 },
+          description: "도쿄의 상징적인 교차로",
+          address: "2 Chome-2-1 Dogenzaka, Shibuya City, Tokyo 150-0043",
+        },
+        {
+          id: "meiji-shrine",
+          name: "메이지 신궁",
+          position: { lat: 35.6763, lng: 139.6993 },
+          description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사",
+          address: "1-1 Yoyogikamizonocho, Shibuya City, Tokyo 151-8557",
+        },
+        {
+          id: "senso-ji",
+          name: "센소지 사원",
+          position: { lat: 35.7147, lng: 139.7966 },
+          description: "도쿄에서 가장 오래된 사원",
+          address: "2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032",
+        },
+        {
+          id: "tokyo-skytree",
+          name: "도쿄 스카이트리",
+          position: { lat: 35.7101, lng: 139.8107 },
+          description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망",
+          address: "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045",
+        },
       ],
     },
     fukuoka: {
       attractions: [
-        { id: "attraction1", name: "오호리 공원", position: { lat: 33.5861, lng: 130.3896 }, description: "평화로운 공원", address: "Ohori Park, Chuo Ward, Fukuoka" },
-        { id: "attraction2", name: "캐널시티 하카타", position: { lat: 33.5898, lng: 130.4108 }, description: "대형 쇼핑몰", address: "Canal City Hakata, Hakata Ward, Fukuoka" },
+        {
+          id: "canal-city",
+          name: "캐널시티 하카타",
+          position: { lat: 33.5898, lng: 130.4108 },
+          description: "대형 쇼핑몰",
+          address: "1 Chome-2 Sumiyoshi, Hakata Ward, Fukuoka, 812-0018",
+        },
+        {
+          id: "ohori-park",
+          name: "오호리 공원",
+          position: { lat: 33.5861, lng: 130.3797 },
+          description: "평화로운 공원",
+          address: "1 Chome-2 Ohorikoen, Chuo Ward, Fukuoka, 810-0051",
+        },
+        {
+          id: "fukuoka-tower",
+          name: "후쿠오카 타워",
+          position: { lat: 33.5944, lng: 130.3514 },
+          description: "후쿠오카의 랜드마크",
+          address: "2 Chome-3-26 Momochihama, Sawara Ward, Fukuoka, 814-0001",
+        },
+        {
+          id: "dazaifu",
+          name: "다자이후 텐만구",
+          position: { lat: 33.5196, lng: 130.5354 },
+          description: "학문의 신을 모시는 신사",
+          address: "4 Chome-7-1 Saifu, Dazaifu, Fukuoka 818-0117",
+        },
+        {
+          id: "nakasu",
+          name: "나카스",
+          position: { lat: 33.5938, lng: 130.4043 },
+          description: "야간 유흥의 중심지",
+          address: "Nakasu, Hakata Ward, Fukuoka, 810-0801",
+        },
+      ],
+    },
+    jeju: {
+      attractions: [
+        {
+          id: "hallasan",
+          name: "한라산",
+          position: { lat: 33.3617, lng: 126.5292 },
+          description: "제주의 대표적인 산",
+          address: "Hallasan, Jeju Island",
+        },
+        {
+          id: "seongsan",
+          name: "성산일출봉",
+          position: { lat: 33.4581, lng: 126.9425 },
+          description: "아름다운 일출 명소",
+          address: "Seongsan Ilchulbong, Seogwipo, Jeju",
+        },
       ],
     },
     bangkok: {
       attractions: [
-        { id: "attraction1", name: "왓 아룬", position: { lat: 13.7442, lng: 100.4889 }, description: "아름다운 사원", address: "158 Thanon Wang Doem, Bangkok Yai, Bangkok" },
-        { id: "attraction2", name: "그랜드 팰리스", position: { lat: 13.7500, lng: 100.4927 }, description: "왕궁", address: "Na Phra Lan Rd, Phra Nakhon, Bangkok" },
-        { id: "grand-palace", name: "그랜드 팰리스", position: { lat: 13.7500, lng: 100.4927 }, description: "방콕의 대표적인 왕궁", address: "Na Phra Lan Rd, Phra Nakhon, Bangkok" },
+        {
+          id: "grand-palace",
+          name: "왕궁",
+          position: { lat: 13.75, lng: 100.4914 },
+          description: "방콕의 대표적인 왕궁",
+          address: "Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
+        },
+        {
+          id: "wat-arun",
+          name: "왓 아룬",
+          position: { lat: 13.7437, lng: 100.4888 },
+          description: "아름다운 사원",
+          address: "158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand",
+        },
+        {
+          id: "chatuchak-market",
+          name: "차투착 주말 시장",
+          position: { lat: 13.7999, lng: 100.5502 },
+          description: "활기찬 주말 시장",
+          address: "Kamphaeng Phet 2 Rd, Chatuchak, Bangkok 10900, Thailand",
+        },
+        {
+          id: "wat-pho",
+          name: "왓 포",
+          position: { lat: 13.7465, lng: 100.493 },
+          description: "거대한 와불상이 있는 사원",
+          address: "2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
+        },
+        {
+          id: "khao-san-road",
+          name: "카오산 로드",
+          position: { lat: 13.7582, lng: 100.4971 },
+          description: "배낭여행자의 거리",
+          address: "Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand",
+        },
       ],
     },
     singapore: {
       attractions: [
-        { id: "attraction1", name: "마리나 베이 샌즈", position: { lat: 1.2834, lng: 103.8607 }, description: "럭셔리 호텔", address: "10 Bayfront Ave, Singapore" },
-        { id: "attraction2", name: "가든스 바이 더 베이", position: { lat: 1.2816, lng: 103.8636 }, description: "미래적인 정원", address: "18 Marina Gardens Dr, Singapore" },
+        {
+          id: "marina-bay-sands",
+          name: "마리나 베이 샌즈",
+          position: { lat: 1.2834, lng: 103.8607 },
+          description: "럭셔리 호텔",
+          address: "10 Bayfront Avenue, Singapore 018956",
+        },
+        {
+          id: "gardens-by-the-bay",
+          name: "가든스 바이 더 베이",
+          position: { lat: 1.2815, lng: 103.8636 },
+          description: "미래적인 정원",
+          address: "18 Marina Gardens Drive, Singapore 018953",
+        },
+        {
+          id: "sentosa-island",
+          name: "센토사 섬",
+          position: { lat: 1.2494, lng: 103.8303 },
+          description: "놀이와 휴식의 섬",
+          address: "Sentosa Island, Singapore",
+        },
+        {
+          id: "universal-studios",
+          name: "유니버설 스튜디오 싱가포르",
+          position: { lat: 1.254, lng: 103.8238 },
+          description: "인기 테마파크",
+          address: "8 Sentosa Gateway, Singapore 098269",
+        },
+        {
+          id: "merlion-park",
+          name: "머라이언 파크",
+          position: { lat: 1.2868, lng: 103.8545 },
+          description: "싱가포르의 상징",
+          address: "1 Fullerton Road, Singapore 049213",
+        },
       ],
     },
     paris: {
       attractions: [
-        { id: "attraction1", name: "에펠탑", position: { lat: 48.8584, lng: 2.2945 }, description: "파리의 상징", address: "Champ de Mars, 5 Avenue Anatole France, Paris" },
-        { id: "attraction2", name: "루브르 박물관", position: { lat: 48.8606, lng: 2.3376 }, description: "세계적인 박물관", address: "75001 Paris, France" },
+        {
+          id: "eiffel-tower",
+          name: "에펠탑",
+          position: { lat: 48.8584, lng: 2.2945 },
+          description: "파리의 상징",
+          address: "Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France",
+        },
+        {
+          id: "louvre-museum",
+          name: "루브르 박물관",
+          position: { lat: 48.8606, lng: 2.3376 },
+          description: "세계적인 박물관",
+          address: "Rue de Rivoli, 75001 Paris, France",
+        },
+        {
+          id: "notre-dame",
+          name: "노트르담 대성당",
+          position: { lat: 48.853, lng: 2.3499 },
+          description: "고딕 양식의 대성당",
+          address: "6 Parvis Notre-Dame - Pl. Jean-Paul II, 75004 Paris, France",
+        },
+        {
+          id: "arc-de-triomphe",
+          name: "개선문",
+          position: { lat: 48.8738, lng: 2.295 },
+          description: "나폴레옹의 승리를 기념",
+          address: "Place Charles de Gaulle, 75008 Paris, France",
+        },
+        {
+          id: "montmartre",
+          name: "몽마르트",
+          position: { lat: 48.8867, lng: 2.3431 },
+          description: "예술가의 동네",
+          address: "Montmartre, 75018 Paris, France",
+        },
       ],
     },
     rome: {
       attractions: [
-        { id: "attraction1", name: "콜로세움", position: { lat: 41.8902, lng: 12.4922 }, description: "고대 로마의 원형 경기장", address: "Piazza del Colosseo, 1, Rome" },
-        { id: "attraction2", name: "판테온", position: { lat: 41.8986, lng: 12.4769 }, description: "로마의 역사적인 건축물", address: "Piazza della Rotonda, Rome" },
+        {
+          id: "colosseum",
+          name: "콜로세움",
+          position: { lat: 41.8902, lng: 12.4922 },
+          description: "고대 로마의 원형 경기장",
+          address: "Piazza del Colosseo, 1, 00184 Roma RM, Italy",
+        },
+        {
+          id: "vatican-museums",
+          name: "바티칸 박물관",
+          position: { lat: 41.9065, lng: 12.4534 },
+          description: "시스티나 성당 포함",
+          address: "Viale Vaticano, 00165 Roma RM, Italy",
+        },
+        {
+          id: "trevi-fountain",
+          name: "트레비 분수",
+          position: { lat: 41.9009, lng: 12.4833 },
+          description: "동전을 던져 소원을 빌어보세요",
+          address: "Piazza di Trevi, 00187 Roma RM, Italy",
+        },
+        {
+          id: "pantheon",
+          name: "판테온",
+          position: { lat: 41.8986, lng: 12.4769 },
+          description: "로마의 역사적인 건축물",
+          address: "Piazza della Rotonda, 00186 Roma RM, Italy",
+        },
+        {
+          id: "roman-forum",
+          name: "로마 포럼",
+          position: { lat: 41.8925, lng: 12.4853 },
+          description: "고대 로마의 중심지",
+          address: "Via della Salara Vecchia, 5/6, 00186 Roma RM, Italy",
+        },
       ],
     },
     venice: {
       attractions: [
-        { id: "attraction1", name: "산 마르코 광장", position: { lat: 45.4340, lng: 12.3388 }, description: "베니스의 중심 광장", address: "Piazza San Marco, Venice" },
-        { id: "attraction2", name: "리알토 다리", position: { lat: 45.4380, lng: 12.3359 }, description: "유명한 다리", address: "Rialto Bridge, Venice" },
+        {
+          id: "st-marks-square",
+          name: "산 마르코 광장",
+          position: { lat: 45.4341, lng: 12.3388 },
+          description: "베니스의 중심 광장",
+          address: "Piazza San Marco, 30100 Venezia VE, Italy",
+        },
+        {
+          id: "rialto-bridge",
+          name: "리알토 다리",
+          position: { lat: 45.4381, lng: 12.3358 },
+          description: "유명한 다리",
+          address: "Sestiere San Polo, 30125 Venezia VE, Italy",
+        },
+        {
+          id: "doges-palace",
+          name: "도지의 궁전",
+          position: { lat: 45.4337, lng: 12.3401 },
+          description: "베니스의 역사적인 궁전",
+          address: "P.za San Marco, 1, 30124 Venezia VE, Italy",
+        },
+        {
+          id: "grand-canal",
+          name: "대운하",
+          position: { lat: 45.4408, lng: 12.3325 },
+          description: "베니스의 주요 수로",
+          address: "Grand Canal, Venice, Italy",
+        },
+        {
+          id: "burano",
+          name: "부라노 섬",
+          position: { lat: 45.4853, lng: 12.4167 },
+          description: "컬러풀한 집들로 유명",
+          address: "Burano, 30142 Venice, Italy",
+        },
       ],
     },
   };
@@ -921,6 +1180,9 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
 
     setTimeout(() => {
       console.log("Travel Plan Data:", travelPlan);
+      console.log("Raw selectedAttractions:", selectedAttractions);
+      console.log("Custom Attractions:", customAttractions);
+
       if (isAiMode && location.state?.itinerary) {
         console.log("AI Mode: Processing itinerary from location.state", location.state.itinerary);
         const aiItinerary = {};
@@ -934,11 +1196,13 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
               time: activity.time.charAt(0).toUpperCase() + activity.time.slice(1),
               description: activity.description,
               position: attractionsData[destination?.toLowerCase()]?.attractions.find(a => a.name === activity.activity)?.position || null,
+              address: activity.address || activity.activity,
             })),
             accommodation: dayData.accommodation || {
               id: `h${day}`,
               name: "AI 추천 호텔",
               description: "AI가 추천한 편리한 위치의 호텔입니다.",
+              address: "Unknown Address",
             },
           };
         });
@@ -959,14 +1223,8 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
 
         dayKeys.forEach((dayKey, index) => {
           const day = index + 1;
-          // selectedAttractions 키를 day1, day2, day3로 매핑
-          const legacyDayKey = `day${day}`;
-          const attractions = Array.isArray(selectedAttractions[dayKey])
-            ? selectedAttractions[dayKey]
-            : Array.isArray(selectedAttractions[legacyDayKey])
-              ? selectedAttractions[legacyDayKey]
-              : [];
-          const hotelId = selectedHotels[dayKey] || selectedHotels[legacyDayKey] || "hotel1";
+          const attractions = Array.isArray(selectedAttractions[dayKey]) ? selectedAttractions[dayKey] : [];
+          const hotelId = selectedHotels?.[dayKey] || "hotel1";
           const hotel = hotelsData[destination?.toLowerCase()]?.hotels.find(h => h.id === hotelId) || {
             id: `h${day}`,
             name: "기본 호텔",
@@ -976,14 +1234,14 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
             address: "Unknown Address",
           };
 
-          console.log(`Day ${day} (Key: ${dayKey}, Legacy Key: ${legacyDayKey}): Attractions`, attractions);
+          console.log(`Day ${day} (Key: ${dayKey}): Attractions`, attractions);
           console.log(`Available attractions for ${destination}:`, attractionsData[destination?.toLowerCase()]?.attractions);
 
           const places = attractions.map((attractionId, idx) => {
             const normalizedAttractionId = typeof attractionId === 'string' ? attractionId.trim().toLowerCase() : attractionId;
             const attraction = attractionsData[destination?.toLowerCase()]?.attractions.find(
-              a => a.id.trim().toLowerCase() === normalizedAttractionId || a.name.trim().toLowerCase() === normalizedAttractionId
-            );
+              a => a.id.trim().toLowerCase() === normalizedAttractionId
+            ) || customAttractions.find(a => a.id === normalizedAttractionId);
             const timeSlots = ["10:00", "12:30", "14:30", "16:00"];
 
             if (!attraction) {
@@ -1005,26 +1263,11 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
               name: attraction.name,
               type: "attraction",
               time: timeSlots[idx % timeSlots.length],
-              description: attraction.description,
+              description: attraction.description || "장소 설명 없음",
               position: attraction.position,
               address: attraction.address || attraction.name,
             };
           });
-
-          // 장소가 없으면 기본 장소 추가 (임시)
-          if (places.length === 0 && attractionsData[destination?.toLowerCase()]?.attractions[0]) {
-            const defaultAttraction = attractionsData[destination?.toLowerCase()].attractions[0];
-            places.push({
-              id: `a${day}-0`,
-              name: defaultAttraction.name,
-              type: "attraction",
-              time: "10:00",
-              description: defaultAttraction.description,
-              position: defaultAttraction.position,
-              address: defaultAttraction.address || defaultAttraction.name,
-            });
-            console.log(`Added default attraction for Day ${day}:`, defaultAttraction);
-          }
 
           manualItinerary[day] = {
             places,
@@ -1033,7 +1276,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
         });
 
         if (hasInvalidAttraction) {
-          setErrorMessage("일부 장소를 매핑하지 못했습니다. 선택한 장소를 다시 확인해주세요.");
+          setErrorMessage("일부 장소를 매핑하지 못했습니다. Step 2에서 장소를 다시 확인해주세요.");
         }
 
         console.log("Generated Manual Itinerary:", manualItinerary);
@@ -1043,7 +1286,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
       setIsLoading(false);
       setIsGenerated(true);
     }, 1500);
-  }, [isAiMode, destination, location.state, startDate, endDate, selectedAttractions, selectedHotels, isGenerated]);
+  }, [isAiMode, destination, location.state, startDate, endDate, selectedAttractions, selectedHotels, customAttractions, isGenerated]);
 
   const removePlaceFromItinerary = (day, placeId) => {
     setItinerary((prev) => {
@@ -1080,7 +1323,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
       const transportations = [];
 
       Object.keys(itinerary).forEach((day) => {
-        const dayKey = `day${day}`;
+        const dayKey = dayKeys[day - 1];
         itinerary[day].places.forEach((place) => {
           places.push({
             day: dayKey,
@@ -1105,10 +1348,10 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
           });
         }
 
-        if (selectedTransportation?.[dayKeys[day - 1]]) {
+        if (selectedTransportation?.[dayKey]) {
           transportations.push({
             day: dayKey,
-            type: selectedTransportation[dayKeys[day - 1]].toUpperCase(),
+            type: selectedTransportation[dayKey].toUpperCase(),
           });
         }
       });
@@ -1153,15 +1396,17 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
         }
 
         const formattedItinerary = Object.keys(itinerary).map((day) => ({
-          day: `day${day}`,
+          day: dayKeys[day - 1],
           activities: itinerary[day].places.map((place) => ({
             activity: place.name,
             time: place.time.toLowerCase(),
             description: place.description,
+            address: place.address,
           })),
           accommodation: itinerary[day].accommodation ? {
             name: itinerary[day].accommodation.name,
             description: itinerary[day].accommodation.description,
+            address: itinerary[day].accommodation.address,
           } : null,
         }));
 
@@ -1206,6 +1451,13 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
       {errorMessage && (
         <div className="text-red-600 p-4 bg-red-100 rounded-lg">
           {errorMessage}
+          <Button
+            variant="link"
+            className="ml-2 text-blue-600"
+            onClick={() => navigate(`/travel-planner/${destination}/step2`)}
+          >
+            Step 2로 돌아가기
+          </Button>
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -1275,6 +1527,13 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
             {itinerary[selectedDay]?.places.length === 0 ? (
               <p className="text-center text-gray-500">
                 이 날의 일정이 비어있습니다. Step 2에서 장소를 추가해주세요.
+                <Button
+                  variant="link"
+                  className="ml-2 text-blue-600"
+                  onClick={() => navigate(`/travel-planner/${destination}/step2`)}
+                >
+                  장소 선택으로 이동
+                </Button>
               </p>
             ) : (
               <div className="space-y-4">
@@ -1323,6 +1582,9 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
                     <p className="mt-2 text-sm text-gray-600">
                       {place.description}
                     </p>
+                    <p className="text-sm text-gray-500">
+                      {place.address}
+                    </p>
 
                     {index < itinerary[selectedDay]?.places.length - 1 && (
                       <div className="mt-2 flex items-center">
@@ -1362,6 +1624,9 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
 
                     <p className="mt-2 text-sm text-gray-600">
                       {itinerary[selectedDay].accommodation.description}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {itinerary[selectedDay].accommodation.address}
                     </p>
                   </div>
                 )}
