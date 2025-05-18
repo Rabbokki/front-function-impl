@@ -17,7 +17,7 @@ import { differenceInCalendarDays } from 'date-fns';
 import { generateDayKeys, saveToLocalStorage, getFromLocalStorage } from "../../utils";
 
 const AttractionSelection = ({ destination, startDate, endDate }) => {
-  const [activeDay, setActiveDay] = useState(null); // 초기값 null로 설정
+  const [activeDay, setActiveDay] = useState(null);
   const [hoveredAttraction, setHoveredAttraction] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -35,7 +35,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       initial[key] = Array.isArray(saved[key]) ? saved[key] : [];
     });
 
-    // 레거시 키 (day1, day2, day3) 처리
     const legacyKeys = ['day1', 'day2', 'day3'];
     legacyKeys.forEach((legacyKey, index) => {
       if (Array.isArray(saved[legacyKey]) && saved[legacyKey].length > 0 && dayKeys[index]) {
@@ -43,7 +42,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       }
     });
 
-    console.log("Initialized selectedAttractions:", initial);
     saveToLocalStorage("travelPlan", {
       ...getFromLocalStorage("travelPlan"),
       selectedAttractions: initial,
@@ -55,7 +53,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // activeDay 설정
   useEffect(() => {
     if (dayKeys.length > 0 && !activeDay) {
       setActiveDay(dayKeys[0]);
@@ -65,123 +62,67 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
     }
   }, [dayKeys, activeDay]);
 
-  // 렌더링 조건 분기
   if (!startDate || !endDate) {
     return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;
   }
   if (!dayKeys.length || !activeDay) {
     return <div className="text-red-600 p-4">유효한 여행 날짜가 없습니다. Step 1로 돌아가세요.</div>;
   }
+
   const attractionsData = {
-    osaka: {
-      name: "오사카",
-      center: { lat: 34.6937, lng: 135.5023 },
+    bangkok: {
+      name: "방콕",
+      center: { lat: 13.7563, lng: 100.5018 },
       attractions: [
         {
-          id: "dotonbori",
-          name: "도톤보리",
+          id: "grand-palace",
+          name: "왕궁",
           category: "명소",
-          address: "Dotonbori, Chuo Ward, Osaka, 542-0071",
+          address: "Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
           rating: 4.7,
-          likes: 7196,
-          image: "/images/attractions/dotonbori.png",
-          position: { lat: 34.6687, lng: 135.5031 },
+          likes: 8765,
+          image: "/bangkok-grand-palace.png",
+          position: { lat: 13.75, lng: 100.4914 },
         },
         {
-          id: "osaka-castle",
-          name: "오사카 성",
+          id: "wat-arun",
+          name: "왓 아룬",
           category: "명소",
-          address: "1-1 Osakajo, Chuo Ward, Osaka, 540-0002",
-          rating: 4.4,
-          likes: 6557,
-          image: "/images/attractions/osaka-castle.png",
-          position: { lat: 34.6873, lng: 135.5262 },
-        },
-        {
-          id: "universal-studios",
-          name: "유니버설 스튜디오 재팬",
-          category: "명소",
-          address: "2-chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031",
-          rating: 4.5,
-          likes: 5361,
-          image: "/images/attractions/universal-studios.jpg",
-          position: { lat: 34.6654, lng: 135.4323 },
-        },
-        {
-          id: "umeda-wheel",
-          name: "우메다 공중정원",
-          category: "명소",
-          address: "Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88",
-          rating: 4.4,
-          likes: 4824,
-          image: "/images/attractions/umeda-wheel.jpg",
-          position: { lat: 34.7052, lng: 135.4957 },
-        },
-        {
-          id: "namba",
-          name: "난바",
-          category: "명소",
-          address: "Namba, Chuo Ward, Osaka, 542-0076",
-          rating: 4.3,
-          likes: 4666,
-          image: "/images/attractions/namba.jpg",
-          position: { lat: 34.6659, lng: 135.5013 },
-        },
-      ],
-    },
-    tokyo: {
-      name: "도쿄",
-      center: { lat: 35.6762, lng: 139.6503 },
-      attractions: [
-        {
-          id: "tokyo-tower",
-          name: "도쿄 타워",
-          category: "명소",
-          address: "4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011",
+          address: "158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand",
           rating: 4.6,
-          likes: 8234,
-          image: "/tokyo-night-lights.png",
-          position: { lat: 35.6586, lng: 139.7454 },
-        },
-        {
-          id: "shibuya-crossing",
-          name: "시부야 스크램블 교차로",
-          category: "명소",
-          address: "2 Chome-2-1 Dogenzaka, Shibuya City, Tokyo 150-0043",
-          rating: 4.5,
           likes: 7654,
-          image: "/shibuya-intersection-bustle.png",
-          position: { lat: 35.6595, lng: 139.7004 },
+          image: "/bangkok-wat-arun.png",
+          position: { lat: 13.7437, lng: 100.4888 },
         },
         {
-          id: "meiji-shrine",
-          name: "메이지 신궁",
+          id: "chatuchak-market",
+          name: "차투착 주말 시장",
           category: "명소",
-          address: "1-1 Yoyogikamizonocho, Shibuya City, Tokyo 151-8557",
-          rating: 4.7,
+          address: "Kamphaeng Phet 2 Rd, Chatuchak, Bangkok 10900, Thailand",
+          rating: 4.8,
           likes: 6543,
-          image: "/meiji-shrine-entrance.png",
-          position: { lat: 35.6763, lng: 139.6993 },
+          image: "/bangkok-chatuchak-market.png",
+          position: { lat: 13.7999, lng: 100.5502 },
         },
         {
-          id: "senso-ji",
-          name: "센소지 사원",
+          id: "wat-pho",
+          name: "왓 포",
           category: "명소",
-          address: "2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032",
-          rating: 4.6,
-          likes: 7123,
-          image: "/sensoji-lantern.png",
-          position: { lat: 35.7147, lng: 139.7966 },
+          address: "2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
+          rating: 4.7,
+          likes: 5432,
+          image: "/bangkok-wat-pho.png",
+          position: { lat: 13.7465, lng: 100.493 },
         },
         {
-          id: "tokyo-skytree",
-          name: "도쿄 스카이트리",
+          id: "khao-san-road",
+          name: "카오산 로드",
           category: "명소",
-          address: "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045",
+          address: "Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand",
           rating: 4.5,
-          likes: 6789,
-          image: "/tokyo-skytree-day.png",
-          position: { lat: 35.7101, lng: 139.8107 },
+          likes: 4321,
+          image: "/bangkok-khao-san-road.png",
+          position: { lat: 13.7582, lng: 100.4971 },
         },
       ],
     },
@@ -238,6 +179,118 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4321,
           image: "/nakasu-night-lights.png",
           position: { lat: 33.5938, lng: 130.4043 },
+        },
+      ],
+    },
+    jeju: {
+      name: "제주",
+      center: { lat: 33.4890, lng: 126.4983 },
+      attractions: [
+        {
+          id: "hallasan",
+          name: "한라산",
+          category: "명소",
+          address: "Hallasan National Park, Jeju Island, South Korea",
+          rating: 4.8,
+          likes: 7890,
+          image: "/images/attractions/hallasan.jpg",
+          position: { lat: 33.3617, lng: 126.5292 },
+        },
+        {
+          id: "seongsan",
+          name: "성산일출봉",
+          category: "명소",
+          address: "Seongsan Ilchulbong, Seogwipo, Jeju, South Korea",
+          rating: 4.7,
+          likes: 6543,
+          image: "/images/attractions/seongsan.jpg",
+          position: { lat: 33.4581, lng: 126.9425 },
+        },
+        {
+          id: "udo",
+          name: "우도",
+          category: "명소",
+          address: "Udo Island, Jeju, South Korea",
+          rating: 4.6,
+          likes: 5432,
+          image: "/images/attractions/udo.jpg",
+          position: { lat: 33.5050, lng: 126.9540 },
+        },
+        {
+          id: "manjanggul",
+          name: "만장굴",
+          category: "명소",
+          address: "Manjanggul Cave, Jeju, South Korea",
+          rating: 4.5,
+          likes: 4321,
+          image: "/images/attractions/manjanggul.jpg",
+          position: { lat: 33.5283, lng: 126.7716 },
+        },
+        {
+          id: "jeju-folk-village",
+          name: "제주 민속촌",
+          category: "명소",
+          address: "Jeju Folk Village, Seogwipo, Jeju, South Korea",
+          rating: 4.4,
+          likes: 3987,
+          image: "/images/attractions/jeju-folk-village.jpg",
+          position: { lat: 33.3227, lng: 126.8418 },
+        },
+      ],
+    },
+    osaka: {
+      name: "오사카",
+      center: { lat: 34.6937, lng: 135.5023 },
+      attractions: [
+        {
+          id: "dotonbori",
+          name: "도톤보리",
+          category: "명소",
+          address: "Dotonbori, Chuo Ward, Osaka, 542-0071",
+          rating: 4.7,
+          likes: 7196,
+          image: "/images/attractions/dotonbori.png",
+          position: { lat: 34.6687, lng: 135.5031 },
+        },
+        {
+          id: "osaka-castle",
+          name: "오사카 성",
+          category: "명소",
+          address: "1-1 Osakajo, Chuo Ward, Osaka, 540-0002",
+          rating: 4.4,
+          likes: 6557,
+          image: "/images/attractions/osaka-castle.png",
+          position: { lat: 34.6873, lng: 135.5262 },
+        },
+        {
+          id: "universal-studios",
+          name: "유니버설 스튜디오 재팬",
+          category: "명소",
+          address: "2-chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031",
+          rating: 4.5,
+          likes: 5361,
+          image: "/images/attractions/universal-studios.jpg",
+          position: { lat: 34.6654, lng: 135.4323 },
+        },
+        {
+          id: "umeda-wheel",
+          name: "우메다 공중정원",
+          category: "명소",
+          address: "Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88",
+          rating: 4.4,
+          likes: 4824,
+          image: "/images/attractions/umeda-wheel.jpg",
+          position: { lat: 34.7052, lng: 135.4957 },
+        },
+        {
+          id: "namba",
+          name: "난바",
+          category: "명소",
+          address: "Namba, Chuo Ward, Osaka, 542-0076",
+          rating: 4.3,
+          likes: 4666,
+          image: "/images/attractions/namba.jpg",
+          position: { lat: 34.6659, lng: 135.5013 },
         },
       ],
     },
@@ -353,118 +406,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         },
       ],
     },
-    venice: {
-      name: "베니스",
-      center: { lat: 45.4408, lng: 12.3155 },
-      attractions: [
-        {
-          id: "st-marks-square",
-          name: "산 마르코 광장",
-          category: "명소",
-          address: "Piazza San Marco, 30100 Venezia VE, Italy",
-          rating: 4.8,
-          likes: 8765,
-          image: "/venice-st-marks-square.png",
-          position: { lat: 45.4341, lng: 12.3388 },
-        },
-        {
-          id: "rialto-bridge",
-          name: "리알토 다리",
-          category: "명소",
-          address: "Sestiere San Polo, 30125 Venezia VE, Italy",
-          rating: 4.7,
-          likes: 7654,
-          image: "/venice-rialto-bridge.png",
-          position: { lat: 45.4381, lng: 12.3358 },
-        },
-        {
-          id: "doges-palace",
-          name: "도지의 궁전",
-          category: "명소",
-          address: "P.za San Marco, 1, 30124 Venezia VE, Italy",
-          rating: 4.7,
-          likes: 6543,
-          image: "/venice-doges-palace.png",
-          position: { lat: 45.4337, lng: 12.3401 },
-        },
-        {
-          id: "grand-canal",
-          name: "대운하",
-          category: "명소",
-          address: "Grand Canal, Venice, Italy",
-          rating: 4.8,
-          likes: 5432,
-          image: "/venice-grand-canal.png",
-          position: { lat: 45.4408, lng: 12.3325 },
-        },
-        {
-          id: "burano",
-          name: "부라노 섬",
-          category: "명소",
-          address: "Burano, 30142 Venice, Italy",
-          rating: 4.6,
-          likes: 4321,
-          image: "/venice-burano.png",
-          position: { lat: 45.4853, lng: 12.4167 },
-        },
-      ],
-    },
-    bangkok: {
-      name: "방콕",
-      center: { lat: 13.7563, lng: 100.5018 },
-      attractions: [
-        {
-          id: "grand-palace",
-          name: "왕궁",
-          category: "명소",
-          address: "Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
-          rating: 4.7,
-          likes: 8765,
-          image: "/bangkok-grand-palace.png",
-          position: { lat: 13.75, lng: 100.4914 },
-        },
-        {
-          id: "wat-arun",
-          name: "왓 아룬",
-          category: "명소",
-          address: "158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand",
-          rating: 4.6,
-          likes: 7654,
-          image: "/bangkok-wat-arun.png",
-          position: { lat: 13.7437, lng: 100.4888 },
-        },
-        {
-          id: "chatuchak-market",
-          name: "차투착 주말 시장",
-          category: "명소",
-          address: "Kamphaeng Phet 2 Rd, Chatuchak, Bangkok 10900, Thailand",
-          rating: 4.8,
-          likes: 6543,
-          image: "/bangkok-chatuchak-market.png",
-          position: { lat: 13.7999, lng: 100.5502 },
-        },
-        {
-          id: "wat-pho",
-          name: "왓 포",
-          category: "명소",
-          address: "2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
-          rating: 4.7,
-          likes: 5432,
-          image: "/bangkok-wat-pho.png",
-          position: { lat: 13.7465, lng: 100.493 },
-        },
-        {
-          id: "khao-san-road",
-          name: "카오산 로드",
-          category: "명소",
-          address: "Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand",
-          rating: 4.5,
-          likes: 4321,
-          image: "/bangkok-khao-san-road.png",
-          position: { lat: 13.7582, lng: 100.4971 },
-        },
-      ],
-    },
     singapore: {
       name: "싱가포르",
       center: { lat: 1.3521, lng: 103.8198 },
@@ -521,14 +462,127 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         },
       ],
     },
+    tokyo: {
+      name: "도쿄",
+      center: { lat: 35.6762, lng: 139.6503 },
+      attractions: [
+        {
+          id: "tokyo-tower",
+          name: "도쿄 타워",
+          category: "명소",
+          address: "4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011",
+          rating: 4.6,
+          likes: 8234,
+          image: "/tokyo-night-lights.png",
+          position: { lat: 35.6586, lng: 139.7454 },
+        },
+        {
+          id: "shibuya-crossing",
+          name: "시부야 스크램블 교차로",
+          category: "명소",
+          address: "2 Chome-2-1 Dogenzaka, Shibuya City, Tokyo 150-0043",
+          rating: 4.5,
+          likes: 7654,
+          image: "/shibuya-intersection-bustle.png",
+          position: { lat: 35.6595, lng: 139.7004 },
+        },
+        {
+          id: "meiji-shrine",
+          name: "메이지 신궁",
+          category: "명소",
+          address: "1-1 Yoyogikamizonocho, Shibuya City, Tokyo 151-8557",
+          rating: 4.7,
+          likes: 6543,
+          image: "/meiji-shrine-entrance.png",
+          position: { lat: 35.6763, lng: 139.6993 },
+        },
+        {
+          id: "senso-ji",
+          name: "센소지 사원",
+          category: "명소",
+          address: "2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032",
+          rating: 4.6,
+          likes: 7123,
+          image: "/sensoji-lantern.png",
+          position: { lat: 35.7147, lng: 139.7966 },
+        },
+        {
+          id: "tokyo-skytree",
+          name: "도쿄 스카이트리",
+          category: "명소",
+          address: "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045",
+          rating: 4.5,
+          likes: 6789,
+          image: "/tokyo-skytree-day.png",
+          position: { lat: 35.7101, lng: 139.8107 },
+        },
+      ],
+    },
+    venice: {
+      name: "베니스",
+      center: { lat: 45.4408, lng: 12.3155 },
+      attractions: [
+        {
+          id: "st-marks-square",
+          name: "산 마르코 광장",
+          category: "명소",
+          address: "Piazza San Marco, 30100 Venezia VE, Italy",
+          rating: 4.8,
+          likes: 8765,
+          image: "/venice-st-marks-square.png",
+          position: { lat: 45.4341, lng: 12.3388 },
+        },
+        {
+          id: "rialto-bridge",
+          name: "리알토 다리",
+          category: "명소",
+          address: "Sestiere San Polo, 30125 Venezia VE, Italy",
+          rating: 4.7,
+          likes: 7654,
+          image: "/venice-rialto-bridge.png",
+          position: { lat: 45.4381, lng: 12.3358 },
+        },
+        {
+          id: "doges-palace",
+          name: "도지의 궁전",
+          category: "명소",
+          address: "P.za San Marco, 1, 30124 Venezia VE, Italy",
+          rating: 4.7,
+          likes: 6543,
+          image: "/venice-doges-palace.png",
+          position: { lat: 45.4337, lng: 12.3401 },
+        },
+        {
+          id: "grand-canal",
+          name: "대운하",
+          category: "명소",
+          address: "Grand Canal, Venice, Italy",
+          rating: 4.8,
+          likes: 5432,
+          image: "/venice-grand-canal.png",
+          position: { lat: 45.4408, lng: 12.3325 },
+        },
+        {
+          id: "burano",
+          name: "부라노 섬",
+          category: "명소",
+          address: "Burano, 30142 Venice, Italy",
+          rating: 4.6,
+          likes: 4321,
+          image: "/venice-burano.png",
+          position: { lat: 45.4853, lng: 12.4167 },
+        },
+      ],
+    },
   };
+
   const cityData = attractionsData[destination.toLowerCase()] || {};
   const allAttractions = [...(cityData.attractions || []), ...customAttractions];
   const filteredAttractions = allAttractions.filter(
     (attraction) =>
       attraction.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       attraction.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      attraction.address.toLowerCase().includes(searchQuery.toLowerCase())
+      (attraction.address && attraction.address.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const toggleAttraction = (attractionId) => {
@@ -545,7 +599,6 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         endDate,
         destination: destination.toLowerCase(),
       });
-      console.log(`Toggled attraction: ${attractionId} for ${activeDay}`, newSelections);
       return newSelections;
     });
   };
@@ -565,7 +618,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       description: formData.get("memo") || "사용자 추가 장소",
     };
     setCustomAttractions((prev) => [...prev, newAttraction]);
-    toggleAttraction(newAttraction.id); // 자동 선택
+    toggleAttraction(newAttraction.id);
     e.target.reset();
   };
 

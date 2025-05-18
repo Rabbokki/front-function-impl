@@ -735,119 +735,80 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   const dayKeys = generateDayKeys(startDate, endDate);
 
   const cityNames = {
-    osaka: "오사카",
-    tokyo: "도쿄",
+    bangkok: "방콕",
     fukuoka: "후쿠오카",
     jeju: "제주",
-    bangkok: "방콕",
-    singapore: "싱가포르",
+    osaka: "오사카",
     paris: "파리",
     rome: "로마",
+    singapore: "싱가포르",
+    tokyo: "도쿄",
     venice: "베니스",
   };
 
   const cityCoords = {
-    osaka: { lat: 34.6937, lng: 135.5023 },
-    tokyo: { lat: 35.6762, lng: 139.6503 },
-    fukuoka: { lat: 33.5904, lng: 130.4017 },
-    jeju: { lat: 33.4890, lng: 126.4983 },
     bangkok: { lat: 13.7563, lng: 100.5018 },
-    singapore: { lat: 1.3521, lng: 103.8198 },
+    fukuoka: { lat: 33.5902, lng: 130.4017 },
+    jeju: { lat: 33.4890, lng: 126.4983 },
+    osaka: { lat: 34.6937, lng: 135.5023 },
     paris: { lat: 48.8566, lng: 2.3522 },
     rome: { lat: 41.9028, lng: 12.4964 },
+    singapore: { lat: 1.3521, lng: 103.8198 },
+    tokyo: { lat: 35.6762, lng: 139.6503 },
     venice: { lat: 45.4408, lng: 12.3155 },
   };
 
   const countryMap = {
-    osaka: "일본",
-    tokyo: "일본",
+    bangkok: "태국",
     fukuoka: "일본",
     jeju: "한국",
-    bangkok: "태국",
-    singapore: "싱가포르",
+    osaka: "일본",
     paris: "프랑스",
     rome: "이탈리아",
+    singapore: "싱가포르",
+    tokyo: "일본",
     venice: "이탈리아",
   };
 
   const mapCenter = cityCoords[destination?.toLowerCase()] || { lat: 0, lng: 0 };
 
   const attractionsData = {
-    osaka: {
+    bangkok: {
       attractions: [
         {
-          id: "dotonbori",
-          name: "도톤보리",
-          position: { lat: 34.6687, lng: 135.5031 },
-          description: "오사카의 활기찬 먹거리 거리",
-          address: "Dotonbori, Chuo Ward, Osaka, 542-0071",
+          id: "grand-palace",
+          name: "왕궁",
+          position: { lat: 13.75, lng: 100.4914 },
+          description: "방콕의 대표적인 왕궁",
+          address: "Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
         },
         {
-          id: "osaka-castle",
-          name: "오사카 성",
-          position: { lat: 34.6873, lng: 135.5262 },
-          description: "역사적인 성곽",
-          address: "1-1 Osakajo, Chuo Ward, Osaka, 540-0002",
+          id: "wat-arun",
+          name: "왓 아룬",
+          position: { lat: 13.7437, lng: 100.4888 },
+          description: "아름다운 사원",
+          address: "158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand",
         },
         {
-          id: "universal-studios",
-          name: "유니버설 스튜디오 재팬",
-          position: { lat: 34.6654, lng: 135.4323 },
-          description: "인기 있는 테마파크",
-          address: "2-chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031",
+          id: "chatuchak-market",
+          name: "차투착 주말 시장",
+          position: { lat: 13.7999, lng: 100.5502 },
+          description: "활기찬 주말 시장",
+          address: "Kamphaeng Phet 2 Rd, Chatuchak, Bangkok 10900, Thailand",
         },
         {
-          id: "umeda-wheel",
-          name: "우메다 공중정원",
-          position: { lat: 34.7052, lng: 135.4957 },
-          description: "오사카의 전경을 볼 수 있는 전망대",
-          address: "Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88",
+          id: "wat-pho",
+          name: "왓 포",
+          position: { lat: 13.7465, lng: 100.493 },
+          description: "거대한 와불상이 있는 사원",
+          address: "2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
         },
         {
-          id: "namba",
-          name: "난바",
-          position: { lat: 34.6659, lng: 135.5013 },
-          description: "쇼핑과 엔터테인먼트의 중심지",
-          address: "Namba, Chuo Ward, Osaka, 542-0076",
-        },
-      ],
-    },
-    tokyo: {
-      attractions: [
-        {
-          id: "tokyo-tower",
-          name: "도쿄 타워",
-          position: { lat: 35.6586, lng: 139.7454 },
-          description: "도쿄의 랜드마크",
-          address: "4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011",
-        },
-        {
-          id: "shibuya-crossing",
-          name: "시부야 스크램블 교차로",
-          position: { lat: 35.6595, lng: 139.7004 },
-          description: "도쿄의 상징적인 교차로",
-          address: "2 Chome-2-1 Dogenzaka, Shibuya City, Tokyo 150-0043",
-        },
-        {
-          id: "meiji-shrine",
-          name: "메이지 신궁",
-          position: { lat: 35.6763, lng: 139.6993 },
-          description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사",
-          address: "1-1 Yoyogikamizonocho, Shibuya City, Tokyo 151-8557",
-        },
-        {
-          id: "senso-ji",
-          name: "센소지 사원",
-          position: { lat: 35.7147, lng: 139.7966 },
-          description: "도쿄에서 가장 오래된 사원",
-          address: "2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032",
-        },
-        {
-          id: "tokyo-skytree",
-          name: "도쿄 스카이트리",
-          position: { lat: 35.7101, lng: 139.8107 },
-          description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망",
-          address: "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045",
+          id: "khao-san-road",
+          name: "카오산 로드",
+          position: { lat: 13.7582, lng: 100.4971 },
+          description: "배낭여행자의 거리",
+          address: "Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand",
         },
       ],
     },
@@ -897,92 +858,74 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
           name: "한라산",
           position: { lat: 33.3617, lng: 126.5292 },
           description: "제주의 대표적인 산",
-          address: "Hallasan, Jeju Island",
+          address: "Hallasan National Park, Jeju Island, South Korea",
         },
         {
           id: "seongsan",
           name: "성산일출봉",
           position: { lat: 33.4581, lng: 126.9425 },
           description: "아름다운 일출 명소",
-          address: "Seongsan Ilchulbong, Seogwipo, Jeju",
+          address: "Seongsan Ilchulbong, Seogwipo, Jeju, South Korea",
+        },
+        {
+          id: "udo",
+          name: "우도",
+          position: { lat: 33.5050, lng: 126.9540 },
+          description: "작고 아름다운 섬",
+          address: "Udo Island, Jeju, South Korea",
+        },
+        {
+          id: "manjanggul",
+          name: "만장굴",
+          position: { lat: 33.5283, lng: 126.7716 },
+          description: "화산 동굴 탐험",
+          address: "Manjanggul Cave, Jeju, South Korea",
+        },
+        {
+          id: "jeju-folk-village",
+          name: "제주 민속촌",
+          position: { lat: 33.3227, lng: 126.8418 },
+          description: "제주의 전통 문화를 체험",
+          address: "Jeju Folk Village, Seogwipo, Jeju, South Korea",
         },
       ],
     },
-    bangkok: {
+    osaka: {
       attractions: [
         {
-          id: "grand-palace",
-          name: "왕궁",
-          position: { lat: 13.75, lng: 100.4914 },
-          description: "방콕의 대표적인 왕궁",
-          address: "Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
+          id: "dotonbori",
+          name: "도톤보리",
+          position: { lat: 34.6687, lng: 135.5031 },
+          description: "오사카의 활기찬 먹거리 거리",
+          address: "Dotonbori, Chuo Ward, Osaka, 542-0071",
         },
         {
-          id: "wat-arun",
-          name: "왓 아룬",
-          position: { lat: 13.7437, lng: 100.4888 },
-          description: "아름다운 사원",
-          address: "158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand",
-        },
-        {
-          id: "chatuchak-market",
-          name: "차투착 주말 시장",
-          position: { lat: 13.7999, lng: 100.5502 },
-          description: "활기찬 주말 시장",
-          address: "Kamphaeng Phet 2 Rd, Chatuchak, Bangkok 10900, Thailand",
-        },
-        {
-          id: "wat-pho",
-          name: "왓 포",
-          position: { lat: 13.7465, lng: 100.493 },
-          description: "거대한 와불상이 있는 사원",
-          address: "2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
-        },
-        {
-          id: "khao-san-road",
-          name: "카오산 로드",
-          position: { lat: 13.7582, lng: 100.4971 },
-          description: "배낭여행자의 거리",
-          address: "Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand",
-        },
-      ],
-    },
-    singapore: {
-      attractions: [
-        {
-          id: "marina-bay-sands",
-          name: "마리나 베이 샌즈",
-          position: { lat: 1.2834, lng: 103.8607 },
-          description: "럭셔리 호텔",
-          address: "10 Bayfront Avenue, Singapore 018956",
-        },
-        {
-          id: "gardens-by-the-bay",
-          name: "가든스 바이 더 베이",
-          position: { lat: 1.2815, lng: 103.8636 },
-          description: "미래적인 정원",
-          address: "18 Marina Gardens Drive, Singapore 018953",
-        },
-        {
-          id: "sentosa-island",
-          name: "센토사 섬",
-          position: { lat: 1.2494, lng: 103.8303 },
-          description: "놀이와 휴식의 섬",
-          address: "Sentosa Island, Singapore",
+          id: "osaka-castle",
+          name: "오사카 성",
+          position: { lat: 34.6873, lng: 135.5262 },
+          description: "역사적인 성곽",
+          address: "1-1 Osakajo, Chuo Ward, Osaka, 540-0002",
         },
         {
           id: "universal-studios",
-          name: "유니버설 스튜디오 싱가포르",
-          position: { lat: 1.254, lng: 103.8238 },
-          description: "인기 테마파크",
-          address: "8 Sentosa Gateway, Singapore 098269",
+          name: "유니버설 스튜디오 재팬",
+          position: { lat: 34.6654, lng: 135.4323 },
+          description: "인기 있는 테마파크",
+          address: "2-chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031",
         },
         {
-          id: "merlion-park",
-          name: "머라이언 파크",
-          position: { lat: 1.2868, lng: 103.8545 },
-          description: "싱가포르의 상징",
-          address: "1 Fullerton Road, Singapore 049213",
+          id: "umeda-wheel",
+          name: "우메다 공중정원",
+          position: { lat: 34.7052, lng: 135.4957 },
+          description: "오사카의 전경을 볼 수 있는 전망대",
+          address: "Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88",
+        },
+        {
+          id: "namba",
+          name: "난바",
+          position: { lat: 34.6659, lng: 135.5013 },
+          description: "쇼핑과 엔터테인먼트의 중심지",
+          address: "Namba, Chuo Ward, Osaka, 542-0076",
         },
       ],
     },
@@ -1064,6 +1007,84 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
         },
       ],
     },
+    singapore: {
+      attractions: [
+        {
+          id: "marina-bay-sands",
+          name: "마리나 베이 샌즈",
+          position: { lat: 1.2834, lng: 103.8607 },
+          description: "럭셔리 호텔과 전망대",
+          address: "10 Bayfront Avenue, Singapore 018956",
+        },
+        {
+          id: "gardens-by-the-bay",
+          name: "가든스 바이 더 베이",
+          position: { lat: 1.2815, lng: 103.8636 },
+          description: "미래적인 정원",
+          address: "18 Marina Gardens Drive, Singapore 018953",
+        },
+        {
+          id: "sentosa-island",
+          name: "센토사 섬",
+          position: { lat: 1.2494, lng: 103.8303 },
+          description: "해변과 놀이공원",
+          address: "Sentosa Island, Singapore",
+        },
+        {
+          id: "universal-studios",
+          name: "유니버설 스튜디오 싱가포르",
+          position: { lat: 1.254, lng: 103.8238 },
+          description: "테마파크",
+          address: "8 Sentosa Gateway, Singapore 098269",
+        },
+        {
+          id: "merlion-park",
+          name: "머라이언 파크",
+          position: { lat: 1.2868, lng: 103.8545 },
+          description: "싱가포르의 상징",
+          address: "1 Fullerton Road, Singapore 049213",
+        },
+      ],
+    },
+    tokyo: {
+      attractions: [
+        {
+          id: "tokyo-tower",
+          name: "도쿄 타워",
+          position: { lat: 35.6586, lng: 139.7454 },
+          description: "도쿄의 랜드마크",
+          address: "4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011",
+        },
+        {
+          id: "shibuya-crossing",
+          name: "시부야 스크램블 교차로",
+          position: { lat: 35.6595, lng: 139.7004 },
+          description: "세계적으로 유명한 교차로",
+          address: "2 Chome-2-1 Dogenzaka, Shibuya City, Tokyo 150-0043",
+        },
+        {
+          id: "meiji-shrine",
+          name: "메이지 신궁",
+          position: { lat: 35.6763, lng: 139.6993 },
+          description: "평화로운 신사",
+          address: "1-1 Yoyogikamizonocho, Shibuya City, Tokyo 151-8557",
+        },
+        {
+          id: "senso-ji",
+          name: "센소지 사원",
+          position: { lat: 35.7147, lng: 139.7966 },
+          description: "도쿄의 오래된 사원",
+          address: "2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032",
+        },
+        {
+          id: "tokyo-skytree",
+          name: "도쿄 스카이트리",
+          position: { lat: 35.7101, lng: 139.8107 },
+          description: "세계에서 가장 높은 타워",
+          address: "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045",
+        },
+      ],
+    },
     venice: {
       attractions: [
         {
@@ -1077,7 +1098,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
           id: "rialto-bridge",
           name: "리알토 다리",
           position: { lat: 45.4381, lng: 12.3358 },
-          description: "유명한 다리",
+          description: "대운하 위의 유명한 다리",
           address: "Sestiere San Polo, 30125 Venezia VE, Italy",
         },
         {
@@ -1091,14 +1112,14 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
           id: "grand-canal",
           name: "대운하",
           position: { lat: 45.4408, lng: 12.3325 },
-          description: "베니스의 주요 수로",
+          description: "베니스의 주요 운하",
           address: "Grand Canal, Venice, Italy",
         },
         {
           id: "burano",
           name: "부라노 섬",
           position: { lat: 45.4853, lng: 12.4167 },
-          description: "컬러풀한 집들로 유명",
+          description: "화려한 색상의 섬",
           address: "Burano, 30142 Venice, Italy",
         },
       ],
@@ -1106,550 +1127,334 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   };
 
   const hotelsData = {
-    osaka: {
-      hotels: [
-        { id: "hotel1", name: "호텔 오사카 센트럴", description: "도심에 위치한 편리한 호텔", lat: 34.6937, lng: 135.5023, address: "Chuo Ward, Osaka" },
-        { id: "hotel2", name: "스위소텔 난카이 오사카", description: "난바 근처의 고급 호텔", lat: 34.6667, lng: 135.5016, address: "Namba, Chuo Ward, Osaka" },
-      ],
-    },
-    jeju: {
-      hotels: [
-        { id: "hotel1", name: "제주 신라호텔", description: "럭셔리 리조트", lat: 33.2478, lng: 126.4081, address: "Seogwipo, Jeju" },
-        { id: "hotel2", name: "롯데 호텔 제주", description: "가족 친화적인 호텔", lat: 33.2486, lng: 126.4102, address: "Seogwipo, Jeju" },
-      ],
-    },
-    tokyo: {
-      hotels: [
-        { id: "hotel1", name: "시타디네스 신주쿠", description: "신주쿠역 근처 호텔", lat: 35.6906, lng: 139.6995, address: "1 Chome-28-13 Shinjuku, Tokyo" },
-        { id: "hotel2", name: "도쿄 베이 호텔", description: "디즈니랜드 근처 테마 호텔", lat: 35.6255, lng: 139.8790, address: "Maihama, Urayasu, Chiba" },
-        { id: "hotel3", name: "고지라 그레이서리 호텔", description: "신주쿠에 위치한 고지라 테마 호텔", lat: 35.6940, lng: 139.7040, address: "Kabukicho, Shinjuku, Tokyo" },
-      ],
-    },
-    fukuoka: {
-      hotels: [
-        { id: "hotel1", name: "호텔 후쿠오카 센트럴", description: "도심에 위치한 호텔", lat: 33.5904, lng: 130.4017, address: "Chuo Ward, Fukuoka" },
-        { id: "hotel2", name: "힐튼 후쿠오카", description: "고급 호텔", lat: 33.5920, lng: 130.4050, address: "Hakata Ward, Fukuoka" },
-      ],
-    },
-    bangkok: {
-      hotels: [
-        { id: "hotel1", name: "방콕 센트럴 호텔", description: "도심에 위치한 호텔", lat: 13.7563, lng: 100.5018, address: "Sukhumvit Rd, Bangkok" },
-        { id: "hotel2", name: "샹그릴라 방콕", description: "강변 럭셔리 호텔", lat: 13.7234, lng: 100.5140, address: "89 Soi Wat Suan Plu, Bangkok" },
-      ],
-    },
-    singapore: {
-      hotels: [
-        { id: "hotel1", name: "마리나 베이 샌즈", description: "아이코닉한 럭셔리 호텔", lat: 1.2834, lng: 103.8607, address: "10 Bayfront Ave, Singapore" },
-        { id: "hotel2", name: "래플스 호텔", description: "역사적인 호텔", lat: 1.2948, lng: 103.8540, address: "1 Beach Rd, Singapore" },
-      ],
-    },
-    paris: {
-      hotels: [
-        { id: "hotel1", name: "파리 센트럴 호텔", description: "도심에 위치한 호텔", lat: 48.8566, lng: 2.3522, address: "1st Arrondissement, Paris" },
-        { id: "hotel2", name: "샹그릴라 파리", description: "고급 호텔", lat: 48.8637, lng: 2.2935, address: "10 Avenue d'Iéna, Paris" },
-      ],
-    },
-    rome: {
-      hotels: [
-        { id: "hotel1", name: "로마 센트럴 호텔", description: "도심에 위치한 호텔", lat: 41.9028, lng: 12.4964, address: "Via del Corso, Rome" },
-        { id: "hotel2", name: "호텔 에덴", description: "럭셔리 호텔", lat: 41.9050, lng: 12.4870, address: "Via Ludovisi, Rome" },
-      ],
-    },
-    venice: {
-      hotels: [
-        { id: "hotel1", name: "베니스 센트럴 호텔", description: "운하 근처 호텔", lat: 45.4408, lng: 12.3155, address: "San Marco, Venice" },
-        { id: "hotel2", name: "다니엘리 호텔", description: "역사적인 럭셔리 호텔", lat: 45.4339, lng: 12.3410, address: "Riva degli Schiavoni, Venice" },
-      ],
-    },
+    bangkok: [
+      { id: "hotel1", name: "방콕 호텔 A", position: { lat: 13.756, lng: 100.502 } },
+      { id: "hotel2", name: "방콕 호텔 B", position: { lat: 13.757, lng: 100.503 } },
+    ],
+    fukuoka: [
+      { id: "hotel1", name: "후쿠오카 호텔 A", position: { lat: 33.59, lng: 130.402 } },
+      { id: "hotel2", name: "후쿠오카 호텔 B", position: { lat: 33.591, lng: 130.403 } },
+    ],
+    jeju: [
+      { id: "hotel1", name: "제주 호텔 A", position: { lat: 33.4895, lng: 126.4985 } },
+      { id: "hotel2", name: "제주 호텔 B", position: { lat: 33.4900, lng: 126.4990 } },
+    ],
+    osaka: [
+      { id: "hotel1", name: "오사카 호텔 A", position: { lat: 34.694, lng: 135.503 } },
+      { id: "hotel2", name: "오사카 호텔 B", position: { lat: 34.695, lng: 135.504 } },
+    ],
+    paris: [
+      { id: "hotel1", name: "파리 호텔 A", position: { lat: 48.857, lng: 2.353 } },
+      { id: "hotel2", name: "파리 호텔 B", position: { lat: 48.858, lng: 2.354 } },
+    ],
+    rome: [
+      { id: "hotel1", name: "로마 호텔 A", position: { lat: 41.903, lng: 12.497 } },
+      { id: "hotel2", name: "로마 호텔 B", position: { lat: 41.904, lng: 12.498 } },
+    ],
+    singapore: [
+      { id: "hotel1", name: "싱가포르 호텔 A", position: { lat: 1.353, lng: 103.82 } },
+      { id: "hotel2", name: "싱가포르 호텔 B", position: { lat: 1.354, lng: 103.821 } },
+    ],
+    tokyo: [
+      { id: "hotel1", name: "도쿄 호텔 A", position: { lat: 35.677, lng: 139.651 } },
+      { id: "hotel2", name: "도쿄 호텔 B", position: { lat: 35.678, lng: 139.652 } },
+    ],
+    venice: [
+      { id: "hotel1", name: "베니스 호텔 A", position: { lat: 45.441, lng: 12.316 } },
+      { id: "hotel2", name: "베니스 호텔 B", position: { lat: 45.442, lng: 12.317 } },
+    ],
   };
-
-  const mapMarkers = itinerary[selectedDay]?.places
-    ?.filter((place) => place.position)
-    .map((place) => ({
-      id: place.id,
-      position: place.position,
-      title: place.name,
-      selected: false,
-    })) || [];
 
   useEffect(() => {
-    if (isInitialized.current || isGenerated) return;
-
+    if (isInitialized.current || !startDate || !endDate || !destination) return;
     isInitialized.current = true;
-    setIsLoading(true);
 
-    setTimeout(() => {
-      console.log("Travel Plan Data:", travelPlan);
-      console.log("Raw selectedAttractions:", selectedAttractions);
-      console.log("Custom Attractions:", customAttractions);
-
-      if (isAiMode && location.state?.itinerary) {
-        console.log("AI Mode: Processing itinerary from location.state", location.state.itinerary);
-        const aiItinerary = {};
-        location.state.itinerary.forEach((dayData, index) => {
-          const day = index + 1;
-          aiItinerary[day] = {
-            places: dayData.activities.map((activity, idx) => ({
-              id: `a${day}-${idx}`,
-              name: activity.activity,
-              type: activity.time === "lunch" || activity.time === "evening" ? "restaurant" : "attraction",
-              time: activity.time.charAt(0).toUpperCase() + activity.time.slice(1),
-              description: activity.description,
-              position: attractionsData[destination?.toLowerCase()]?.attractions.find(a => a.name === activity.activity)?.position || null,
-              address: activity.address || activity.activity,
-            })),
-            accommodation: dayData.accommodation || {
-              id: `h${day}`,
-              name: "AI 추천 호텔",
-              description: "AI가 추천한 편리한 위치의 호텔입니다.",
-              address: "Unknown Address",
-            },
-          };
-        });
-        setItinerary(aiItinerary);
-      } else {
-        if (!startDate || !endDate || !selectedAttractions || !selectedHotels) {
-          console.error("Manual Mode: Missing required data", { startDate, endDate, selectedAttractions, selectedHotels });
-          setErrorMessage("여행 데이터가 누락되었습니다. Step 1부터 다시 시작해주세요.");
-          setIsLoading(false);
-          return;
-        }
-
-        console.log("Manual Mode: Processing selectedAttractions", selectedAttractions);
-        console.log("Day Keys:", dayKeys);
-
-        const manualItinerary = {};
-        let hasInvalidAttraction = false;
-
-        dayKeys.forEach((dayKey, index) => {
-          const day = index + 1;
-          const attractions = Array.isArray(selectedAttractions[dayKey]) ? selectedAttractions[dayKey] : [];
-          const hotelId = selectedHotels?.[dayKey] || "hotel1";
-          const hotel = hotelsData[destination?.toLowerCase()]?.hotels.find(h => h.id === hotelId) || {
-            id: `h${day}`,
-            name: "기본 호텔",
-            description: "도심에 위치한 호텔",
-            lat: 0.0,
-            lng: 0.0,
-            address: "Unknown Address",
-          };
-
-          console.log(`Day ${day} (Key: ${dayKey}): Attractions`, attractions);
-          console.log(`Available attractions for ${destination}:`, attractionsData[destination?.toLowerCase()]?.attractions);
-
-          const places = attractions.map((attractionId, idx) => {
-            const normalizedAttractionId = typeof attractionId === 'string' ? attractionId.trim().toLowerCase() : attractionId;
-            const attraction = attractionsData[destination?.toLowerCase()]?.attractions.find(
-              a => a.id.trim().toLowerCase() === normalizedAttractionId
-            ) || customAttractions.find(a => a.id === normalizedAttractionId);
-            const timeSlots = ["10:00", "12:30", "14:30", "16:00"];
-
-            if (!attraction) {
-              console.warn(`Attraction not found for ID: ${attractionId} in destination: ${destination}`);
-              hasInvalidAttraction = true;
-              return {
-                id: `a${day}-${idx}`,
-                name: `알 수 없는 장소 (ID: ${attractionId})`,
-                type: "attraction",
-                time: timeSlots[idx % timeSlots.length],
-                description: "선택된 장소에 대한 정보가 없습니다.",
-                position: null,
-                address: "Unknown Address",
-              };
-            }
-
-            return {
-              id: `a${day}-${idx}`,
-              name: attraction.name,
-              type: "attraction",
-              time: timeSlots[idx % timeSlots.length],
-              description: attraction.description || "장소 설명 없음",
-              position: attraction.position,
-              address: attraction.address || attraction.name,
+    const initializeItinerary = async () => {
+      setIsLoading(true);
+      try {
+        let newItinerary = {};
+        if (isAiMode) {
+          const response = await axiosInstance.post("/api/aiplan/generate", {
+            destination,
+            start_date: startDate,
+            end_date: endDate,
+            planType: plannerType === "ai" ? "AI" : "MY",
+          });
+          newItinerary = response.data.itinerary || {};
+          setIsGenerated(true);
+        } else {
+          dayKeys.forEach((day, index) => {
+            const attractionsForDay = Array.isArray(selectedAttractions?.[day])
+              ? selectedAttractions[day].map((id) => {
+                  const attr = [
+                    ...(attractionsData[destination.toLowerCase()]?.attractions || []),
+                    ...customAttractions,
+                  ].find((a) => a.id === id);
+                  return attr || { id, name: "알 수 없는 장소", position: mapCenter };
+                })
+              : [];
+            newItinerary[day] = {
+              hotel: selectedHotels?.[day] || "hotel1",
+              attractions: attractionsForDay,
+              transportation: selectedTransportation || "car",
+              meals: [
+                { time: "08:00", type: "아침", name: "호텔 조식" },
+                { time: "12:00", type: "점심", name: "현지 식당" },
+                { time: "18:00", type: "저녁", name: "현지 식당" },
+              ],
             };
           });
-
-          manualItinerary[day] = {
-            places,
-            accommodation: hotel,
-          };
-        });
-
-        if (hasInvalidAttraction) {
-          setErrorMessage("일부 장소를 매핑하지 못했습니다. Step 2에서 장소를 다시 확인해주세요.");
         }
-
-        console.log("Generated Manual Itinerary:", manualItinerary);
-        setItinerary(manualItinerary);
+        setItinerary(newItinerary);
+      } catch (error) {
+        console.error("일정 생성 실패:", error);
+        setErrorMessage("일정을 생성하는 데 문제가 발생했습니다. 다시 시도해 주세요.");
+        toast.error("일정 생성에 실패했습니다. 다시 시도해 주세요.");
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setIsLoading(false);
-      setIsGenerated(true);
-    }, 1500);
-  }, [isAiMode, destination, location.state, startDate, endDate, selectedAttractions, selectedHotels, customAttractions, isGenerated]);
+    initializeItinerary();
+  }, [startDate, endDate, destination, isAiMode, plannerType, dayKeys, selectedAttractions, selectedHotels, selectedTransportation, customAttractions]);
 
-  const removePlaceFromItinerary = (day, placeId) => {
-    setItinerary((prev) => {
-      const updatedDay = { ...prev[day] };
-      updatedDay.places = updatedDay.places.filter((place) => place.id !== placeId);
-      return { ...prev, [day]: updatedDay };
-    });
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
   };
 
-  const changeAccommodation = (day) => {
-    const accommodations = hotelsData[destination?.toLowerCase()]?.hotels || [
-      { id: "h1", name: "시티 센터 호텔", description: "도심에 위치한 편리한 호텔입니다.", lat: 0.0, lng: 0.0, address: "Unknown Address" },
-    ];
-
-    const currentId = itinerary[day]?.accommodation?.id;
-    const newAccommodation = accommodations.find((acc) => acc.id !== currentId) || accommodations[0];
-
-    setItinerary((prev) => {
-      const updatedDay = { ...prev[day] };
-      updatedDay.accommodation = newAccommodation;
-      return { ...prev, [day]: updatedDay };
-    });
-  };
-
-  const handleSaveManualPlan = async () => {
+  const handleSaveChanges = async () => {
     try {
-      if (!startDate || !endDate) {
-        toast.error("여행 시작일 또는 종료일이 올바르지 않습니다. 다시 설정해주세요.");
-        return;
-      }
-
-      const places = [];
-      const accommodations = [];
-      const transportations = [];
-
-      Object.keys(itinerary).forEach((day) => {
-        const dayKey = dayKeys[day - 1];
-        itinerary[day].places.forEach((place) => {
-          places.push({
-            day: dayKey,
-            name: place.name,
-            category: place.type,
-            description: place.description,
-            time: place.time,
-            latitude: place.position?.lat || 0.0,
-            longitude: place.position?.lng || 0.0,
-            address: place.address || place.name,
-          });
-        });
-
-        if (itinerary[day].accommodation) {
-          accommodations.push({
-            day: dayKey,
-            name: itinerary[day].accommodation.name,
-            description: itinerary[day].accommodation.description,
-            latitude: itinerary[day].accommodation.lat || 0.0,
-            longitude: itinerary[day].accommodation.lng || 0.0,
-            address: itinerary[day].accommodation.address || itinerary[day].accommodation.name,
-          });
-        }
-
-        if (selectedTransportation?.[dayKey]) {
-          transportations.push({
-            day: dayKey,
-            type: selectedTransportation[dayKey].toUpperCase(),
-          });
-        }
-      });
-
-      if (places.length === 0) {
-        toast.error("여행 일정에 장소가 없습니다. Step 2에서 장소를 추가해주세요.");
-        return;
-      }
-
-      const planData = {
-        city: destination,
-        country: countryMap[destination?.toLowerCase()] || "Unknown",
+      await axiosInstance.post("/api/aiplan/save", {
+        destination,
         start_date: startDate,
         end_date: endDate,
-        places,
-        accommodations,
-        transportations,
-      };
-
-      console.log("Saving Manual Plan Data:", JSON.stringify(planData, null, 2));
-
-      const response = await axiosInstance.post("/api/travel-plans", planData);
-      if (response.data === "여행 계획 저장 성공") {
-        toast.success("여행 일정이 성공적으로 저장되었습니다!");
-        localStorage.setItem("travelPlan", JSON.stringify({ ...travelPlan, ...planData }));
-        navigate("/mypage");
-      } else {
-        throw new Error("서버에서 예상치 못한 응답: " + JSON.stringify(response.data));
-      }
+        itinerary,
+        planType: plannerType === "ai" ? "AI" : "MY",
+      });
+      setIsEditing(false);
+      toast.success("일정이 성공적으로 저장되었습니다!");
     } catch (error) {
-      console.error("일정 저장 실패:", error.response?.data || error.message);
-      toast.error(`일정 저장에 실패했습니다: ${error.response?.data?.message || error.message}`);
+      console.error("일정 저장 실패:", error);
+      toast.error("일정 저장에 실패했습니다. 다시 시도해 주세요.");
     }
   };
 
-  const handleSavePlan = async () => {
-    if (isAiMode) {
-      try {
-        if (!startDate || !endDate) {
-          toast.error("여행 시작일 또는 종료일이 올바르지 않습니다. 다시 설정해주세요.");
-          return;
-        }
-
-        const formattedItinerary = Object.keys(itinerary).map((day) => ({
-          day: dayKeys[day - 1],
-          activities: itinerary[day].places.map((place) => ({
-            activity: place.name,
-            time: place.time.toLowerCase(),
-            description: place.description,
-            address: place.address,
-          })),
-          accommodation: itinerary[day].accommodation ? {
-            name: itinerary[day].accommodation.name,
-            description: itinerary[day].accommodation.description,
-            address: itinerary[day].accommodation.address,
-          } : null,
-        }));
-
-        if (!formattedItinerary || formattedItinerary.length === 0) {
-          toast.error("여행 일정 데이터가 없습니다.");
-          return;
-        }
-
-        const planData = {
-          destination,
-          start_date: startDate,
-          end_date: endDate,
-          itinerary: formattedItinerary,
-          planType: "AI",
-        };
-
-        const response = await axiosInstance.post("/api/aiplan/save", planData);
-        toast.success("AI 여행 일정이 성공적으로 저장되었습니다!");
-        navigate("/mypage");
-      } catch (error) {
-        console.error("AI 일정 저장 실패:", error.response?.data || error.message);
-        toast.error(`AI 일정 저장에 실패했습니다: ${error.response?.data?.message || error.message}`);
-      }
-    } else {
-      await handleSaveManualPlan();
-    }
+  const handleFlightSelect = () => {
+    setIsFlightModalOpen(true);
   };
 
-  const isSaveDisabled = Object.keys(itinerary).every((day) => itinerary[day].places.length === 0);
+  const handleDayChange = (dayIndex) => {
+    setSelectedDay(dayIndex + 1);
+  };
+
+  const currentDayKey = dayKeys[selectedDay - 1];
+  const currentItinerary = itinerary[currentDayKey] || {};
+  const currentAttractions = currentItinerary.attractions || [];
+  const currentHotelId = currentItinerary.hotel || "hotel1";
+  const currentHotel = hotelsData[destination.toLowerCase()]?.find((h) => h.id === currentHotelId) || { name: "호텔 정보 없음", position: mapCenter };
+
+  const mapMarkers = [
+    ...(currentAttractions.map((attr) => ({
+      id: attr.id,
+      position: attr.position || mapCenter,
+      title: attr.name,
+      selected: true,
+    }))),
+    {
+      id: currentHotelId,
+      position: currentHotel.position || mapCenter,
+      title: currentHotel.name,
+      selected: true,
+    },
+  ];
 
   if (isLoading) {
+    return <div className="p-4 text-traveling-text">일정을 준비 중입니다...</div>;
+  }
+
+  if (errorMessage) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-traveling-purple border-t-transparent"></div>
-        <span className="ml-3 text-lg">일정을 생성하는 중입니다...</span>
+      <div className="p-4 text-red-600">
+        {errorMessage}
+        <Button
+          className="mt-4 bg-traveling-purple text-white hover:bg-traveling-purple/90"
+          onClick={() => {
+            setErrorMessage("");
+            isInitialized.current = false;
+          }}
+        >
+          다시 시도
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {errorMessage && (
-        <div className="text-red-600 p-4 bg-red-100 rounded-lg">
-          {errorMessage}
-          <Button
-            variant="link"
-            className="ml-2 text-blue-600"
-            onClick={() => navigate(`/travel-planner/${destination}/step2`)}
-          >
-            Step 2로 돌아가기
-          </Button>
+      <Card className="bg-white p-6 shadow-md">
+        <div className="mb-6">
+          <h2 className="mb-2 text-center text-2xl font-bold text-traveling-text">
+            {cityNames[destination.toLowerCase()]} 여행 일정
+          </h2>
+          <p className="text-center text-sm text-traveling-text/70">
+            {startDate} ~ {endDate} ({dayKeys.length}일)
+          </p>
         </div>
-      )}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold">
-          {isAiMode ? "AI 추천 일정" : "나의 여행 일정"}: {cityNames[destination?.toLowerCase()] || destination}
-        </h3>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            {isEditing ? (
-              <>
-                <Check className="mr-1 h-4 w-4" />
-                <span>완료</span>
-              </>
-            ) : (
-              <>
-                <Edit className="mr-1 h-4 w-4" />
-                <span>일정 수정</span>
-              </>
-            )}
-          </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFlightModalOpen(true)}
-          >
-            <Plane className="mr-1 h-4 w-4" />
-            <span>항공편 추가</span>
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {dayKeys.map((day, index) => (
-          <Button
-            key={day}
-            variant={selectedDay === index + 1 ? "default" : "outline"}
-            className={`${selectedDay === index + 1 ? "bg-traveling-purple text-white" : "bg-white"}`}
-            onClick={() => setSelectedDay(index + 1)}
-          >
-            {index + 1}일차
-          </Button>
-        ))}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-5">
-        <Card className="md:col-span-2">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium">지도</h4>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Map className="h-4 w-4" />
+        <div className="sticky top-0 z-10 bg-white py-3 mb-4 border-b">
+          <div className="flex space-x-2 overflow-x-auto">
+            {dayKeys.map((day, idx) => (
+              <Button
+                key={day}
+                onClick={() => handleDayChange(idx)}
+                className={
+                  selectedDay === idx + 1
+                    ? "bg-traveling-purple text-white"
+                    : "border border-traveling-text/30 text-traveling-text"
+                }
+              >
+                {idx + 1}일차
               </Button>
-            </div>
-            <MapComponent center={mapCenter} height="400px" markers={mapMarkers} />
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
 
-        <Card className="md:col-span-3">
-          <CardContent className="p-4">
-            <h4 className="font-medium mb-4">{selectedDay}일차 일정</h4>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-traveling-text">{selectedDay}일차 일정</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEditToggle}
+                    className="text-traveling-purple"
+                  >
+                    {isEditing ? <Check className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                    {isEditing ? "완료" : "편집"}
+                  </Button>
+                </div>
 
-            {itinerary[selectedDay]?.places.length === 0 ? (
-              <p className="text-center text-gray-500">
-                이 날의 일정이 비어있습니다. Step 2에서 장소를 추가해주세요.
-                <Button
-                  variant="link"
-                  className="ml-2 text-blue-600"
-                  onClick={() => navigate(`/travel-planner/${destination}/step2`)}
-                >
-                  장소 선택으로 이동
-                </Button>
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {itinerary[selectedDay]?.places.map((place, index) => (
-                  <div key={place.id} className="rounded-lg border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-traveling-purple/10">
-                          {place.type === "attraction" && (
-                            <Camera className="h-4 w-4 text-traveling-purple" />
-                          )}
-                          {place.type === "restaurant" && (
-                            <Utensils className="h-4 w-4 text-traveling-purple" />
-                          )}
-                          {place.type === "cafe" && (
-                            <Coffee className="h-4 w-4 text-traveling-purple" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center">
-                            <p className="font-medium">{place.name}</p>
-                            <span className="ml-2 text-xs text-gray-500">
-                              {place.time}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {place.type === "attraction" && "관광지"}
-                            {place.type === "restaurant" && "식당"}
-                            {place.type === "cafe" && "카페"}
-                          </p>
-                        </div>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Plane className="h-6 w-6 text-traveling-purple" />
+                    <div>
+                      <p className="font-medium text-traveling-text">
+                        {selectedDay === 1 ? "왕복 항공편" : "항공편 없음"}
+                      </p>
+                      <p className="text-sm text-traveling-text/70">
+                        {selectedDay === 1
+                          ? "항공편을 선택하려면 아래 버튼을 클릭하세요"
+                          : "추가 이동 없음"}
+                      </p>
+                      {selectedDay === 1 && (
+                        <Button
+                          size="sm"
+                          className="mt-2 bg-traveling-purple text-white hover:bg-traveling-purple/90"
+                          onClick={handleFlightSelect}
+                        >
+                          항공편 선택
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Hotel className="h-6 w-6 text-traveling-purple" />
+                    <div>
+                      <p className="font-medium text-traveling-text">{currentHotel.name}</p>
+                      <p className="text-sm text-traveling-text/70">숙소 확인 완료</p>
+                    </div>
+                  </div>
+
+                  {currentItinerary.meals?.map((meal, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      {meal.type === "아침" ? (
+                        <Coffee className="h-6 w-6 text-traveling-purple" />
+                      ) : (
+                        <Utensils className="h-6 w-6 text-traveling-purple" />
+                      )}
+                      <div>
+                        <p className="font-medium text-traveling-text">
+                          {meal.time} {meal.type}
+                        </p>
+                        <p className="text-sm text-traveling-text/70">{meal.name}</p>
                       </div>
+                    </div>
+                  ))}
 
+                  {currentAttractions.map((attr, idx) => (
+                    <div key={attr.id} className="flex items-start gap-3">
+                      <Camera className="h-6 w-6 text-traveling-purple" />
+                      <div>
+                        <p className="font-medium text-traveling-text">{attr.name}</p>
+                        <p className="text-sm text-traveling-text/70">{attr.description}</p>
+                        <p className="text-sm text-traveling-text/70">{attr.address}</p>
+                      </div>
                       {isEditing && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removePlaceFromItinerary(selectedDay, place.id)}
-                          className="h-8 w-8 p-0"
+                          className="text-red-500"
+                          onClick={() => {
+                            setItinerary((prev) => ({
+                              ...prev,
+                              [currentDayKey]: {
+                                ...prev[currentDayKey],
+                                attractions: prev[currentDayKey].attractions.filter(
+                                  (a) => a.id !== attr.id
+                                ),
+                              },
+                            }));
+                          }}
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                    <p className="mt-2 text-sm text-gray-600">
-                      {place.description}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {place.address}
-                    </p>
+          <div className="h-[600px] rounded-lg overflow-hidden">
+            <MapComponent
+              center={mapCenter}
+              markers={mapMarkers}
+              height="100%"
+            />
+          </div>
+        </div>
 
-                    {index < itinerary[selectedDay]?.places.length - 1 && (
-                      <div className="mt-2 flex items-center">
-                        <div className="ml-4 h-6 border-l-2 border-dashed border-gray-300"></div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            className="border-traveling-purple text-traveling-purple hover:bg-traveling-purple/10"
+            onClick={() => navigate(`/travel-planner/${destination}/step2`)}
+          >
+            이전 단계
+          </Button>
+          <Button
+            className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+            onClick={handleSaveChanges}
+            disabled={isEditing}
+          >
+            일정 저장
+          </Button>
+        </div>
+      </Card>
 
-                {itinerary[selectedDay]?.accommodation && (
-                  <div className="rounded-lg border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-traveling-purple/10">
-                          <Hotel className="h-4 w-4 text-traveling-purple" />
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {itinerary[selectedDay].accommodation.name}
-                          </p>
-                          <p className="text-xs text-gray-500">숙소</p>
-                        </div>
-                      </div>
-
-                      {isEditing && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => changeAccommodation(selectedDay)}
-                          className="h-8 p-2"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          <span className="text-xs">변경</span>
-                        </Button>
-                      )}
-                    </div>
-
-                    <p className="mt-2 text-sm text-gray-600">
-                      {itinerary[selectedDay].accommodation.description}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {itinerary[selectedDay].accommodation.address}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex justify-end">
-        <Button
-          className="bg-traveling-purple"
-          onClick={handleSavePlan}
-          disabled={isSaveDisabled}
-        >
-          여행 일정 저장하기
-        </Button>
-      </div>
-
-      <FlightModal
-        isOpen={isFlightModalOpen}
-        onClose={() => setIsFlightModalOpen(false)}
-      />
+      {isFlightModalOpen && (
+        <FlightModal
+          isOpen={isFlightModalOpen}
+          onClose={() => setIsFlightModalOpen(false)}
+          destination={destination}
+          startDate={startDate}
+          endDate={endDate}
+        />
+      )}
     </div>
   );
 }

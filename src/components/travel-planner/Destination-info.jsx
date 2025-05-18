@@ -6,39 +6,25 @@ import { Card } from "../../modules/Card";
 import { saveToLocalStorage } from "../../utils";
 import axiosInstance from "../../api/axiosInstance";
 import { format } from 'date-fns';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 // 도시별 데이터
 const cityData = {
-  osaka: {
-    name: "오사카",
-    nameEn: "OSAKA",
-    country: "일본",
-    countryEn: "Japan",
-    flag: "🇯🇵",
+  bangkok: {
+    name: "방콕",
+    nameEn: "BANGKOK",
+    country: "태국",
+    countryEn: "Thailand",
+    flag: "🇹🇭",
     description:
-      "일본의 미식과 역사의 중심지. 도톤보리의 눈부신 불빛 아래, 전통적인 타코야키의 오묘한 맛을 즐겨세요. 오사카성에서는 일본의 고대 역사를 체험할 수 있습니다. 유니버설 스튜디오 재팬에서는 화려한 어트랙션을 경험할 수 있으며, 신세계의 츠텐카쿠 타워에서는 도시의 전경을 한 눈에 볼 수 있습니다. 오사카에서는 끊임없는 먹거리 발견이 기다립니다.",
-    flightTime: "약 2시간",
-    visa: "무비자",
-    currency: "엔(JPY)",
-    voltage: "110V",
-    adapter: "없음",
-    image: "/images/destinations/osaka.jpg",
-    airport: "osaa",
-  },
-  tokyo: {
-    name: "도쿄",
-    nameEn: "TOKYO",
-    country: "일본",
-    countryEn: "Japan",
-    flag: "🇯🇵",
-    description:
-      "일본의 수도이자 세계 최대 도시 중 하나인 도쿄는 현대적인 기술과 전통이 공존하는 매력적인 도시입니다. 화려한 네온사인의 번화가부터 고즈넉한 사원과 정원까지, 다양한 매력을 지닌 도시입니다.",
-    flightTime: "약 2시간 30분",
-    visa: "무비자",
-    currency: "엔(JPY)",
-    voltage: "110V",
-    adapter: "없음",
-    image: "/images/destinations/tokyo.png",
-    airport: "tyoa",
+      "태국의 수도 방콕은 활기찬 거리 음식, 화려한 사원, 번화한 시장이 특징인 도시입니다. 전통과 현대가 공존하는 이 도시는 동남아시아에서 가장 인기 있는 관광지 중 하나입니다.",
+    flightTime: "약 6시간",
+    visa: "무비자(90일)",
+    currency: "바트(THB)",
+    voltage: "220V",
+    adapter: "필요",
+    image: "/images/destinations/bangkok.png",
+    airport: "bkkt",
   },
   fukuoka: {
     name: "후쿠오카",
@@ -60,6 +46,7 @@ const cityData = {
     name: "제주",
     nameEn: "JEJU",
     country: "대한민국",
+    countryEn: "South Korea",
     flag: "🇰🇷",
     description:
       "한국의 아름다운 섬 제주도는 화산 지형과 독특한 자연 경관으로 유명합니다. 성산일출봉, 한라산, 우도 등 다양한 자연 명소와 함께 제주 특유의 문화와 음식을 경험해보세요.",
@@ -69,6 +56,23 @@ const cityData = {
     voltage: "220V",
     adapter: "없음",
     image: "/images/destinations/jeju.png",
+    airport: "jeja",
+  },
+  osaka: {
+    name: "오사카",
+    nameEn: "OSAKA",
+    country: "일본",
+    countryEn: "Japan",
+    flag: "🇯🇵",
+    description:
+      "일본의 미식과 역사의 중심지. 도톤보리의 눈부신 불빛 아래, 전통적인 타코야키의 오묘한 맛을 즐겨세요. 오사카성에서는 일본의 고대 역사를 체험할 수 있습니다. 유니버설 스튜디오 재팬에서는 화려한 어트랙션을 경험할 수 있으며, 신세계의 츠텐카쿠 타워에서는 도시의 전경을 한 눈에 볼 수 있습니다. 오사카에서는 끊임없는 먹거리 발견이 기다립니다.",
+    flightTime: "약 2시간",
+    visa: "무비자",
+    currency: "엔(JPY)",
+    voltage: "110V",
+    adapter: "없음",
+    image: "/images/destinations/osaka.jpg",
+    airport: "osaa",
   },
   paris: {
     name: "파리",
@@ -102,38 +106,6 @@ const cityData = {
     image: "/images/destinations/rome.png",
     airport: "rome",
   },
-  venice: {
-    name: "베니스",
-    nameEn: "VENICE",
-    country: "이탈리아",
-    countryEn: "Italy",
-    flag: "🇮🇹",
-    description:
-      "이탈리아 북동부에 위치한 베니스는 117개의 작은 섬으로 이루어진 수상 도시입니다. 곤돌라를 타고 운하를 따라 이동하며 산 마르코 광장, 리알토 다리 등 아름다운 건축물과 예술 작품을 감상할 수 있습니다.",
-    flightTime: "약 13시간 30분",
-    visa: "무비자(90일)",
-    currency: "유로(EUR)",
-    voltage: "230V",
-    adapter: "필요",
-    image: "/images/destinations/venice.png",
-    airport: "veni",
-  },
-  bangkok: {
-    name: "방콕",
-    nameEn: "BANGKOK",
-    country: "태국",
-    countryEn: "Thailand",
-    flag: "🇹🇭",
-    description:
-      "태국의 수도 방콕은 활기찬 거리 음식, 화려한 사원, 번화한 시장이 특징인 도시입니다. 전통과 현대가 공존하는 이 도시는 동남아시아에서 가장 인기 있는 관광지 중 하나입니다.",
-    flightTime: "약 6시간",
-    visa: "무비자(90일)",
-    currency: "바트(THB)",
-    voltage: "220V",
-    adapter: "필요",
-    image: "/images/destinations/bangkok.png",
-    airport: "bkkt",
-  },
   singapore: {
     name: "싱가포르",
     nameEn: "SINGAPORE",
@@ -149,6 +121,38 @@ const cityData = {
     adapter: "필요",
     image: "/images/destinations/singapore.png",
     airport: "sins",
+  },
+  tokyo: {
+    name: "도쿄",
+    nameEn: "TOKYO",
+    country: "일본",
+    countryEn: "Japan",
+    flag: "🇯🇵",
+    description:
+      "일본의 수도이자 세계 최대 도시 중 하나인 도쿄는 현대적인 기술과 전통이 공존하는 매력적인 도시입니다. 화려한 네온사인의 번화가부터 고즈넉한 사원과 정원까지, 다양한 매력을 지닌 도시입니다.",
+    flightTime: "약 2시간 30분",
+    visa: "무비자",
+    currency: "엔(JPY)",
+    voltage: "110V",
+    adapter: "없음",
+    image: "/images/destinations/tokyo.png",
+    airport: "tyoa",
+  },
+  venice: {
+    name: "베니스",
+    nameEn: "VENICE",
+    country: "이탈리아",
+    countryEn: "Italy",
+    flag: "🇮🇹",
+    description:
+      "이탈리아 북동부에 위치한 베니스는 117개의 작은 섬으로 이루어진 수상 도시입니다. 곤돌라를 타고 운하를 따라 이동하며 산 마르코 광장, 리알토 다리 등 아름다운 건축물과 예술 작품을 감상할 수 있습니다.",
+    flightTime: "약 13시간 30분",
+    visa: "무비자(90일)",
+    currency: "유로(EUR)",
+    voltage: "230V",
+    adapter: "필요",
+    image: "/images/destinations/venice.png",
+    airport: "veni",
   },
 };
 
@@ -242,55 +246,84 @@ export function DestinationInfo({ destination }) {
     return `${format(start)} - ${format(end)} (${sorted.length}일)`;
   };
 
-  const handleNext = async () => {
-    if (selectedDates.length > 0) {
-      const sorted = [...selectedDates].sort();
-      const startDate = sorted[0];
-      const endDate = sorted[sorted.length - 1];
+ const handleNext = async () => {
+  console.log("selectedDates:", selectedDates); // 디버깅
+  if (!selectedDates || selectedDates.length === 0) {
+    toast.error("여행 날짜를 선택해 주세요.");
+    return;
+  }
 
-      // selectedAttractions와 selectedHotels 초기화
-      const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
-      const selectedAttractions = {};
-      const selectedHotels = {};
-      for (let i = 0; i < daysCount; i++) {
-        const dayKey = format(new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)), "yyyy-MM-dd");
-        selectedAttractions[dayKey] = [];
-        selectedHotels[dayKey] = "hotel1";
-      }
+  const sorted = [...selectedDates].sort();
+  const startDate = sorted[0];
+  const endDate = sorted[sorted.length - 1];
 
-      // 데이터 저장
-      const travelPlan = {
-        destination,
-        startDate,
-        endDate,
-        plannerType,
-        selectedAttractions,
-        selectedHotels,
-        selectedTransportation: "car",
-      };
-      saveToLocalStorage("travelPlan", travelPlan);
+  console.log("startDate:", startDate, "endDate:", endDate); // 디버깅
+  if (!startDate || !endDate) {
+    toast.error("시작 날짜 또는 종료 날짜가 유효하지 않습니다.");
+    return;
+  }
 
-      // DB 저장
-      try {
-        await axiosInstance.post("/api/aiplan/save-initial", {
-          destination,
-          start_date: startDate,
-          end_date: endDate,
-          planType: plannerType === "ai" ? "AI" : "MY",
-        });
-        console.log("Step 1 데이터 DB 저장 성공");
-      } catch (error) {
-        console.error("Step 1 데이터 DB 저장 실패:", error.response?.data || error.message);
-      }
+  // localStorage에 날짜 저장 (AI 일정에서 사용)
+  localStorage.setItem("startDate", startDate);
+  localStorage.setItem("endDate", endDate);
+  localStorage.setItem("destination", destination);
 
-      if (plannerType === "manual") {
-        navigate(`/travel-planner/${destination}/step2`);
-      } else {
-        navigate(`/ai-planner/${destination}`);
-      }
-    }
+  const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
+  const selectedAttractions = {};
+  const selectedHotels = {};
+  for (let i = 0; i < daysCount; i++) {
+    const dayKey = format(new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)), "yyyy-MM-dd");
+    selectedAttractions[dayKey] = [];
+    selectedHotels[dayKey] = "hotel1";
+  }
+
+  const travelPlan = {
+    destination,
+    startDate,
+    endDate,
+    plannerType,
+    selectedAttractions,
+    selectedHotels,
+    selectedTransportation: "car",
   };
 
+  try {
+    saveToLocalStorage("travelPlan", travelPlan);
+    const response = await axiosInstance.post("/api/travel-plans", {
+      city: destination,
+      country: getCountryByDestination(destination),
+      start_date: startDate,
+      end_date: endDate,
+      planType: plannerType === "ai" ? "AI" : "MY",
+      places: [],
+      accommodations: [],
+      transportations: [{ type: "CAR", day: startDate }],
+    });
+    toast.success(response.data || "여행 계획이 저장되었습니다!");
+  } catch (error) {
+    const errorMessage = error.response?.data || "여행 계획 저장에 실패했습니다. 다시 시도해 주세요.";
+    toast.error(errorMessage);
+    console.error("Step 1 데이터 DB 저장 실패:", error.response?.data || error.message);
+    return;
+  }
+
+  navigate(plannerType === "manual" ? `/travel-planner/${destination}/step2` : `/ai-planner/${destination}`);
+};
+
+const getCountryByDestination = (destination) => {
+  const countryMap = {
+    jeju: "한국",
+    bangkok: "태국",
+    fukuoka: "일본",
+    osaka: "일본",
+    paris: "프랑스",
+    rome: "이탈리아",
+    singapore: "싱가포르",
+    tokyo: "일본",
+    venice: "이탈리아",
+  };
+  return countryMap[destination.toLowerCase()] || "알 수 없음";
+};
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
