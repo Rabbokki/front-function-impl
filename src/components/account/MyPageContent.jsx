@@ -30,6 +30,7 @@ import { Badge } from '../../modules/Badge';
 import axiosInstance from '../../api/axiosInstance';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { toast } from 'react-toastify';
 
 function MyPageContent() {
   const [activeTab, setActiveTab] = useState('my-trips');
@@ -63,57 +64,61 @@ function MyPageContent() {
   );
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axiosInstance.get('/api/accounts/mypage');
-        console.log('회원정보', res.data);
+        // 회원 정보
+        const userResponse = await axiosInstance.get('/api/accounts/mypage');
+        console.log('회원정보', userResponse.data);
         setUserInfo({
-          email: res.data.email,
-          nickname: res.data.nickname,
-          imgUrl: res.data.imgUrl,
-          level: res.data.level,
-          levelExp: res.data.levelExp,
+          email: userResponse.data.email,
+          nickname: userResponse.data.nickname,
+          imgUrl: userResponse.data.imgUrl,
+          level: userResponse.data.level,
+          levelExp: userResponse.data.levelExp,
         });
-      } catch (error) {
-        console.error('회원정보 요청 실패:', error);
-      }
-    };
 
-    const fetchBookings = async () => {
-      try {
-        const res = await axiosInstance.get('/api/flights/my-bookings');
-        console.log('예약 목록:', res.data);
-        if (res.data.success) {
-          setBookings(res.data.data);
+        // 예약 목록
+        const bookingsResponse = await axiosInstance.get('/api/flights/my-bookings');
+        console.log('예약 목록:', bookingsResponse.data);
+        if (bookingsResponse.data.success) {
+          setBookings(bookingsResponse.data.data);
         }
-      } catch (error) {
-        console.error('예약 목록 요청 실패:', error);
-      }
-    };
 
-    const fetchAiPlans = async () => {
-      try {
-        const res = await axiosInstance.get('/api/aiplan/my-plans');
-        console.log('AI 일정 목록:', res.data);
-        const trips = res.data.map(plan => ({
+        // AI 일정
+        const aiPlansResponse = await axiosInstance.get('/api/aiplan/my-plans');
+        console.log('AI 일정 목록:', aiPlansResponse.data);
+        const aiTrips = aiPlansResponse.data.map(plan => ({
           id: plan.id,
           title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
           date: `${plan.startDate} - ${plan.endDate}`,
           status: plan.status,
-          planType: plan.planType, // planType 추가
+          planType: plan.planType,
           image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
-          color: getColorForDestination(plan.destination)
+          color: getColorForDestination(plan.destination),
         }));
-        setMyTrips(trips);
+
+        // 수동 일정
+        const manualPlansResponse = await axiosInstance.get('/api/travel-plans/my-plans');
+        console.log('수동 일정 목록:', manualPlansResponse.data);
+        const manualTrips = manualPlansResponse.data.map(plan => ({
+          id: plan.id,
+          title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
+          date: `${plan.startDate} - ${plan.endDate}`,
+          status: plan.status,
+          planType: plan.planType,
+          image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
+          color: getColorForDestination(plan.destination),
+        }));
+
+        // AI와 수동 일정 통합
+        setMyTrips([...aiTrips, ...manualTrips]);
       } catch (error) {
-        console.error('AI 일정 목록 요청 실패:', error);
-        setMyTrips([]);
+        console.error('데이터 요청 실패:', error);
+        toast.error('데이터를 불러오는 중 오류가 발생했습니다.');
       }
     };
 
-    fetchUserInfo();
-    fetchBookings();
-    fetchAiPlans();
+    fetchData();
   }, []);
 
   const destinationMap = {
@@ -124,7 +129,8 @@ function MyPageContent() {
     rome: '로마',
     venice: '베니스',
     fukuoka: '후쿠오카',
-    singapore: '싱가포르'
+    singapore: '싱가포르',
+    osaka: '오사카',
   };
 
   const getColorForDestination = (destination) => {
@@ -136,7 +142,8 @@ function MyPageContent() {
       rome: '#ff9a9e',
       venice: '#93c5fd',
       fukuoka: '#adb5bd',
-      singapore: '#f3d9fa'
+      singapore: '#f3d9fa',
+      osaka: '#ff922b',
     };
     return colors[destination.toLowerCase()] || '#4dabf7';
   };
@@ -305,11 +312,12 @@ function MyPageContent() {
               </Badge>
             </div>
             <div className="mt-1 flex items-center">
-              <Progress
-                value={percent}
-                className="h-2 w-32 bg-[#e7f5ff]"
-                indicatorClassName="bg-[#4dabf7]"
-              />
+              <div className="h-2 w-32 bg-[#e7f5ff]">
+                <div
+                  className="h-full bg-[#4dabf7]"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
               <span
                 className="ml-2 text-xs text-[#495057] cursor-pointer hover:underline"
                 onClick={() => setShowExpModal(true)}
@@ -497,6 +505,21 @@ function MyPageContent() {
                             />
                           </>
                         )}
+                        {trip.image === '오사카' && (
+                          <>
+                            <path
+                              d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
+                              fill="#ff922b"
+                            />
+                            <rect
+                              x="45"
+                              y="30"
+                              width="10"
+                              height="20"
+                              fill="#ffffff"
+                            />
+                          </>
+                        )}
                       </svg>
                     </div>
                     <Badge
@@ -504,7 +527,7 @@ function MyPageContent() {
                         trip.status === '예정' ? 'bg-[#4dabf7]' : 'bg-[#adb5bd]'
                       } text-white`}
                     >
-                      {trip.planType || 'MY'} {/* planType 표시, 기본값 MY */}
+                      {trip.planType || 'AI'}
                     </Badge>
                   </div>
                   <CardContent className="p-4">

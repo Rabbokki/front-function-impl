@@ -182,7 +182,7 @@
 
 
 import React, { useState,useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
 import { Card } from "../../modules/Card";
 import { Button } from "../../modules/Button";
 import { Textarea } from "../../modules/Textarea";
@@ -191,7 +191,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../../api/axiosInstance";
 
-export function AIPlannerContent({ destination }) {
+export function AIPlannerContent() {
+  const { destination } = useParams(); // destination을 useParams로 가져옴
   const [preferences, setPreferences] = useState("");
   const [budget, setBudget] = useState([50]);
   const [pace, setPace] = useState([50]);
@@ -214,23 +215,21 @@ export function AIPlannerContent({ destination }) {
   const cleanedDestination = destination?.toLowerCase().trim();
   const city = cityData[cleanedDestination] || cityData.osaka;
 
-  // localStorage에서 날짜 초기화
   useEffect(() => {
     const storedStartDate = localStorage.getItem("startDate");
     const storedEndDate = localStorage.getItem("endDate");
-    console.log("Stored dates:", { storedStartDate, storedEndDate }); // 디버깅
+    console.log("Stored dates:", { storedStartDate, storedEndDate });
     if (storedStartDate && storedEndDate) {
       setStartDate(storedStartDate);
       setEndDate(storedEndDate);
     } else {
-      console.warn("No dates found in localStorage");
       toast.warn("여행 날짜가 설정되지 않았습니다. Step 1로 이동합니다.");
       navigate(`/travel-planner/${cleanedDestination}`);
     }
   }, [cleanedDestination, navigate]);
 
   const handleGenerateItinerary = async () => {
-    console.log("handleGenerateItinerary:", { startDate, endDate, cleanedDestination }); // 디버깅
+    console.log("handleGenerateItinerary:", { startDate, endDate, cleanedDestination, preferences });
     setIsGenerating(true);
 
     try {
@@ -246,7 +245,7 @@ export function AIPlannerContent({ destination }) {
 
       const requestData = {
         destination: cleanedDestination,
-        preferences,
+        preferences: preferences || "일반적인 관광",
         budget: budget[0],
         pace: pace[0],
         start_date: startDate,
@@ -260,17 +259,17 @@ export function AIPlannerContent({ destination }) {
       console.log("Response Data:", JSON.stringify(response.data, null, 2));
       setIsGenerating(false);
 
-      // AI 일정 저장
-      await axiosInstance.post("/api/aiplan/save", {
-        destination: cleanedDestination,
-        start_date: startDate,
-        end_date: endDate,
-        planType: "AI",
-        itinerary: response.data.itinerary || [],
-      });
+      // AI 일정 데이터를 localStorage에 저장
+      localStorage.setItem("aiItinerary", JSON.stringify(response.data.itinerary || []));
 
       navigate(`/travel-planner/${cleanedDestination}/step5?ai=true`, {
-        state: { itinerary: response.data.itinerary, destination: cleanedDestination },
+        state: {
+          itinerary: response.data.itinerary,
+          destination: cleanedDestination,
+          startDate,
+          endDate,
+          plannerType: "ai",
+        },
       });
     } catch (error) {
       console.error("일정 생성 오류:", error.message, error.stack);

@@ -5,7 +5,7 @@ import { StepIndicator } from "../../../components/travel-planner/Step-indicator
 
 
 // 지원하는 도시 목록에 새로운 도시들 추가
-const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
+const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore","jeju"];
 
 export default function Step1Page() {
   const { destination } = useParams();

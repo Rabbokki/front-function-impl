@@ -1,6 +1,7 @@
 // src/components/travel-planner/Map-component.jsx
 import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
+import { toast } from 'react-toastify';
 
 export default function MapComponent({
   center,
@@ -19,17 +20,30 @@ export default function MapComponent({
       const loader = new Loader({
         apiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
         version: 'weekly',
-        libraries: ['places'],
+        libraries: ['places', 'marker'],
       });
 
       try {
+        if (!process.env.REACT_APP_GOOGLE_MAPS_API_KEY) {
+          console.error('Google Maps API Key is missing');
+          toast.error('Google Maps API 키가 설정되지 않았습니다.');
+          return;
+        }
+
         const google = await loader.load();
         console.log('Google Maps loaded successfully');
-        
+
+        if (!google.maps.marker) {
+          console.error('Google Maps Marker library not loaded');
+          toast.error('Google Maps Marker 라이브러리 로드 실패');
+          return;
+        }
+
         if (mapRef.current) {
           const mapInstance = new google.maps.Map(mapRef.current, {
             center,
             zoom,
+            mapId: process.env.REACT_APP_GOOGLE_MAPS_MAP_ID || 'DEFAULT_MAP_ID',
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: false,
@@ -56,6 +70,7 @@ export default function MapComponent({
         }
       } catch (error) {
         console.error('Error loading Google Maps:', error);
+        toast.error('Google Maps 로드 중 오류 발생: ' + error.message);
       }
     };
 
@@ -65,7 +80,7 @@ export default function MapComponent({
   }, [map]);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !window.google?.maps?.marker) return;
 
     Object.values(googleMarkers).forEach((marker) => {
       marker.setMap(null);
@@ -74,37 +89,45 @@ export default function MapComponent({
     const newGoogleMarkers = {};
 
     markers.forEach((marker) => {
-      const googleMarker = new window.google.maps.Marker({
+      if (!marker.position || !marker.position.lat || !marker.position.lng) {
+        console.warn('Invalid marker position:', marker);
+        return;
+      }
+
+      const markerContent = document.createElement('div');
+      markerContent.style.width = marker.selected ? '30px' : '24px';
+      markerContent.style.height = marker.selected ? '30px' : '24px';
+      markerContent.style.backgroundColor = marker.selected ? '#FF0000' : '#0000FF';
+      markerContent.style.borderRadius = '50%';
+      markerContent.style.border = '2px solid #FFFFFF';
+      markerContent.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      if (marker.selected) {
+        markerContent.style.animation = 'bounce 1s infinite';
+      }
+
+      const googleMarker = new window.google.maps.marker.AdvancedMarkerElement({
         position: marker.position,
         map,
-        title: marker.title,
-        icon: marker.selected
-          ? {
-              url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-              scaledSize: new window.google.maps.Size(50, 50),
-            }
-          : {
-              url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-              scaledSize: new window.google.maps.Size(40, 40),
-            },
-        animation: marker.selected ? window.google.maps.Animation.BOUNCE : null,
+        title: marker.title || 'Unknown',
+        content: markerContent,
       });
 
       const infoWindow = new window.google.maps.InfoWindow({
         content: `
           <div style="padding: 8px; max-width: 200px;">
-            <strong>${marker.title}</strong>
+            <strong>${marker.title || 'Unknown'}</strong>
             <p style="margin: 4px 0 0;">클릭하여 선택</p>
           </div>`,
       });
 
-      googleMarker.addListener('mouseover', () =>
-        infoWindow.open(map, googleMarker)
-      );
+      googleMarker.addListener('gmp-click', () => {
+        if (onMarkerClick) {
+          onMarkerClick(marker.id);
+        }
+        infoWindow.open(map, googleMarker);
+      });
+      googleMarker.addListener('mouseover', () => infoWindow.open(map, googleMarker));
       googleMarker.addListener('mouseout', () => infoWindow.close());
-      if (onMarkerClick) {
-        googleMarker.addListener('click', () => onMarkerClick(marker.id));
-      }
 
       newGoogleMarkers[marker.id] = googleMarker;
     });
@@ -117,7 +140,9 @@ export default function MapComponent({
         map.setZoom(15);
       } else {
         const bounds = new window.google.maps.LatLngBounds();
-        markers.forEach((marker) => bounds.extend(marker.position));
+        markers.forEach((marker) => {
+          if (marker.position) bounds.extend(marker.position);
+        });
         map.fitBounds(bounds);
       }
     }
@@ -127,11 +152,20 @@ export default function MapComponent({
     };
   }, [map, markers, onMarkerClick]);
 
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   return (
-    <div
-      ref={mapRef}
-      style={{ width: '100%', height }}
-      className="rounded-lg"
-    />
+    <div ref={mapRef} style={{ width: '100%', height }} className="rounded-lg" />
   );
 }

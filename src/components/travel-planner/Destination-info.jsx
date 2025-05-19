@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { ArrowRight, Calendar, Brain } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card } from "../../modules/Card";
-import { saveToLocalStorage } from "../../utils";
+import { saveToLocalStorage,getFromLocalStorage } from "../../utils";
 import axiosInstance from "../../api/axiosInstance";
 import { format } from 'date-fns';
 import { toast } from "react-toastify";
@@ -157,22 +157,37 @@ const cityData = {
 };
 
 export function DestinationInfo({ destination }) {
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedDates, setSelectedDates] = useState(getFromLocalStorage("travelPlan")?.selectedDates || []);
   const [currentMonth, setCurrentMonth] = useState(4);
   const [currentYear, setCurrentYear] = useState(2025);
-  const [plannerType, setPlannerType] = useState("manual");
+  const [plannerType, setPlannerType] = useState(getFromLocalStorage("travelPlan")?.plannerType || "manual");
+  const [selectedAttractions, setSelectedAttractions] = useState(getFromLocalStorage("travelPlan")?.selectedAttractions || {});
+  const [selectedHotels, setSelectedHotels] = useState(getFromLocalStorage("travelPlan")?.selectedHotels || {});
+  const [selectedTransportation, setSelectedTransportation] = useState(
+    getFromLocalStorage("travelPlan")?.selectedTransportation || "car"
+  );
 
   const defaultCityKey = "osaka";
   const city = cityData[destination] ?? cityData[defaultCityKey];
   const navigate = useNavigate();
 
-  if (!city) {
-    return (
-      <div className="text-red-600 font-bold p-4">
-        유효하지 않은 여행지입니다. 다시 시도해 주세요.
-      </div>
-    );
-  }
+  // localStorage 동기화
+  useEffect(() => {
+    if (!city) return;
+
+    const travelPlan = {
+      destination: destination.toLowerCase(),
+      selectedDates,
+      startDate: selectedDates.length > 0 ? selectedDates[0] : null,
+      endDate: selectedDates.length > 0 ? selectedDates[selectedDates.length - 1] : null,
+      plannerType,
+      selectedAttractions,
+      selectedHotels,
+      selectedTransportation,
+    };
+    console.log("Saving travelPlan to localStorage:", travelPlan);
+    saveToLocalStorage("travelPlan", travelPlan);
+  }, [selectedDates, plannerType, selectedAttractions, selectedHotels, selectedTransportation, destination, city]);
 
   const generateCalendar = (year, month) => {
     const firstDay = new Date(year, month, 1).getDay();
@@ -246,10 +261,16 @@ export function DestinationInfo({ destination }) {
     return `${format(start)} - ${format(end)} (${sorted.length}일)`;
   };
 
- const handleNext = async () => {
-  console.log("selectedDates:", selectedDates); // 디버깅
+  const handleNext = async () => {
+  console.log('handleNext called with:', { selectedDates, plannerType, destination });
+
+  // 입력 검증
+  if (!destination) {
+    toast.error('목적지를 선택해 주세요.');
+    return;
+  }
   if (!selectedDates || selectedDates.length === 0) {
-    toast.error("여행 날짜를 선택해 주세요.");
+    toast.error('여행 날짜를 선택해 주세요.');
     return;
   }
 
@@ -257,73 +278,110 @@ export function DestinationInfo({ destination }) {
   const startDate = sorted[0];
   const endDate = sorted[sorted.length - 1];
 
-  console.log("startDate:", startDate, "endDate:", endDate); // 디버깅
+  console.log('startDate:', startDate, 'endDate:', endDate);
   if (!startDate || !endDate) {
-    toast.error("시작 날짜 또는 종료 날짜가 유효하지 않습니다.");
+    toast.error('시작 날짜 또는 종료 날짜가 유효하지 않습니다.');
     return;
   }
 
-  // localStorage에 날짜 저장 (AI 일정에서 사용)
-  localStorage.setItem("startDate", startDate);
-  localStorage.setItem("endDate", endDate);
-  localStorage.setItem("destination", destination);
+  // 날짜 포맷 확인 (YYYY-MM-DD)
+  const formattedStartDate = format(new Date(startDate), 'yyyy-MM-dd');
+  const formattedEndDate = format(new Date(endDate), 'yyyy-MM-dd');
 
+  // localStorage에 날짜 및 목적지 저장
+  localStorage.setItem('startDate', formattedStartDate);
+  localStorage.setItem('endDate', formattedEndDate);
+  localStorage.setItem('destination', destination);
+  localStorage.setItem('plannerType', plannerType);
+
+  // selectedAttractions, selectedHotels 초기화
   const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
-  const selectedAttractions = {};
-  const selectedHotels = {};
+  const newSelectedAttractions = {};
+  const newSelectedHotels = {};
   for (let i = 0; i < daysCount; i++) {
-    const dayKey = format(new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)), "yyyy-MM-dd");
-    selectedAttractions[dayKey] = [];
-    selectedHotels[dayKey] = "hotel1";
+    const dayKey = format(
+      new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)),
+      'yyyy-MM-dd'
+    );
+    newSelectedAttractions[dayKey] = selectedAttractions[dayKey] || [];
+    newSelectedHotels[dayKey] = selectedHotels[dayKey] || 'hotel1';
   }
 
-  const travelPlan = {
-    destination,
-    startDate,
-    endDate,
-    plannerType,
-    selectedAttractions,
-    selectedHotels,
-    selectedTransportation: "car",
-  };
+  setSelectedAttractions(newSelectedAttractions);
+  setSelectedHotels(newSelectedHotels);
 
   try {
-    saveToLocalStorage("travelPlan", travelPlan);
-    const response = await axiosInstance.post("/api/travel-plans", {
-      city: destination,
-      country: getCountryByDestination(destination),
-      start_date: startDate,
-      end_date: endDate,
-      planType: plannerType === "ai" ? "AI" : "MY",
-      places: [],
-      accommodations: [],
-      transportations: [{ type: "CAR", day: startDate }],
-    });
-    toast.success(response.data || "여행 계획이 저장되었습니다!");
+    if (plannerType === 'ai') {
+      // AI 일정 생성 요청
+      const aiPlanRequest = {
+        destination: destination.toLowerCase(),
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        preferences: JSON.stringify({ attractions: [], hotels: [], transportation: 'car' }),
+        budget: 0,
+        pace: 0,
+      };
+      console.log('Sending AI plan request:', JSON.stringify(aiPlanRequest, null, 2));
+      const response = await axiosInstance.post('/api/aiplan/generate', aiPlanRequest, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // 인증 토큰
+        },
+      });
+      console.log('AI plan response:', JSON.stringify(response.data, null, 2));
+
+      // AI 일정 데이터를 localStorage에 저장
+      localStorage.setItem('aiItinerary', JSON.stringify(response.data.itinerary));
+      toast.success('AI 일정이 생성되었습니다!');
+      navigate(`/ai-planner/${destination}`);
+    } else {
+      // 수동 일정: travel_plans에 기본 정보 저장
+      const travelPlanRequest = {
+        city: destination.toLowerCase(),
+        country: getCountryByDestination(destination),
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        plan_type: 'MY',
+      };
+      console.log('Sending travel plan request:', JSON.stringify(travelPlanRequest, null, 2));
+      const response = await axiosInstance.post('/api/travel-plans', travelPlanRequest);
+      console.log('Travel plan response:', JSON.stringify(response.data, null, 2));
+      localStorage.setItem('travelPlanId', response.data.id); // travelPlanId 저장
+      toast.success('여행 계획이 저장되었습니다!');
+      navigate(`/travel-planner/${destination}/step2`);
+    }
   } catch (error) {
-    const errorMessage = error.response?.data || "여행 계획 저장에 실패했습니다. 다시 시도해 주세요.";
+    const errorMessage =
+      error.response?.data?.error?.message ||
+      error.response?.data?.message ||
+      'AI 일정 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.';
     toast.error(errorMessage);
-    console.error("Step 1 데이터 DB 저장 실패:", error.response?.data || error.message);
-    return;
+    console.error('handleNext error:', JSON.stringify(error.response?.data || error, null, 2));
+  }
+};
+
+  const getCountryByDestination = (destination) => {
+    const countryMap = {
+      jeju: "한국",
+      bangkok: "태국",
+      fukuoka: "일본",
+      osaka: "일본",
+      paris: "프랑스",
+      rome: "이탈리아",
+      singapore: "싱가포르",
+      tokyo: "일본",
+      venice: "이탈리아",
+    };
+    return countryMap[destination.toLowerCase()] || "알 수 없음";
+  };
+
+  if (!city) {
+    return (
+      <div className="text-red-600 font-bold p-4">
+        유효하지 않은 여행지입니다. 다시 시도해 주세요.
+      </div>
+    );
   }
 
-  navigate(plannerType === "manual" ? `/travel-planner/${destination}/step2` : `/ai-planner/${destination}`);
-};
-
-const getCountryByDestination = (destination) => {
-  const countryMap = {
-    jeju: "한국",
-    bangkok: "태국",
-    fukuoka: "일본",
-    osaka: "일본",
-    paris: "프랑스",
-    rome: "이탈리아",
-    singapore: "싱가포르",
-    tokyo: "일본",
-    venice: "이탈리아",
-  };
-  return countryMap[destination.toLowerCase()] || "알 수 없음";
-};
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
@@ -364,25 +422,66 @@ const getCountryByDestination = (destination) => {
             {[days, nextMonthDays].map((monthDays, i) => (
               <div key={i}>
                 <div className="mb-4 flex items-center justify-between">
-                  <button onClick={i === 0 ? handlePrevMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>&lt;</button>
+                  <button
+                    onClick={i === 0 ? handlePrevMonth : undefined}
+                    className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}
+                  >
+                    &lt;
+                  </button>
                   <h3 className="text-lg font-bold text-traveling-text">
-                    {i === 0 ? currentYear : currentMonth === 11 ? currentYear + 1 : currentYear}년 {months[(currentMonth + i) % 12]}
+                    {i === 0 ? currentYear : currentMonth === 11 ? currentYear + 1 : currentYear}년{" "}
+                    {months[(currentMonth + i) % 12]}
                   </h3>
-                  <button onClick={i === 0 ? handleNextMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>&gt;</button>
+                  <button
+                    onClick={i === 0 ? handleNextMonth : undefined}
+                    className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}
+                  >
+                    &gt;
+                  </button>
                 </div>
                 <div className="grid grid-cols-7">
                   {weekdays.map((day, idx) => (
-                    <div key={idx} className={`p-2 text-center text-sm font-medium ${idx === 0 ? "text-red-500" : idx === 6 ? "text-blue-500" : "text-traveling-text"}`}>{day}</div>
+                    <div
+                      key={idx}
+                      className={`p-2 text-center text-sm font-medium ${
+                        idx === 0
+                          ? "text-red-500"
+                          : idx === 6
+                          ? "text-blue-500"
+                          : "text-traveling-text"
+                      }`}
+                    >
+                      {day}
+                    </div>
                   ))}
                   {monthDays.map((day, idx) => {
-                    const dateStr = `${day.year}-${String(day.month + 1).padStart(2, "0")}-${String(day.date).padStart(2, "0")}`;
+                    const dateStr = `${day.year}-${String(day.month + 1).padStart(2, "0")}-${String(
+                      day.date
+                    ).padStart(2, "0")}`;
                     const isSelected = selectedDates.includes(dateStr);
                     const isToday = new Date().toISOString().split("T")[0] === dateStr;
                     return (
-                      <div key={idx} className={`p-2 text-center ${!day.currentMonth ? "text-gray-300" : idx % 7 === 0 ? "text-red-500" : idx % 7 === 6 ? "text-blue-500" : "text-traveling-text"}`}>
+                      <div
+                        key={idx}
+                        className={`p-2 text-center ${
+                          !day.currentMonth
+                            ? "text-gray-300"
+                            : idx % 7 === 0
+                            ? "text-red-500"
+                            : idx % 7 === 6
+                            ? "text-blue-500"
+                            : "text-traveling-text"
+                        }`}
+                      >
                         <button
                           onClick={() => day.currentMonth && handleDateClick(day.year, day.month, day.date)}
-                          className={`h-8 w-8 rounded-full ${isSelected ? "bg-traveling-purple text-white" : isToday ? "border border-traveling-purple" : ""}`}
+                          className={`h-8 w-8 rounded-full ${
+                            isSelected
+                              ? "bg-traveling-purple text-white"
+                              : isToday
+                              ? "border border-traveling-purple"
+                              : ""
+                          }`}
                           disabled={!day.currentMonth}
                         >
                           {day.date}

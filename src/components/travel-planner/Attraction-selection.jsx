@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect,Component } from 'react';
 import { Search, MapPin, Star, Plus, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from "../../modules/Button";
 import { Input } from "../../modules/Input";
@@ -16,13 +16,39 @@ import { ReviewForm } from '../travel-planner/Review-form';
 import { differenceInCalendarDays } from 'date-fns';
 import { generateDayKeys, saveToLocalStorage, getFromLocalStorage } from "../../utils";
 
+class ErrorBoundary extends Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error in component:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="text-red-600 p-4">
+          지도를 렌더링하는 중 오류가 발생했습니다. 새로고침해 주세요.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const AttractionSelection = ({ destination, startDate, endDate }) => {
   const [activeDay, setActiveDay] = useState(null);
   const [hoveredAttraction, setHoveredAttraction] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [customAttractions, setCustomAttractions] = useState([]);
-  
+  const [customAttractions, setCustomAttractions] = useState(
+    getFromLocalStorage("travelPlan")?.customAttractions || []
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+
   const dayKeys = useMemo(() => {
     if (!startDate || !endDate) return [];
     return generateDayKeys(startDate, endDate);
@@ -35,24 +61,31 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       initial[key] = Array.isArray(saved[key]) ? saved[key] : [];
     });
 
-    const legacyKeys = ['day1', 'day2', 'day3'];
+    // 레거시 키 처리
+    const legacyKeys = ["day1", "day2", "day3"];
     legacyKeys.forEach((legacyKey, index) => {
       if (Array.isArray(saved[legacyKey]) && saved[legacyKey].length > 0 && dayKeys[index]) {
         initial[dayKeys[index]] = [...(initial[dayKeys[index]] || []), ...saved[legacyKey]];
       }
     });
 
-    saveToLocalStorage("travelPlan", {
-      ...getFromLocalStorage("travelPlan"),
-      selectedAttractions: initial,
-      startDate,
-      endDate,
-    });
     return initial;
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // selectedAttractions 변경 시 localStorage 동기화
+  useEffect(() => {
+    console.log("Saving selectedAttractions to localStorage:", selectedAttractions);
+    saveToLocalStorage("travelPlan", {
+      ...getFromLocalStorage("travelPlan"),
+      selectedAttractions,
+      customAttractions,
+      startDate,
+      endDate,
+      destination: destination.toLowerCase(),
+    });
+  }, [selectedAttractions, customAttractions, startDate, endDate, destination]);
 
+  // activeDay 설정 및 유효성 검사
   useEffect(() => {
     if (dayKeys.length > 0 && !activeDay) {
       setActiveDay(dayKeys[0]);
@@ -83,6 +116,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 8765,
           image: "/bangkok-grand-palace.png",
           position: { lat: 13.75, lng: 100.4914 },
+          description: "방콕의 대표적인 왕궁",
         },
         {
           id: "wat-arun",
@@ -93,6 +127,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7654,
           image: "/bangkok-wat-arun.png",
           position: { lat: 13.7437, lng: 100.4888 },
+          description: "아름다운 사원",
         },
         {
           id: "chatuchak-market",
@@ -103,6 +138,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/bangkok-chatuchak-market.png",
           position: { lat: 13.7999, lng: 100.5502 },
+          description: "활기찬 주말 시장",
         },
         {
           id: "wat-pho",
@@ -113,6 +149,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/bangkok-wat-pho.png",
           position: { lat: 13.7465, lng: 100.493 },
+          description: "거대한 와불상이 있는 사원",
         },
         {
           id: "khao-san-road",
@@ -123,6 +160,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4321,
           image: "/bangkok-khao-san-road.png",
           position: { lat: 13.7582, lng: 100.4971 },
+          description: "배낭여행자의 거리",
         },
       ],
     },
@@ -139,6 +177,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/canal-city-hakata-water-show.png",
           position: { lat: 33.5898, lng: 130.4108 },
+          description: "대형 쇼핑몰",
         },
         {
           id: "ohori-park",
@@ -149,6 +188,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4987,
           image: "/ohori-park-serenity.png",
           position: { lat: 33.5861, lng: 130.3797 },
+          description: "평화로운 공원",
         },
         {
           id: "fukuoka-tower",
@@ -159,6 +199,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4567,
           image: "/fukuoka-seaside-view.png",
           position: { lat: 33.5944, lng: 130.3514 },
+          description: "후쿠오카의 랜드마크",
         },
         {
           id: "dazaifu",
@@ -169,6 +210,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5678,
           image: "/dazaifu-plum-blossoms.png",
           position: { lat: 33.5196, lng: 130.5354 },
+          description: "학문의 신을 모시는 신사",
         },
         {
           id: "nakasu",
@@ -179,6 +221,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4321,
           image: "/nakasu-night-lights.png",
           position: { lat: 33.5938, lng: 130.4043 },
+          description: "야간 유흥의 중심지",
         },
       ],
     },
@@ -195,6 +238,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7890,
           image: "/images/attractions/hallasan.jpg",
           position: { lat: 33.3617, lng: 126.5292 },
+          description: "제주의 대표적인 산",
         },
         {
           id: "seongsan",
@@ -205,6 +249,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/images/attractions/seongsan.jpg",
           position: { lat: 33.4581, lng: 126.9425 },
+          description: "아름다운 일출 명소",
         },
         {
           id: "udo",
@@ -215,6 +260,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/images/attractions/udo.jpg",
           position: { lat: 33.5050, lng: 126.9540 },
+          description: "작고 아름다운 섬",
         },
         {
           id: "manjanggul",
@@ -225,6 +271,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4321,
           image: "/images/attractions/manjanggul.jpg",
           position: { lat: 33.5283, lng: 126.7716 },
+          description: "화산 동굴 탐험",
         },
         {
           id: "jeju-folk-village",
@@ -235,6 +282,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 3987,
           image: "/images/attractions/jeju-folk-village.jpg",
           position: { lat: 33.3227, lng: 126.8418 },
+          description: "제주의 전통 문화를 체험",
         },
       ],
     },
@@ -251,6 +299,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7196,
           image: "/images/attractions/dotonbori.png",
           position: { lat: 34.6687, lng: 135.5031 },
+          description: "오사카의 활기찬 먹거리 거리",
         },
         {
           id: "osaka-castle",
@@ -261,6 +310,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6557,
           image: "/images/attractions/osaka-castle.png",
           position: { lat: 34.6873, lng: 135.5262 },
+          description: "역사적인 성곽",
         },
         {
           id: "universal-studios",
@@ -271,6 +321,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5361,
           image: "/images/attractions/universal-studios.jpg",
           position: { lat: 34.6654, lng: 135.4323 },
+          description: "인기 있는 테마파크",
         },
         {
           id: "umeda-wheel",
@@ -281,6 +332,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4824,
           image: "/images/attractions/umeda-wheel.jpg",
           position: { lat: 34.7052, lng: 135.4957 },
+          description: "오사카의 전경을 볼 수 있는 전망대",
         },
         {
           id: "namba",
@@ -291,6 +343,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4666,
           image: "/images/attractions/namba.jpg",
           position: { lat: 34.6659, lng: 135.5013 },
+          description: "쇼핑과 엔터테인먼트의 중심지",
         },
       ],
     },
@@ -307,6 +360,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 9876,
           image: "/paris-eiffel-tower.png",
           position: { lat: 48.8584, lng: 2.2945 },
+          description: "파리의 상징",
         },
         {
           id: "louvre-museum",
@@ -317,6 +371,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 8765,
           image: "/paris-louvre-museum.png",
           position: { lat: 48.8606, lng: 2.3376 },
+          description: "세계적인 박물관",
         },
         {
           id: "notre-dame",
@@ -327,6 +382,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7654,
           image: "/paris-notre-dame.png",
           position: { lat: 48.853, lng: 2.3499 },
+          description: "고딕 양식의 대성당",
         },
         {
           id: "arc-de-triomphe",
@@ -337,6 +393,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/paris-arc-de-triomphe.png",
           position: { lat: 48.8738, lng: 2.295 },
+          description: "나폴레옹의 승리를 기념",
         },
         {
           id: "montmartre",
@@ -347,6 +404,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/paris-montmartre.png",
           position: { lat: 48.8867, lng: 2.3431 },
+          description: "예술가의 동네",
         },
       ],
     },
@@ -363,6 +421,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 9876,
           image: "/rome-colosseum.png",
           position: { lat: 41.8902, lng: 12.4922 },
+          description: "고대 로마의 원형 경기장",
         },
         {
           id: "vatican-museums",
@@ -373,6 +432,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 8765,
           image: "/rome-vatican-museums.png",
           position: { lat: 41.9065, lng: 12.4534 },
+          description: "시스티나 성당 포함",
         },
         {
           id: "trevi-fountain",
@@ -383,6 +443,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7654,
           image: "/rome-trevi-fountain.png",
           position: { lat: 41.9009, lng: 12.4833 },
+          description: "동전을 던져 소원을 빌어보세요",
         },
         {
           id: "pantheon",
@@ -393,6 +454,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/rome-pantheon.png",
           position: { lat: 41.8986, lng: 12.4769 },
+          description: "로마의 역사적인 건축물",
         },
         {
           id: "roman-forum",
@@ -403,6 +465,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/rome-roman-forum.png",
           position: { lat: 41.8925, lng: 12.4853 },
+          description: "고대 로마의 중심지",
         },
       ],
     },
@@ -419,6 +482,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 8765,
           image: "/singapore-marina-bay-sands.png",
           position: { lat: 1.2834, lng: 103.8607 },
+          description: "럭셔리 호텔과 전망대",
         },
         {
           id: "gardens-by-the-bay",
@@ -429,6 +493,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7654,
           image: "/singapore-gardens-by-the-bay.png",
           position: { lat: 1.2815, lng: 103.8636 },
+          description: "미래적인 정원",
         },
         {
           id: "sentosa-island",
@@ -439,6 +504,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/singapore-sentosa-island.png",
           position: { lat: 1.2494, lng: 103.8303 },
+          description: "해변과 놀이공원",
         },
         {
           id: "universal-studios",
@@ -449,6 +515,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/singapore-universal-studios.png",
           position: { lat: 1.254, lng: 103.8238 },
+          description: "테마파크",
         },
         {
           id: "merlion-park",
@@ -459,6 +526,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4321,
           image: "/singapore-merlion-park.png",
           position: { lat: 1.2868, lng: 103.8545 },
+          description: "싱가포르의 상징",
         },
       ],
     },
@@ -475,6 +543,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 8234,
           image: "/tokyo-night-lights.png",
           position: { lat: 35.6586, lng: 139.7454 },
+          description: "도쿄의 랜드마크",
         },
         {
           id: "shibuya-crossing",
@@ -485,6 +554,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7654,
           image: "/shibuya-intersection-bustle.png",
           position: { lat: 35.6595, lng: 139.7004 },
+          description: "세계적으로 유명한 교차로",
         },
         {
           id: "meiji-shrine",
@@ -495,6 +565,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/meiji-shrine-entrance.png",
           position: { lat: 35.6763, lng: 139.6993 },
+          description: "평화로운 신사",
         },
         {
           id: "senso-ji",
@@ -505,6 +576,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7123,
           image: "/sensoji-lantern.png",
           position: { lat: 35.7147, lng: 139.7966 },
+          description: "도쿄의 오래된 사원",
         },
         {
           id: "tokyo-skytree",
@@ -515,6 +587,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6789,
           image: "/tokyo-skytree-day.png",
           position: { lat: 35.7101, lng: 139.8107 },
+          description: "세계에서 가장 높은 타워",
         },
       ],
     },
@@ -531,6 +604,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 8765,
           image: "/venice-st-marks-square.png",
           position: { lat: 45.4341, lng: 12.3388 },
+          description: "베니스의 중심 광장",
         },
         {
           id: "rialto-bridge",
@@ -541,6 +615,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 7654,
           image: "/venice-rialto-bridge.png",
           position: { lat: 45.4381, lng: 12.3358 },
+          description: "대운하 위의 유명한 다리",
         },
         {
           id: "doges-palace",
@@ -551,6 +626,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 6543,
           image: "/venice-doges-palace.png",
           position: { lat: 45.4337, lng: 12.3401 },
+          description: "베니스의 역사적인 궁전",
         },
         {
           id: "grand-canal",
@@ -561,6 +637,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 5432,
           image: "/venice-grand-canal.png",
           position: { lat: 45.4408, lng: 12.3325 },
+          description: "베니스의 주요 운하",
         },
         {
           id: "burano",
@@ -571,6 +648,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
           likes: 4321,
           image: "/venice-burano.png",
           position: { lat: 45.4853, lng: 12.4167 },
+          description: "화려한 색상의 섬",
         },
       ],
     },
@@ -592,13 +670,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
         ? currentDaySelections.filter((id) => id !== attractionId)
         : [...currentDaySelections, attractionId];
       const newSelections = { ...prev, [activeDay]: updated };
-      saveToLocalStorage("travelPlan", {
-        ...getFromLocalStorage("travelPlan"),
-        selectedAttractions: newSelections,
-        startDate,
-        endDate,
-        destination: destination.toLowerCase(),
-      });
+      console.log("Toggled attraction:", { attractionId, activeDay, newSelections });
       return newSelections;
     });
   };
@@ -619,6 +691,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
     };
     setCustomAttractions((prev) => [...prev, newAttraction]);
     toggleAttraction(newAttraction.id);
+    console.log("Added custom attraction:", newAttraction);
     e.target.reset();
   };
 
@@ -628,7 +701,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
     title: attraction.name,
     selected:
       (Array.isArray(selectedAttractions[activeDay]) &&
-       selectedAttractions[activeDay].includes(attraction.id)) ||
+        selectedAttractions[activeDay].includes(attraction.id)) ||
       hoveredAttraction === attraction.id,
   }));
 
@@ -747,9 +820,7 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
                             <MapPin className="mr-1 h-4 w-4" />
                             {attraction.address}
                           </p>
-                          <p className="text-sm text-traveling-text/70 mb-2">
-                            {attraction.description}
-                          </p>
+                          <p className="text-sm text-traveling-text/70 mb-2">{attraction.description}</p>
                           <div className="mt-auto flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-traveling-text/70">
                               <Star className="h-4 w-4 text-traveling-pink" />
