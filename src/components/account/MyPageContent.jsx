@@ -1,4 +1,3 @@
-// css 이쁘던거 원래코드
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -213,6 +212,10 @@ function MyPageContent() {
       color: '#51cf66',
     },
   ];
+
+  useEffect(() => {
+    console.log("Percent value:", percent, typeof percent);
+  }, [percent])
 
   const formatRelativeTime = (string) => {
     const now = new Date();

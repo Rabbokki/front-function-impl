@@ -14,7 +14,7 @@ import { addLike,
 import { getCommentsByPostId, createComment, deleteComment } from '../hooks/reducer/comment/commentThunk';
 
 import {
-  ArrowLeft, ThumbsUp, MessageSquare, Share2, Clock, Eye,
+  ArrowLeft, ThumbsUp, MessageSquare, Share2, Clock, Eye, ShieldAlert
 } from "lucide-react";
 
 import { Button } from "./Button";
@@ -154,6 +154,11 @@ export function CommunityPostDetail({ postId }) {
       });
   };
 
+  //신고 처리
+  const handleReport = () => {
+    console.log("Hey hombre! I'm deporting you!")
+  }
+
   // 거맨트 좋아요 처리
   const handleCommentLike = (commentId) => {
     const isAlreadyLiked = likedComments.has(commentId);
@@ -247,16 +252,20 @@ export function CommunityPostDetail({ postId }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`${liked ? "bg-[#4dabf7] text-white" : "text-[#495057]"}`}
+                  className={`${liked ? "bg-[#fbc4fc] text-[#442845]" : "text-[#495057]"}`}
                   onClick={handleLike}
                 >
                   <ThumbsUp className="mr-1 h-4 w-4" />
                   좋아요 {localPost.likeCount}
-              </Button>
-              {/* <Button variant="outline" size="sm" className="text-[#495057]">
-                <Share2 className="mr-1 h-4 w-4" />
-                  공유하기
-              </Button> */}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-[#ff6060]"
+                  onClick={handleReport}>
+                    <ShieldAlert className="mr-1 h-4 w-4" />
+                    신고
+                </Button>
             </div>
           )}
         </div>
@@ -307,7 +316,7 @@ export function CommunityPostDetail({ postId }) {
           </div>
         )}
       </div>
-
+      
       <Separator className="my-6 bg-[#e9ecef]" />
 
       <div>

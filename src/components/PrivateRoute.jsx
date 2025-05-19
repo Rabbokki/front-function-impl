@@ -24,5 +24,7 @@ export function PrivateRoute({ children, requiredRole }) {
     }
   }
 
+  else console.log("YOURE NOT ADMIN")
+
   return children;
 }
