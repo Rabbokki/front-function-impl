@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getAllPosts } from '../hooks/reducer/post/postThunk'; // Update the path as necessary
 
 export function CommunityContent() {
-  const [activeTab, setActiveTab] = useState('TIPS');
+  const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const dispatch = useDispatch();
 
@@ -27,11 +27,9 @@ export function CommunityContent() {
   const loading = useSelector((state) => state.posts.loading);
   const error = useSelector((state) => state.posts.error);
 
-  // 게시글을 카테고리와 검색어에 맞게 서버에서 불러오는 함수
   useEffect(() => {
-    // Dispatch getAllPosts when activeTab or searchTerm changes
     dispatch(getAllPosts({ category: activeTab, search: searchTerm }));
-  }, [dispatch, activeTab, searchTerm]); // activeTab이나 searchTerm이 변경될 때마다 호출
+  }, [dispatch, activeTab, searchTerm]);
 
   useEffect(() => {
     console.log('posts is: ', posts)
@@ -40,6 +38,7 @@ export function CommunityContent() {
   useEffect(() => {
     console.log('activeTab now is: ', activeTab)
   }, [activeTab])
+
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-md">
@@ -60,8 +59,11 @@ export function CommunityContent() {
         </Link>
       </div>
 
-      <Tabs defaultValue="TIPS" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 grid w-full grid-cols-3 bg-[#e7f5ff]">
+      <Tabs defaultValue="ALL" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="mb-6 grid w-full grid-cols-4 bg-[#e7f5ff]">
+          <TabsTrigger value="ALL" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+            전채 보기
+          </TabsTrigger>
           <TabsTrigger value="TIPS" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
             꿀팁 게시판
           </TabsTrigger>
