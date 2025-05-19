@@ -181,8 +181,8 @@
 // }
 
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState,useEffect } from "react";
+import { useNavigate,useParams } from "react-router-dom";
 import { Card } from "../../modules/Card";
 import { Button } from "../../modules/Button";
 import { Textarea } from "../../modules/Textarea";
@@ -191,11 +191,14 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../../api/axiosInstance";
 
-export function AIPlannerContent({ destination }) {
+export function AIPlannerContent() {
+  const { destination } = useParams(); // destination을 useParams로 가져옴
   const [preferences, setPreferences] = useState("");
   const [budget, setBudget] = useState([50]);
   const [pace, setPace] = useState([50]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const navigate = useNavigate();
 
   const cityData = {
@@ -212,11 +215,24 @@ export function AIPlannerContent({ destination }) {
   const cleanedDestination = destination?.toLowerCase().trim();
   const city = cityData[cleanedDestination] || cityData.osaka;
 
+  useEffect(() => {
+    const storedStartDate = localStorage.getItem("startDate");
+    const storedEndDate = localStorage.getItem("endDate");
+    console.log("Stored dates:", { storedStartDate, storedEndDate });
+    if (storedStartDate && storedEndDate) {
+      setStartDate(storedStartDate);
+      setEndDate(storedEndDate);
+    } else {
+      toast.warn("여행 날짜가 설정되지 않았습니다. Step 1로 이동합니다.");
+      navigate(`/travel-planner/${cleanedDestination}`);
+    }
+  }, [cleanedDestination, navigate]);
+
   const handleGenerateItinerary = async () => {
+    console.log("handleGenerateItinerary:", { startDate, endDate, cleanedDestination, preferences });
     setIsGenerating(true);
+
     try {
-      const startDate = localStorage.getItem("startDate");
-      const endDate = localStorage.getItem("endDate");
       const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
 
       if (!startDate || !endDate) {
@@ -229,11 +245,12 @@ export function AIPlannerContent({ destination }) {
 
       const requestData = {
         destination: cleanedDestination,
-        preferences,
+        preferences: preferences || "일반적인 관광",
         budget: budget[0],
         pace: pace[0],
         start_date: startDate,
         end_date: endDate,
+        planType: "AI",
       };
       console.log("Request Data:", JSON.stringify(requestData, null, 2));
 
@@ -242,13 +259,23 @@ export function AIPlannerContent({ destination }) {
       console.log("Response Data:", JSON.stringify(response.data, null, 2));
       setIsGenerating(false);
 
+      // AI 일정 데이터를 localStorage에 저장
+      localStorage.setItem("aiItinerary", JSON.stringify(response.data.itinerary || []));
+
       navigate(`/travel-planner/${cleanedDestination}/step5?ai=true`, {
-        state: { itinerary: response.data.itinerary, destination: cleanedDestination },
+        state: {
+          itinerary: response.data.itinerary,
+          destination: cleanedDestination,
+          startDate,
+          endDate,
+          plannerType: "ai",
+        },
       });
     } catch (error) {
       console.error("일정 생성 오류:", error.message, error.stack);
       setIsGenerating(false);
-      toast.error(`일정 생성 중 오류가 발생했습니다: ${error.message}`, {
+      const errorMessage = error.response?.data || error.message || "일정 생성에 실패했습니다.";
+      toast.error(`일정 생성 중 오류: ${errorMessage}`, {
         position: "top-right",
         autoClose: 5000,
       });
@@ -306,7 +333,7 @@ export function AIPlannerContent({ destination }) {
             <Button
               className="w-full bg-traveling-purple text-white hover:bg-traveling-purple/90"
               onClick={handleGenerateItinerary}
-              disabled={isGenerating}
+              disabled={isGenerating || !startDate || !endDate}
             >
               {isGenerating ? "일정 생성 중..." : "AI 일정 생성하기"}
             </Button>

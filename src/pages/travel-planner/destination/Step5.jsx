@@ -2,17 +2,16 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { NavBar } from "../../../components/Nav-bar";
 import ItineraryGeneration from "../../../components/travel-planner/Itinerary-generation";
 import { StepIndicator } from "../../../components/travel-planner/Step-indicator";
-
+import { getFromLocalStorage } from "../../../utils";
 const supportedCities = ["osaka", "tokyo", "fukuoka", "paris", "rome", "venice", "bangkok", "singapore"];
 
 export default function Step5Page() {
   const { destination } = useParams();
   const [searchParams] = useSearchParams();
 
-  // 날짜를 localStorage에서 읽어오기
-  const startDate = localStorage.getItem("startDate");
-  const endDate = localStorage.getItem("endDate");
-  const transportation = localStorage.getItem("transportation");
+  // localStorage에서 travelPlan 가져오기
+  const travelPlan = getFromLocalStorage("travelPlan") || {};
+  const { startDate, endDate, plannerType } = travelPlan;
 
   console.log("🧪 Step5 (localStorage) startDate:", startDate, "endDate:", endDate);
 
@@ -20,7 +19,7 @@ export default function Step5Page() {
     return <div>404 - 지원하지 않는 도시입니다.</div>;
   }
 
-  const isAiMode = searchParams.get("ai") === "true";
+  const isAiMode = plannerType === "ai" || searchParams.get("ai") === "true";
 
   return (
     <main className="min-h-screen bg-traveling-bg">
@@ -32,7 +31,7 @@ export default function Step5Page() {
           isAiMode={isAiMode}
           startDate={startDate}
           endDate={endDate}
-          transportation={localStorage.getItem("transportation")}
+          plannerType={plannerType}
         />
       </div>
     </main>

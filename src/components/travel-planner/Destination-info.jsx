@@ -1,43 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState,useEffect } from "react";
 import { ArrowRight, Calendar, Brain } from "lucide-react";
 import { Button } from "../../modules/Button";
 import { Card } from "../../modules/Card";
-
+import { saveToLocalStorage,getFromLocalStorage } from "../../utils";
+import axiosInstance from "../../api/axiosInstance";
+import { format } from 'date-fns';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 // 도시별 데이터
 const cityData = {
-  osaka: {
-    name: "오사카",
-    nameEn: "OSAKA",
-    country: "일본",
-    countryEn: "Japan",
-    flag: "🇯🇵",
+  bangkok: {
+    name: "방콕",
+    nameEn: "BANGKOK",
+    country: "태국",
+    countryEn: "Thailand",
+    flag: "🇹🇭",
     description:
-      "일본의 미식과 역사의 중심지. 도톤보리의 눈부신 불빛 아래, 전통적인 타코야키의 오묘한 맛을 즐겨세요. 오사카성에서는 일본의 고대 역사를 체험할 수 있습니다. 유니버설 스튜디오 재팬에서는 화려한 어트랙션을 경험할 수 있으며, 신세계의 츠텐카쿠 타워에서는 도시의 전경을 한 눈에 볼 수 있습니다. 오사카에서는 끊임없는 먹거리 발견이 기다립니다.",
-    flightTime: "약 2시간",
-    visa: "무비자",
-    currency: "엔(JPY)",
-    voltage: "110V",
-    adapter: "없음",
-    image: "/images/destinations/osaka.jpg",
-    airport: "osaa", // 스카이스캐너 공항 코드
-  },
-  tokyo: {
-    name: "도쿄",
-    nameEn: "TOKYO",
-    country: "일본",
-    countryEn: "Japan",
-    flag: "🇯🇵",
-    description:
-      "일본의 수도이자 세계 최대 도시 중 하나인 도쿄는 현대적인 기술과 전통이 공존하는 매력적인 도시입니다. 화려한 네온사인의 번화가부터 고즈넉한 사원과 정원까지, 다양한 매력을 지닌 도시입니다.",
-    flightTime: "약 2시간 30분",
-    visa: "무비자",
-    currency: "엔(JPY)",
-    voltage: "110V",
-    adapter: "없음",
-    image: "/images/destinations/tokyo.png",
-    airport: "tyoa", // 스카이스캐너 공항 코드
+      "태국의 수도 방콕은 활기찬 거리 음식, 화려한 사원, 번화한 시장이 특징인 도시입니다. 전통과 현대가 공존하는 이 도시는 동남아시아에서 가장 인기 있는 관광지 중 하나입니다.",
+    flightTime: "약 6시간",
+    visa: "무비자(90일)",
+    currency: "바트(THB)",
+    voltage: "220V",
+    adapter: "필요",
+    image: "/images/destinations/bangkok.png",
+    airport: "bkkt",
   },
   fukuoka: {
     name: "후쿠오카",
@@ -53,12 +40,13 @@ const cityData = {
     voltage: "110V",
     adapter: "없음",
     image: "/images/destinations/fukuoka.png",
-    airport: "fuka", // 스카이스캐너 공항 코드
+    airport: "fuka",
   },
   jeju: {
     name: "제주",
     nameEn: "JEJU",
     country: "대한민국",
+    countryEn: "South Korea",
     flag: "🇰🇷",
     description:
       "한국의 아름다운 섬 제주도는 화산 지형과 독특한 자연 경관으로 유명합니다. 성산일출봉, 한라산, 우도 등 다양한 자연 명소와 함께 제주 특유의 문화와 음식을 경험해보세요.",
@@ -68,6 +56,23 @@ const cityData = {
     voltage: "220V",
     adapter: "없음",
     image: "/images/destinations/jeju.png",
+    airport: "jeja",
+  },
+  osaka: {
+    name: "오사카",
+    nameEn: "OSAKA",
+    country: "일본",
+    countryEn: "Japan",
+    flag: "🇯🇵",
+    description:
+      "일본의 미식과 역사의 중심지. 도톤보리의 눈부신 불빛 아래, 전통적인 타코야키의 오묘한 맛을 즐겨세요. 오사카성에서는 일본의 고대 역사를 체험할 수 있습니다. 유니버설 스튜디오 재팬에서는 화려한 어트랙션을 경험할 수 있으며, 신세계의 츠텐카쿠 타워에서는 도시의 전경을 한 눈에 볼 수 있습니다. 오사카에서는 끊임없는 먹거리 발견이 기다립니다.",
+    flightTime: "약 2시간",
+    visa: "무비자",
+    currency: "엔(JPY)",
+    voltage: "110V",
+    adapter: "없음",
+    image: "/images/destinations/osaka.jpg",
+    airport: "osaa",
   },
   paris: {
     name: "파리",
@@ -83,7 +88,7 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/paris.png",
-    airport: "pari", // 스카이스캐너 공항 코드
+    airport: "pari",
   },
   rome: {
     name: "로마",
@@ -99,39 +104,7 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/rome.png",
-    airport: "rome", // 스카이스캐너 공항 코드
-  },
-  venice: {
-    name: "베니스",
-    nameEn: "VENICE",
-    country: "이탈리아",
-    countryEn: "Italy",
-    flag: "🇮🇹",
-    description:
-      "이탈리아 북동부에 위치한 베니스는 117개의 작은 섬으로 이루어진 수상 도시입니다. 곤돌라를 타고 운하를 따라 이동하며 산 마르코 광장, 리알토 다리 등 아름다운 건축물과 예술 작품을 감상할 수 있습니다.",
-    flightTime: "약 13시간 30분",
-    visa: "무비자(90일)",
-    currency: "유로(EUR)",
-    voltage: "230V",
-    adapter: "필요",
-    image: "/images/destinations/venice.png",
-    airport: "veni", // 스카이스캐너 공항 코드
-  },
-  bangkok: {
-    name: "방콕",
-    nameEn: "BANGKOK",
-    country: "태국",
-    countryEn: "Thailand",
-    flag: "🇹🇭",
-    description:
-      "태국의 수도 방콕은 활기찬 거리 음식, 화려한 사원, 번화한 시장이 특징인 도시입니다. 전통과 현대가 공존하는 이 도시는 동남아시아에서 가장 인기 있는 관광지 중 하나입니다.",
-    flightTime: "약 6시간",
-    visa: "무비자(90일)",
-    currency: "바트(THB)",
-    voltage: "220V",
-    adapter: "필요",
-    image: "/images/destinations/bangkok.png",
-    airport: "bkkt", // 스카이스캐너 공항 코드
+    airport: "rome",
   },
   singapore: {
     name: "싱가포르",
@@ -147,32 +120,74 @@ const cityData = {
     voltage: "230V",
     adapter: "필요",
     image: "/images/destinations/singapore.png",
-    airport: "sins", // 스카이스캐너 공항 코드
+    airport: "sins",
   },
-  // ...다른 도시도 동일한 형식으로 추가
+  tokyo: {
+    name: "도쿄",
+    nameEn: "TOKYO",
+    country: "일본",
+    countryEn: "Japan",
+    flag: "🇯🇵",
+    description:
+      "일본의 수도이자 세계 최대 도시 중 하나인 도쿄는 현대적인 기술과 전통이 공존하는 매력적인 도시입니다. 화려한 네온사인의 번화가부터 고즈넉한 사원과 정원까지, 다양한 매력을 지닌 도시입니다.",
+    flightTime: "약 2시간 30분",
+    visa: "무비자",
+    currency: "엔(JPY)",
+    voltage: "110V",
+    adapter: "없음",
+    image: "/images/destinations/tokyo.png",
+    airport: "tyoa",
+  },
+  venice: {
+    name: "베니스",
+    nameEn: "VENICE",
+    country: "이탈리아",
+    countryEn: "Italy",
+    flag: "🇮🇹",
+    description:
+      "이탈리아 북동부에 위치한 베니스는 117개의 작은 섬으로 이루어진 수상 도시입니다. 곤돌라를 타고 운하를 따라 이동하며 산 마르코 광장, 리알토 다리 등 아름다운 건축물과 예술 작품을 감상할 수 있습니다.",
+    flightTime: "약 13시간 30분",
+    visa: "무비자(90일)",
+    currency: "유로(EUR)",
+    voltage: "230V",
+    adapter: "필요",
+    image: "/images/destinations/venice.png",
+    airport: "veni",
+  },
 };
 
 export function DestinationInfo({ destination }) {
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [currentMonth, setCurrentMonth] = useState(4); // 4월
+  const [selectedDates, setSelectedDates] = useState(getFromLocalStorage("travelPlan")?.selectedDates || []);
+  const [currentMonth, setCurrentMonth] = useState(4);
   const [currentYear, setCurrentYear] = useState(2025);
-  const [plannerType, setPlannerType] = useState("manual");
+  const [plannerType, setPlannerType] = useState(getFromLocalStorage("travelPlan")?.plannerType || "manual");
+  const [selectedAttractions, setSelectedAttractions] = useState(getFromLocalStorage("travelPlan")?.selectedAttractions || {});
+  const [selectedHotels, setSelectedHotels] = useState(getFromLocalStorage("travelPlan")?.selectedHotels || {});
+  const [selectedTransportation, setSelectedTransportation] = useState(
+    getFromLocalStorage("travelPlan")?.selectedTransportation || "car"
+  );
 
   const defaultCityKey = "osaka";
   const city = cityData[destination] ?? cityData[defaultCityKey];
-
   const navigate = useNavigate();
 
-  if (!city) {
-    return (
-      <div className="text-red-600 font-bold p-4">
-        유효하지 않은 여행지입니다. 다시 시도해 주세요.
-      </div>
-    );
-  }
+  // localStorage 동기화
+  useEffect(() => {
+    if (!city) return;
 
-  const skyscannerUrl = `https://www.skyscanner.co.kr/transport/flights/sela/${city.airport}`;
-  const bookingUrl = `https://www.booking.com/searchresults.ko.html?ss=${encodeURIComponent(city.name)}`;
+    const travelPlan = {
+      destination: destination.toLowerCase(),
+      selectedDates,
+      startDate: selectedDates.length > 0 ? selectedDates[0] : null,
+      endDate: selectedDates.length > 0 ? selectedDates[selectedDates.length - 1] : null,
+      plannerType,
+      selectedAttractions,
+      selectedHotels,
+      selectedTransportation,
+    };
+    console.log("Saving travelPlan to localStorage:", travelPlan);
+    saveToLocalStorage("travelPlan", travelPlan);
+  }, [selectedDates, plannerType, selectedAttractions, selectedHotels, selectedTransportation, destination, city]);
 
   const generateCalendar = (year, month) => {
     const firstDay = new Date(year, month, 1).getDay();
@@ -246,10 +261,130 @@ export function DestinationInfo({ destination }) {
     return `${format(start)} - ${format(end)} (${sorted.length}일)`;
   };
 
+  const handleNext = async () => {
+  console.log('handleNext called with:', { selectedDates, plannerType, destination });
+
+  // 입력 검증
+  if (!destination) {
+    toast.error('목적지를 선택해 주세요.');
+    return;
+  }
+  if (!selectedDates || selectedDates.length === 0) {
+    toast.error('여행 날짜를 선택해 주세요.');
+    return;
+  }
+
+  const sorted = [...selectedDates].sort();
+  const startDate = sorted[0];
+  const endDate = sorted[sorted.length - 1];
+
+  console.log('startDate:', startDate, 'endDate:', endDate);
+  if (!startDate || !endDate) {
+    toast.error('시작 날짜 또는 종료 날짜가 유효하지 않습니다.');
+    return;
+  }
+
+  // 날짜 포맷 확인 (YYYY-MM-DD)
+  const formattedStartDate = format(new Date(startDate), 'yyyy-MM-dd');
+  const formattedEndDate = format(new Date(endDate), 'yyyy-MM-dd');
+
+  // localStorage에 날짜 및 목적지 저장
+  localStorage.setItem('startDate', formattedStartDate);
+  localStorage.setItem('endDate', formattedEndDate);
+  localStorage.setItem('destination', destination);
+  localStorage.setItem('plannerType', plannerType);
+
+  // selectedAttractions, selectedHotels 초기화
+  const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
+  const newSelectedAttractions = {};
+  const newSelectedHotels = {};
+  for (let i = 0; i < daysCount; i++) {
+    const dayKey = format(
+      new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)),
+      'yyyy-MM-dd'
+    );
+    newSelectedAttractions[dayKey] = selectedAttractions[dayKey] || [];
+    newSelectedHotels[dayKey] = selectedHotels[dayKey] || 'hotel1';
+  }
+
+  setSelectedAttractions(newSelectedAttractions);
+  setSelectedHotels(newSelectedHotels);
+
+  try {
+    if (plannerType === 'ai') {
+      // AI 일정 생성 요청
+      const aiPlanRequest = {
+        destination: destination.toLowerCase(),
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        preferences: JSON.stringify({ attractions: [], hotels: [], transportation: 'car' }),
+        budget: 0,
+        pace: 0,
+      };
+      console.log('Sending AI plan request:', JSON.stringify(aiPlanRequest, null, 2));
+      const response = await axiosInstance.post('/api/aiplan/generate', aiPlanRequest, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // 인증 토큰
+        },
+      });
+      console.log('AI plan response:', JSON.stringify(response.data, null, 2));
+
+      // AI 일정 데이터를 localStorage에 저장
+      localStorage.setItem('aiItinerary', JSON.stringify(response.data.itinerary));
+      toast.success('AI 일정이 생성되었습니다!');
+      navigate(`/ai-planner/${destination}`);
+    } else {
+      // 수동 일정: travel_plans에 기본 정보 저장
+      const travelPlanRequest = {
+        city: destination.toLowerCase(),
+        country: getCountryByDestination(destination),
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        plan_type: 'MY',
+      };
+      console.log('Sending travel plan request:', JSON.stringify(travelPlanRequest, null, 2));
+      const response = await axiosInstance.post('/api/travel-plans', travelPlanRequest);
+      console.log('Travel plan response:', JSON.stringify(response.data, null, 2));
+      localStorage.setItem('travelPlanId', response.data.id); // travelPlanId 저장
+      toast.success('여행 계획이 저장되었습니다!');
+      navigate(`/travel-planner/${destination}/step2`);
+    }
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.error?.message ||
+      error.response?.data?.message ||
+      'AI 일정 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+    toast.error(errorMessage);
+    console.error('handleNext error:', JSON.stringify(error.response?.data || error, null, 2));
+  }
+};
+
+  const getCountryByDestination = (destination) => {
+    const countryMap = {
+      jeju: "한국",
+      bangkok: "태국",
+      fukuoka: "일본",
+      osaka: "일본",
+      paris: "프랑스",
+      rome: "이탈리아",
+      singapore: "싱가포르",
+      tokyo: "일본",
+      venice: "이탈리아",
+    };
+    return countryMap[destination.toLowerCase()] || "알 수 없음";
+  };
+
+  if (!city) {
+    return (
+      <div className="text-red-600 font-bold p-4">
+        유효하지 않은 여행지입니다. 다시 시도해 주세요.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="bg-white p-6 shadow-md">
-        {/* 여행 계획 유형 선택 버튼 */}
         <div className="mb-8 grid grid-cols-2 gap-4">
           <Button
             className={`flex h-24 flex-col items-center justify-center gap-2 text-lg ${
@@ -267,15 +402,12 @@ export function DestinationInfo({ destination }) {
               plannerType === "ai"
                 ? "bg-traveling-purple text-white"
                 : "bg-traveling-background text-traveling-text hover:bg-traveling-purple/20"
-           }`}
-            onClick={() => {
-              setPlannerType("ai");
-            }}
+            }`}
+            onClick={() => setPlannerType("ai")}
           >
             <Brain className="h-6 w-6" />
             AI 추천 일정 만들기
-        </Button>
-
+          </Button>
         </div>
 
         <div className="mt-8">
@@ -290,30 +422,66 @@ export function DestinationInfo({ destination }) {
             {[days, nextMonthDays].map((monthDays, i) => (
               <div key={i}>
                 <div className="mb-4 flex items-center justify-between">
-                  <button onClick={i === 0 ? handlePrevMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>
+                  <button
+                    onClick={i === 0 ? handlePrevMonth : undefined}
+                    className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}
+                  >
                     &lt;
                   </button>
                   <h3 className="text-lg font-bold text-traveling-text">
-                    {i === 0 ? currentYear : currentMonth === 11 ? currentYear + 1 : currentYear}년 {months[(currentMonth + i) % 12]}
+                    {i === 0 ? currentYear : currentMonth === 11 ? currentYear + 1 : currentYear}년{" "}
+                    {months[(currentMonth + i) % 12]}
                   </h3>
-                  <button onClick={i === 0 ? handleNextMonth : undefined} className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}>
+                  <button
+                    onClick={i === 0 ? handleNextMonth : undefined}
+                    className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}
+                  >
                     &gt;
                   </button>
                 </div>
-
                 <div className="grid grid-cols-7">
                   {weekdays.map((day, idx) => (
-                    <div key={idx} className={`p-2 text-center text-sm font-medium ${idx === 0 ? "text-red-500" : idx === 6 ? "text-blue-500" : "text-traveling-text"}`}>{day}</div>
+                    <div
+                      key={idx}
+                      className={`p-2 text-center text-sm font-medium ${
+                        idx === 0
+                          ? "text-red-500"
+                          : idx === 6
+                          ? "text-blue-500"
+                          : "text-traveling-text"
+                      }`}
+                    >
+                      {day}
+                    </div>
                   ))}
                   {monthDays.map((day, idx) => {
-                    const dateStr = `${day.year}-${String(day.month + 1).padStart(2, "0")}-${String(day.date).padStart(2, "0")}`;
+                    const dateStr = `${day.year}-${String(day.month + 1).padStart(2, "0")}-${String(
+                      day.date
+                    ).padStart(2, "0")}`;
                     const isSelected = selectedDates.includes(dateStr);
                     const isToday = new Date().toISOString().split("T")[0] === dateStr;
                     return (
-                      <div key={idx} className={`p-2 text-center ${!day.currentMonth ? "text-gray-300" : idx % 7 === 0 ? "text-red-500" : idx % 7 === 6 ? "text-blue-500" : "text-traveling-text"}`}>
+                      <div
+                        key={idx}
+                        className={`p-2 text-center ${
+                          !day.currentMonth
+                            ? "text-gray-300"
+                            : idx % 7 === 0
+                            ? "text-red-500"
+                            : idx % 7 === 6
+                            ? "text-blue-500"
+                            : "text-traveling-text"
+                        }`}
+                      >
                         <button
                           onClick={() => day.currentMonth && handleDateClick(day.year, day.month, day.date)}
-                          className={`h-8 w-8 rounded-full ${isSelected ? "bg-traveling-purple text-white" : isToday ? "border border-traveling-purple" : ""}`}
+                          className={`h-8 w-8 rounded-full ${
+                            isSelected
+                              ? "bg-traveling-purple text-white"
+                              : isToday
+                              ? "border border-traveling-purple"
+                              : ""
+                          }`}
                           disabled={!day.currentMonth}
                         >
                           {day.date}
@@ -327,31 +495,14 @@ export function DestinationInfo({ destination }) {
           </div>
 
           <div className="mt-8 flex justify-end">
-           
-              <Button
-               className="bg-traveling-purple text-white hover:bg-traveling-purple/90" 
-               disabled={selectedDates.length === 0}
-               onClick={() => {
-                if (selectedDates.length > 0) {
-                  const sorted = [...selectedDates].sort();
-                  const startDate = sorted[0];
-                  const endDate = sorted[sorted.length - 1];
-          
-                  // 선택사항: localStorage 저장
-                  localStorage.setItem("startDate", startDate);
-                  localStorage.setItem("endDate", endDate);
-          
-                  if (plannerType === "manual") navigate(`/travel-planner/${destination}/step2`);
-                  else navigate(`/ai-planner/${destination}`);
-                }
-              }}
+            <Button
+              className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+              disabled={selectedDates.length === 0}
+              onClick={handleNext}
             >
-               
-                다음 단계로
-
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            
+              다음 단계로
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </Card>
