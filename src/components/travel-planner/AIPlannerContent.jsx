@@ -192,7 +192,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../../api/axiosInstance";
 
 export function AIPlannerContent() {
-  const { destination } = useParams(); // destination을 useParams로 가져옴
+  const { destination } = useParams();
   const [preferences, setPreferences] = useState("");
   const [budget, setBudget] = useState([50]);
   const [pace, setPace] = useState([50]);
@@ -216,24 +216,57 @@ export function AIPlannerContent() {
   const city = cityData[cleanedDestination] || cityData.osaka;
 
   useEffect(() => {
-    const storedStartDate = localStorage.getItem("startDate");
-    const storedEndDate = localStorage.getItem("endDate");
+    const travelPlan = JSON.parse(localStorage.getItem("travelPlan") || "{}");
+    const storedStartDate = travelPlan.startDate || localStorage.getItem("startDate");
+    const storedEndDate = travelPlan.endDate || localStorage.getItem("endDate");
+    console.log("Stored travelPlan:", travelPlan);
     console.log("Stored dates:", { storedStartDate, storedEndDate });
+
     if (storedStartDate && storedEndDate) {
       setStartDate(storedStartDate);
       setEndDate(storedEndDate);
     } else {
-      toast.warn("여행 날짜가 설정되지 않았습니다. Step 1로 이동합니다.");
+      console.warn("No travel dates found in localStorage.");
+      toast.warn("여행 날짜가 설정되지 않았습니다. Step 1로 이동합니다.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       navigate(`/travel-planner/${cleanedDestination}`);
     }
   }, [cleanedDestination, navigate]);
 
+  const checkExistingPlan = async () => {
+    try {
+      const response = await axiosInstance.get("/api/aiplan/my-plans");
+      console.log("Check existing plans response:", response.data);
+      const plans = response.data?.data || [];
+      return plans.some(
+        (plan) =>
+          plan.destination?.toLowerCase() === cleanedDestination &&
+          plan.start_date === startDate &&
+          plan.end_date === endDate
+      );
+    } catch (error) {
+      console.error("Error checking existing plans:", error);
+      toast.error("기존 일정 확인 중 오류: " + (error.response?.data?.message || error.message));
+      return false;
+    }
+  };
+
   const handleGenerateItinerary = async () => {
-    console.log("handleGenerateItinerary:", { startDate, endDate, cleanedDestination, preferences });
+    console.log("handleGenerateItinerary called with:", {
+      startDate,
+      endDate,
+      cleanedDestination,
+      preferences,
+      budget,
+      pace,
+    });
     setIsGenerating(true);
 
     try {
       const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+      const userId = localStorage.getItem("userId") || "default_user";
 
       if (!startDate || !endDate) {
         throw new Error("출발 날짜 또는 종료 날짜가 설정되지 않았습니다.");
@@ -241,6 +274,16 @@ export function AIPlannerContent() {
       if (!accessToken) {
         navigate("/login");
         throw new Error("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+      }
+
+      const hasExistingPlan = await checkExistingPlan();
+      if (hasExistingPlan) {
+        toast.warn("이미 동일한 여행 일정이 존재합니다. 마이페이지에서 확인하세요.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        navigate("/mypage");
+        return;
       }
 
       const requestData = {
@@ -251,20 +294,44 @@ export function AIPlannerContent() {
         start_date: startDate,
         end_date: endDate,
         planType: "AI",
+        user_id: userId,
       };
-      console.log("Request Data:", JSON.stringify(requestData, null, 2));
+      console.log("Sending request to /api/aiplan/generate:", JSON.stringify(requestData, null, 2));
 
       const response = await axiosInstance.post("/api/aiplan/generate", requestData);
+      console.log("Received response from /api/aiplan/generate:", JSON.stringify(response.data, null, 2));
 
-      console.log("Response Data:", JSON.stringify(response.data, null, 2));
-      setIsGenerating(false);
+      const aiItinerary = response.data.itinerary || [];
+      if (!aiItinerary.length) {
+        console.warn("Empty itinerary received from backend.");
+        throw new Error("AI 일정 데이터가 비어 있습니다.");
+      }
 
-      // AI 일정 데이터를 localStorage에 저장
-      localStorage.setItem("aiItinerary", JSON.stringify(response.data.itinerary || []));
+      localStorage.setItem("aiItinerary", JSON.stringify(aiItinerary));
+      console.log("aiItinerary saved to localStorage:", aiItinerary);
 
-      navigate(`/travel-planner/${cleanedDestination}/step5?ai=true`, {
+      // travelPlan 업데이트
+      const travelPlan = JSON.parse(localStorage.getItem("travelPlan") || "{}");
+      localStorage.setItem(
+        "travelPlan",
+        JSON.stringify({
+          ...travelPlan,
+          destination: cleanedDestination,
+          startDate,
+          endDate,
+          plannerType: "ai",
+        })
+      );
+      console.log("Updated travelPlan in localStorage:", {
+        destination: cleanedDestination,
+        startDate,
+        endDate,
+        plannerType: "ai",
+      });
+
+      navigate(`/travel-planner/${cleanedDestination}/ai-planner`, {
         state: {
-          itinerary: response.data.itinerary,
+          itinerary: aiItinerary,
           destination: cleanedDestination,
           startDate,
           endDate,
@@ -272,13 +339,14 @@ export function AIPlannerContent() {
         },
       });
     } catch (error) {
-      console.error("일정 생성 오류:", error.message, error.stack);
-      setIsGenerating(false);
-      const errorMessage = error.response?.data || error.message || "일정 생성에 실패했습니다.";
+      console.error("Itinerary generation error:", error.message, error.stack);
+      const errorMessage = error.response?.data?.message || error.message || "일정 생성에 실패했습니다.";
       toast.error(`일정 생성 중 오류: ${errorMessage}`, {
         position: "top-right",
         autoClose: 5000,
       });
+    } finally {
+      setIsGenerating(false);
     }
   };
 

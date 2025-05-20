@@ -1,1533 +1,1687 @@
-// css 이쁘던거 원래코드
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+//==========================================================================================================
+// AI 일정만들기까지 되는 버전
+// import React, { useState, useEffect, useRef } from "react";
+// import {
+//   Plane,
+//   Hotel,
+//   Coffee,
+//   Utensils,
+//   Camera,
+//   X,
+//   Edit,
+//   Check,
+//   Map,
+// } from "lucide-react";
+// import { Button } from "../../modules/Button";
+// import { Card, CardContent } from "../../modules/Card";
+// import { FlightModal } from "./flight-modal";
+// import MapComponent from "../travel-planner/Map-component";
+// import { differenceInCalendarDays } from "date-fns";
+// import axios from "axios";
+// import axiosInstance from "../../api/axiosInstance";
+// import { useNavigate,useLocation } from "react-router-dom";
+
+// function ItineraryGeneration({ destination, isAiMode = false, startDate, endDate }) {
+//   const [selectedDay, setSelectedDay] = useState(1);
+//   const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isGenerated, setIsGenerated] = useState(false);
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const isInitialized = useRef(false);
+//   const [itinerary, setItinerary] = useState({});
+//   const dayCount =
+//     startDate && endDate
+//       ? differenceInCalendarDays(new Date(endDate), new Date(startDate)) + 1
+//       : 3;
+
+//   const dayKeys = Array.from({ length: dayCount }, (_, i) => i + 1);
+
+//   const cityNames = {
+//     osaka: "오사카",
+//     tokyo: "도쿄",
+//     fukuoka: "후쿠오카",
+//     paris: "파리",
+//     rome: "로마",
+//     venice: "베니스",
+//     bangkok: "방콕",
+//     singapore: "싱가포르",
+//   };
+
+//   const cityCoords = {
+//     osaka: { lat: 34.6937, lng: 135.5023 },
+//     tokyo: { lat: 35.6762, lng: 139.6503 },
+//     fukuoka: { lat: 33.5904, lng: 130.4017 },
+//     paris: { lat: 48.8566, lng: 2.3522 },
+//     rome: { lat: 41.9028, lng: 12.4964 },
+//     venice: { lat: 45.4408, lng: 12.3155 },
+//     bangkok: { lat: 13.7563, lng: 100.5018 },
+//     singapore: { lat: 1.3521, lng: 103.8198 },
+//   };
+//   const mapCenter = cityCoords[destination?.toLowerCase()] || { lat: 0, lng: 0 };
+
+//   const mapMarkers =
+//     itinerary[selectedDay]?.places
+//       ?.filter((place) => place.position)
+//       .map((place) => ({
+//         id: place.id,
+//         position: place.position,
+//         title: place.name,
+//         selected: false,
+//       })) || [];
+
+//   const placePositions = {
+//     "도쿄 스카이트리": { lat: 35.7101, lng: 139.8107 },
+//     "센소지 사원": { lat: 35.7148, lng: 139.7967 },
+//     "메이지 신궁": { lat: 35.6764, lng: 139.6993 },
+//     "하라주쿠 쇼핑": { lat: 35.6702, lng: 139.7025 },
+//     "시부야 스크램블 교차로": { lat: 35.6595, lng: 139.7005 },
+//     "도쿄 디즈니랜드": { lat: 35.6329, lng: 139.8804 },
+//     "우에노 공원": { lat: 35.7156, lng: 139.7745 },
+//     "아키하바라": { lat: 35.6984, lng: 139.7730 },
+//     "오다이바": { lat: 35.619, lng: 139.7765 },
+//     "팀랩 보더리스": { lat: 35.6195, lng: 139.7908 },
+//   };
+
+//   useEffect(() => {
+//     if (isInitialized.current || isGenerated) return;
+
+//     isInitialized.current = true;
+//     setIsLoading(true);
+
+//     setTimeout(() => {
+//       if (isAiMode && location.state?.itinerary) {
+//         const aiItinerary = {};
+//         location.state.itinerary.forEach((dayData, index) => {
+//           const day = index + 1;
+//           aiItinerary[day] = {
+//             places: dayData.activities.map((activity, idx) => ({
+//               id: `a${day}-${idx}`,
+//               name: activity.activity,
+//               type: activity.time === "lunch" || activity.time === "evening" ? "restaurant" : "attraction",
+//               time: activity.time.charAt(0).toUpperCase() + activity.time.slice(1),
+//               description: activity.description,
+//               position: placePositions[activity.activity] || null,
+//             })),
+//             accommodation: {
+//               id: `h${day}`,
+//               name: "AI 추천 호텔",
+//               description: "AI가 추천한 편리한 위치의 호텔입니다.",
+//             },
+//           };
+//         });
+//         setItinerary(aiItinerary);
+//       } else if (destination === "tokyo") {
+//         const dummyItinerary = isAiMode
+//           ? {
+//               1: {
+//                 places: [
+//                   {
+//                     id: "a1",
+//                     name: "도쿄 스카이트리",
+//                     type: "attraction",
+//                     time: "10:00",
+//                     description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요.",
+//                     position: { lat: 35.7101, lng: 139.8107 },
+//                   },
+//                   {
+//                     id: "r1",
+//                     name: "스시 긴자",
+//                     type: "restaurant",
+//                     time: "12:30",
+//                     description: "현지인들에게도 인기 있는 스시 레스토랑에서 신선한 해산물을 즐겨보세요.",
+//                     position: { lat: 35.6717, lng: 139.7650 },
+//                   },
+//                   {
+//                     id: "a2",
+//                     name: "센소지 사원",
+//                     type: "attraction",
+//                     time: "14:30",
+//                     description: "도쿄에서 가장 오래된 사원인 센소지를 방문하여 일본 전통 문화를 체험해보세요.",
+//                     position: { lat: 35.7148, lng: 139.7967 },
+//                   },
+//                   {
+//                     id: "c1",
+//                     name: "아사쿠사 카페",
+//                     type: "cafe",
+//                     time: "16:00",
+//                     description: "전통적인 일본 디저트와 함께 차를 즐길 수 있는 카페입니다.",
+//                     position: { lat: 35.7112, lng: 139.7943 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h1",
+//                   name: "시타디네스 신주쿠",
+//                   description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다.",
+//                 },
+//               },
+//               2: {
+//                 places: [
+//                   {
+//                     id: "a3",
+//                     name: "메이지 신궁",
+//                     type: "attraction",
+//                     time: "09:30",
+//                     description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사입니다.",
+//                     position: { lat: 35.6764, lng: 139.6993 },
+//                   },
+//                   {
+//                     id: "a4",
+//                     name: "하라주쿠 쇼핑",
+//                     type: "attraction",
+//                     time: "11:30",
+//                     description: "일본 청소년 문화의 중심지인 하라주쿠에서 독특한 패션과 상점들을 구경해보세요.",
+//                     position: { lat: 35.6702, lng: 139.7025 },
+//                   },
+//                   {
+//                     id: "r2",
+//                     name: "이치란 라멘",
+//                     type: "restaurant",
+//                     time: "13:00",
+//                     description: "개인 부스에서 맛보는 유명한 돈코츠 라멘 체인점입니다.",
+//                     position: { lat: 35.6938, lng: 139.7034 },
+//                   },
+//                   {
+//                     id: "a5",
+//                     name: "시부야 스크램블 교차로",
+//                     type: "attraction",
+//                     time: "15:00",
+//                     description: "세계에서 가장 분주한 횡단보도 중 하나인 시부야 스크램블 교차로를 경험해보세요.",
+//                     position: { lat: 35.6595, lng: 139.7005 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h1",
+//                   name: "시타디네스 신주쿠",
+//                   description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다.",
+//                 },
+//               },
+//               3: {
+//                 places: [
+//                   {
+//                     id: "a6",
+//                     name: "도쿄 디즈니랜드",
+//                     type: "attraction",
+//                     time: "09:00",
+//                     description: "하루 종일 즐길 수 있는 세계적으로 유명한 테마파크입니다.",
+//                     position: { lat: 35.6329, lng: 139.8804 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h2",
+//                   name: "도쿄 베이 호텔",
+//                   description: "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다.",
+//                 },
+//               },
+//               4: {
+//                 places: [
+//                   {
+//                     id: "a7",
+//                     name: "우에노 공원",
+//                     type: "attraction",
+//                     time: "10:00",
+//                     description: "아름다운 공원과 여러 박물관이 있는 문화 공간입니다.",
+//                     position: { lat: 35.7156, lng: 139.7745 },
+//                   },
+//                   {
+//                     id: "r3",
+//                     name: "우동 레스토랑",
+//                     type: "restaurant",
+//                     time: "12:30",
+//                     description: "전통적인 일본 우동을 맛볼 수 있는 현지인들이 사랑하는 식당입니다.",
+//                     position: { lat: 35.7185, lng: 139.7736 },
+//                   },
+//                   {
+//                     id: "a8",
+//                     name: "아키하바라",
+//                     type: "attraction",
+//                     time: "14:00",
+//                     description: "전자제품과 애니메이션의 중심지인 아키하바라에서 일본 오타쿠 문화를 경험해보세요.",
+//                     position: { lat: 35.6984, lng: 139.773 },
+//                   },
+//                   {
+//                     id: "c2",
+//                     name: "메이드 카페",
+//                     type: "cafe",
+//                     time: "16:30",
+//                     description: "아키하바라의 유명한 테마 카페에서 독특한 경험을 해보세요.",
+//                     position: { lat: 35.6995, lng: 139.7722 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h3",
+//                   name: "고지라 그레이서리 호텔",
+//                   description: "신주쿠에 위치한 고지라 테마 호텔입니다.",
+//                 },
+//               },
+//               5: {
+//                 places: [
+//                   {
+//                     id: "a9",
+//                     name: "오다이바",
+//                     type: "attraction",
+//                     time: "10:00",
+//                     description: "도쿄 베이에 위치한 인공 섬으로, 쇼핑몰, 엔터테인먼트 시설, 자유의 여신상 복제품 등이 있습니다.",
+//                     position: { lat: 35.619, lng: 139.7765 },
+//                   },
+//                   {
+//                     id: "r4",
+//                     name: "해산물 뷔페",
+//                     type: "restaurant",
+//                     time: "13:00",
+//                     description: "오다이바에 위치한 고급 해산물 뷔페에서 다양한 일본 요리를 즐겨보세요.",
+//                     position: { lat: 35.6201, lng: 139.7767 },
+//                   },
+//                   {
+//                     id: "a10",
+//                     name: "팀랩 보더리스",
+//                     type: "attraction",
+//                     time: "15:00",
+//                     description: "디지털 아트 뮤지엄에서 몰입형 예술 경험을 해보세요.",
+//                     position: { lat: 35.6195, lng: 139.7908 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h3",
+//                   name: "고지라 그레이서리 호텔",
+//                   description: "신주쿠에 위치한 고지라 테마 호텔입니다.",
+//                 },
+//               },
+//             }
+//           : {
+//               1: {
+//                 places: [
+//                   {
+//                     id: "a1",
+//                     name: "도쿄 스카이트리",
+//                     type: "attraction",
+//                     time: "10:00",
+//                     description: "도쿄의 랜드마크인 스카이트리에서 도시 전체를 조망해보세요.",
+//                     position: { lat: 35.7101, lng: 139.8107 },
+//                   },
+//                   {
+//                     id: "a2",
+//                     name: "센소지 사원",
+//                     type: "attraction",
+//                     time: "14:00",
+//                     description: "도쿄에서 가장 오래된 사원인 센소지를 방문하세요.",
+//                     position: { lat: 35.7148, lng: 139.7967 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h1",
+//                   name: "시타디네스 신주쿠",
+//                   description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다.",
+//                 },
+//               },
+//               2: {
+//                 places: [
+//                   {
+//                     id: "a3",
+//                     name: "메이지 신궁",
+//                     type: "attraction",
+//                     time: "09:30",
+//                     description: "도심 속 울창한 숲으로 둘러싸인 신성한 신사입니다.",
+//                     position: { lat: 35.6764, lng: 139.6993 },
+//                   },
+//                   {
+//                     id: "a5",
+//                     name: "시부야 스크램블 교차로",
+//                     type: "attraction",
+//                     time: "15:00",
+//                     description: "세계에서 가장 분주한 횡단보도 중 하나입니다.",
+//                     position: { lat: 35.6595, lng: 139.7005 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h1",
+//                   name: "시타디네스 신주쿠",
+//                   description: "신주쿠역에서 도보 5분 거리에 위치한 편리한 호텔입니다.",
+//                 },
+//               },
+//               3: {
+//                 places: [
+//                   {
+//                     id: "a6",
+//                     name: "도쿄 디즈니랜드",
+//                     type: "attraction",
+//                     time: "09:00",
+//                     description: "하루 종일 즐길 수 있는 세계적으로 유명한 테마파크입니다.",
+//                     position: { lat: 35.6329, lng: 139.8804 },
+//                   },
+//                 ],
+//                 accommodation: {
+//                   id: "h2",
+//                   name: "도쿄 베이 호텔",
+//                   description: "디즈니랜드와 가까운 위치에 있는 테마 호텔입니다.",
+//                 },
+//               },
+//             };
+
+//         Object.values(dummyItinerary).forEach((day) => {
+//           day.places.forEach((place) => {
+//             if (!place.position && placePositions[place.name]) {
+//               place.position = placePositions[place.name];
+//             }
+//           });
+//         });
+//         setItinerary(dummyItinerary);
+//       } else {
+//         const basicItinerary = {};
+//         for (let i = 1; i <= dayCount; i++) {
+//           basicItinerary[i] = {
+//             places: [
+//               {
+//                 id: `a${i}`,
+//                 name: `${cityNames[destination] || destination} 주요 관광지 ${i}`,
+//                 type: "attraction",
+//                 time: "10:00",
+//                 description: "이 도시의 대표 관광지입니다.",
+//                 position: placePositions[`${cityNames[destination] || destination} 주요 관광지 ${i}`] || null,
+//               },
+//             ],
+//             accommodation: {
+//               id: `h${i}`,
+//               name: "시티 센터 호텔",
+//               description: "도심에 위치한 편리한 호텔입니다.",
+//             },
+//           };
+//         }
+//         setItinerary(basicItinerary);
+//       }
+
+//       setIsLoading(false);
+//       setIsGenerated(true);
+//     }, 1500);
+//   }, [destination, isAiMode, isGenerated, startDate, endDate, location.state]);
+
+//   const removePlaceFromItinerary = (day, placeId) => {
+//     setItinerary((prev) => {
+//       const updatedDay = { ...prev[day] };
+//       updatedDay.places = updatedDay.places.filter((place) => place.id !== placeId);
+//       return { ...prev, [day]: updatedDay };
+//     });
+//   };
+
+//   const changeAccommodation = (day) => {
+//     const accommodations = [
+//       {
+//         id: "h1",
+//         name: "시티 센터 호텔",
+//         description: "도심에 위치한 편리한 호텔입니다.",
+//       },
+//       {
+//         id: "h2",
+//         name: "리조트 호텔",
+//         description: "휴양지에 위치한 고급 호텔입니다.",
+//       },
+//       {
+//         id: "h3",
+//         name: "부티크 호텔",
+//         description: "독특한 디자인의 부티크 호텔입니다.",
+//       },
+//     ];
+
+//     const currentId = itinerary[day]?.accommodation?.id;
+//     const newAccommodation =
+//       accommodations.find((acc) => acc.id !== currentId) || accommodations[0];
+
+//     setItinerary((prev) => {
+//       const updatedDay = { ...prev[day] };
+//       updatedDay.accommodation = newAccommodation;
+//       return { ...prev, [day]: updatedDay };
+//     });
+//   };
+
+//   const handleSavePlan = async () => {
+//     try {
+//       const startDate = localStorage.getItem('startDate');
+//       const endDate = localStorage.getItem('endDate');
+
+//       // 날짜 검증
+//       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+//       if (!startDate || !endDate || !dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+//         console.error('Invalid or missing start_date/end_date in localStorage');
+//         alert('여행 시작일 또는 종료일이 올바르지 않습니다. 다시 설정해주세요.');
+//         return;
+//       }
+
+//       // itinerary를 배열로 변환
+//       const formattedItinerary = Object.keys(itinerary).map((day) => ({
+//         day: `day${day}`,
+//         activities: itinerary[day].places.map((place) => ({
+//           activity: place.name,
+//           time: place.time.toLowerCase(),
+//           description: place.description,
+//         })),
+//         accommodation: itinerary[day].accommodation ? {
+//           name: itinerary[day].accommodation.name,
+//           description: itinerary[day].accommodation.description,
+//         } : null,
+//       }));
+
+//       // itinerary 검증
+//       if (!formattedItinerary || formattedItinerary.length === 0) {
+//         console.error('Formatted itinerary is empty or invalid');
+//         alert('여행 일정 데이터가 없습니다.');
+//         return;
+//       }
+
+//       const planData = {
+//         destination: destination,
+//         start_date: startDate,
+//         end_date: endDate,
+//         itinerary: formattedItinerary,
+//         planType: isAiMode ? 'AI' : 'MY' // AI 모드 여부에 따라 planType 설정
+//       };
+
+//       console.log('Sending planData:', JSON.stringify(planData, null, 2));
+//       const response = await axiosInstance.post('/api/aiplan/save', planData);
+//       console.log('일정 저장 성공:', response.data);
+//       alert('여행 일정이 성공적으로 저장되었습니다!');
+//       navigate('/mypage');
+//     } catch (error) {
+//       console.error('일정 저장 실패:', error.response?.data || error.message);
+//       alert('일정 저장에 실패했습니다. 다시 시도해주세요.');
+//     }
+//   };
+
+//   return (
+//     <div className="space-y-6">
+//       {isLoading ? (
+//         <div className="flex h-64 items-center justify-center">
+//           <div className="h-8 w-8 animate-spin rounded-full border-4 border-traveling-purple border-t-transparent"></div>
+//           <span className="ml-3 text-lg">일정을 생성하는 중입니다...</span>
+//         </div>
+//       ) : (
+//         <>
+//           <div className="flex items-center justify-between">
+//             <h3 className="text-xl font-bold">
+//               {isAiMode ? "AI 추천 일정" : "나의 여행 일정"}:{" "}
+//               {cityNames[destination] || destination}
+//             </h3>
+//             <div className="flex space-x-2">
+//               <Button
+//                 variant="outline"
+//                 size="sm"
+//                 onClick={() => setIsEditing(!isEditing)}
+//               >
+//                 {isEditing ? (
+//                   <>
+//                     <Check className="mr-1 h-4 w-4" />
+//                     <span>완료</span>
+//                   </>
+//                 ) : (
+//                   <>
+//                     <Edit className="mr-1 h-4 w-4" />
+//                     <span>일정 수정</span>
+//                   </>
+//                 )}
+//               </Button>
+
+//               <Button
+//                 variant="outline"
+//                 size="sm"
+//                 onClick={() => setIsFlightModalOpen(true)}
+//               >
+//                 <Plane className="mr-1 h-4 w-4" />
+//                 <span>항공편 추가</span>
+//               </Button>
+//             </div>
+//           </div>
+
+//           <div className="flex flex-wrap gap-2">
+//             {dayKeys.map((day) => (
+//               <Button
+//                 key={day}
+//                 variant={selectedDay === day ? "default" : "outline"}
+//                 className={`${selectedDay === day ? "bg-traveling-purple text-white" : "bg-white"}`}
+//                 onClick={() => setSelectedDay(day)}
+//               >
+//                 {day}일차
+//               </Button>
+//             ))}
+//           </div>
+
+//           <div className="grid gap-6 md:grid-cols-5">
+//             <Card className="md:col-span-2">
+//               <CardContent className="p-4">
+//                 <div className="flex items-center justify-between mb-2">
+//                   <h4 className="font-medium">지도</h4>
+//                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+//                     <Map className="h-4 w-4" />
+//                   </Button>
+//                 </div>
+//                 <MapComponent center={mapCenter} height="400px" markers={mapMarkers} />
+//               </CardContent>
+//             </Card>
+
+//             <Card className="md:col-span-3">
+//               <CardContent className="p-4">
+//                 <h4 className="font-medium mb-4">{selectedDay}일차 일정</h4>
+
+//                 {itinerary[selectedDay]?.places.length === 0 ? (
+//                   <p className="text-center text-gray-500">
+//                     이 날의 일정이 비어있습니다.
+//                   </p>
+//                 ) : (
+//                   <div className="space-y-4">
+//                     {itinerary[selectedDay]?.places.map((place, index) => (
+//                       <div key={place.id} className="rounded-lg border p-3">
+//                         <div className="flex items-center justify-between">
+//                           <div className="flex items-center">
+//                             <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-traveling-purple/10">
+//                               {place.type === "attraction" && (
+//                                 <Camera className="h-4 w-4 text-traveling-purple" />
+//                               )}
+//                               {place.type === "restaurant" && (
+//                                 <Utensils className="h-4 w-4 text-traveling-purple" />
+//                               )}
+//                               {place.type === "cafe" && (
+//                                 <Coffee className="h-4 w-4 text-traveling-purple" />
+//                               )}
+//                             </div>
+//                             <div>
+//                               <div className="flex items-center">
+//                                 <p className="font-medium">{place.name}</p>
+//                                 <span className="ml-2 text-xs text-gray-500">
+//                                   {place.time}
+//                                 </span>
+//                               </div>
+//                               <p className="text-xs text-gray-500">
+//                                 {place.type === "attraction" && "관광지"}
+//                                 {place.type === "restaurant" && "식당"}
+//                                 {place.type === "cafe" && "카페"}
+//                               </p>
+//                             </div>
+//                           </div>
+
+//                           {isEditing && (
+//                             <Button
+//                               variant="ghost"
+//                               size="sm"
+//                               onClick={() => removePlaceFromItinerary(selectedDay, place.id)}
+//                               className="h-8 w-8 p-0"
+//                             >
+//                               <X className="h-4 w-4" />
+//                             </Button>
+//                           )}
+//                         </div>
+
+//                         <p className="mt-2 text-sm text-gray-600">
+//                           {place.description}
+//                         </p>
+
+//                         {index < itinerary[selectedDay]?.places.length - 1 && (
+//                           <div className="mt-2 flex items-center">
+//                             <div className="ml-4 h-6 border-l-2 border-dashed border-gray-300"></div>
+//                           </div>
+//                         )}
+//                       </div>
+//                     ))}
+
+//                     {itinerary[selectedDay]?.accommodation && (
+//                       <div className="rounded-lg border p-3">
+//                         <div className="flex items-center justify-between">
+//                           <div className="flex items-center">
+//                             <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-traveling-purple/10">
+//                               <Hotel className="h-4 w-4 text-traveling-purple" />
+//                             </div>
+//                             <div>
+//                               <p className="font-medium">
+//                                 {itinerary[selectedDay].accommodation.name}
+//                               </p>
+//                               <p className="text-xs text-gray-500">숙소</p>
+//                             </div>
+//                           </div>
+
+//                           {isEditing && (
+//                             <Button
+//                               variant="ghost"
+//                               size="sm"
+//                               onClick={() => changeAccommodation(selectedDay)}
+//                               className="h-8 p-2"
+//                             >
+//                               <Edit className="h-4 w-4 mr-1" />
+//                               <span className="text-xs">변경</span>
+//                             </Button>
+//                           )}
+//                         </div>
+
+//                         <p className="mt-2 text-sm text-gray-600">
+//                           {itinerary[selectedDay].accommodation.description}
+//                         </p>
+//                       </div>
+//                     )}
+//                   </div>
+//                 )}
+//               </CardContent>
+//             </Card>
+//           </div>
+
+//           <div className="flex justify-end">
+//             <Button className="bg-traveling-purple" onClick={handleSavePlan}>
+//               여행 일정 저장하기
+//             </Button>
+//           </div>
+//         </>
+//       )}
+
+//       <FlightModal
+//         isOpen={isFlightModalOpen}
+//         onClose={() => setIsFlightModalOpen(false)}
+//       />
+//     </div>
+//   );
+// }
+
+// export default ItineraryGeneration;
+
+import React, { useState, useEffect, useRef } from "react";
 import {
-  Calendar,
-  MapPin,
-  Bookmark,
-  Star,
-  Settings,
-  PenLine,
-  Plus,
   Plane,
-  Hotel, 
-  Bus,
-  Train,
-  ArrowRight
-} from 'lucide-react';
-import { Button } from '../../modules/Button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '../../modules/Card';
-import { Avatar, AvatarImage } from '../../modules/Avatar';
-import { Progress } from '../../modules/Progress';
-import { Badge } from '../../modules/Badge';
-import axiosInstance from '../../api/axiosInstance';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { toast } from 'react-toastify';
+  Hotel,
+  Coffee,
+  Utensils,
+  Camera,
+  X,
+  Edit,
+  Check,
+  Map,
+} from "lucide-react";
+import { Button } from "../../modules/Button";
+import { Card, CardContent } from "../../modules/Card";
+import { FlightModal } from "./flight-modal";
+import MapComponent from "../travel-planner/Map-component";
+import { differenceInCalendarDays, format } from "date-fns";
+import axiosInstance from "../../api/axiosInstance";
+import { useNavigate, useLocation,useParams } from "react-router-dom";
+import { getFromLocalStorage } from "../../utils";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-function MyPageContent() {
-  const [activeTab, setActiveTab] = useState('my-trips');
-  const [userInfo, setUserInfo] = useState({
-    email: '',
-    nickname: '',
-    imgUrl: '',
-    level: '',
-    levelExp: 0,
-  });
-  const [bookings, setBookings] = useState([]);
-  const [myTrips, setMyTrips] = useState([]);
-  const [showLevelModal, setShowLevelModal] = useState(false);
-  const [showExpModal, setShowExpModal] = useState(false);
+const attractionData = {
+  'eiffel-tower': {
+    name: 'Eiffel Tower',
+    address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
+    category: 'Landmark',
+    description: 'Iconic iron lattice tower on the Champ de Mars in Paris.',
+    latitude: 48.8584,
+    longitude: 2.2945,
+    time: '10:00'
+  },
+  'arc-de-triomphe': {
+    name: 'Arc de Triomphe',
+    address: 'Place Charles de Gaulle, 75008 Paris, France',
+    category: 'Monument',
+    description: 'Monumental archway in Paris honoring victories of Napoleon.',
+    latitude: 48.8738,
+    longitude: 2.2950,
+    time: '14:00'
+  },
+  'notre-dame': {
+    name: 'Notre-Dame Cathedral',
+    address: '6 Parvis Notre-Dame, 75004 Paris, France',
+    category: 'Cathedral',
+    description: 'Historic Catholic cathedral known for its French Gothic architecture.',
+    latitude: 48.8530,
+    longitude: 2.3499,
+    time: '09:00'
+  },
+  'louvre-museum': {
+    name: 'Louvre Museum',
+    address: '75001 Paris, France',
+    category: 'Museum',
+    description: 'World’s largest art museum and a historic monument in Paris.',
+    latitude: 48.8606,
+    longitude: 2.3376,
+    time: '11:00'
+  },
+  'shibuya-crossing': {
+    name: 'Shibuya Crossing',
+    address: 'Shibuya, Tokyo, Japan',
+    category: 'Landmark',
+    description: 'Famous pedestrian crossing in Tokyo.',
+    latitude: 35.6595,
+    longitude: 139.7005,
+    time: '10:00'
+  },
+  'tokyo-tower': {
+    name: 'Tokyo Tower',
+    address: '4 Chome-2-8 Shibakoen, Minato City, Tokyo, Japan',
+    category: 'Monument',
+    description: 'Iconic observation and communications tower.',
+    latitude: 35.6586,
+    longitude: 139.7454,
+    time: '14:00'
+  },
+  'senso-ji': {
+    name: 'Senso-ji Temple',
+    address: '2 Chome-3-1 Asakusa, Taito City, Tokyo, Japan',
+    category: 'Temple',
+    description: 'Tokyo’s oldest temple and a popular tourist attraction.',
+    latitude: 35.7148,
+    longitude: 139.7967,
+    time: '09:00'
+  }
+};
 
-  const levelInfo = {
-    BEGINNER: { label: '여행 새싹', min: 0, max: 99 },
-    NOVICE: { label: '초보 여행자', min: 100, max: 199 },
-    EXPLORER: { label: '탐험가', min: 200, max: 299 },
-    ADVENTURER: { label: '모험가', min: 300, max: 399 },
-    WORLD_TRAVELER: { label: '세계 여행자', min: 400, max: 499 },
-    MASTER: { label: '여행 달인', min: 500, max: 599 },
-    LEGEND: { label: '전설의 여행자', min: 600, max: 9999 },
+const hotelData = {
+  'hotel1': {
+    name: 'Hotel Paris',
+    address: '123 Avenue des Champs-Élysées, 75008 Paris, France',
+    description: 'Luxury hotel in the heart of Paris.',
+    latitude: 48.8709,
+    longitude: 2.3077,
+    checkInDate: '2025-05-24T14:00:00',
+    checkOutDate: '2025-05-26T12:00:00'
+  },
+  'tokyo-hotel1': {
+    name: 'Hotel Tokyo',
+    address: '1 Chome-1-1 Marunouchi, Chiyoda City, Tokyo, Japan',
+    description: 'Luxury hotel in the heart of Tokyo.',
+    latitude: 35.6812,
+    longitude: 139.7656,
+    checkInDate: '2025-05-22T14:00:00',
+    checkOutDate: '2025-05-24T12:00:00'
+  }
+};
+
+function ItineraryGeneration({ destination: propDestination, isAiMode = false, startDate: propStartDate, endDate: propEndDate, plannerType: propPlannerType }) {
+  const { destination: paramDestination } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [itinerary, setItinerary] = useState({});
+
+  const isInitialized = useRef(false);
+  const { state } = location;
+  const travelPlan = getFromLocalStorage("travelPlan") || {};
+  const { startDate: localStartDate, endDate: localEndDate, selectedAttractions, selectedHotels, selectedTransportation, customAttractions = [] } = travelPlan;
+
+  // destination은 useParams 우선, prop 또는 localStorage 순으로 결정
+  const destination = paramDestination || propDestination || travelPlan.destination || "fukuoka";
+  const startDate = state?.startDate || localStartDate || propStartDate;
+  const endDate = state?.endDate || localEndDate || propEndDate;
+  const plannerType = state?.plannerType || propPlannerType || travelPlan.plannerType || "manual";
+  const queryParams = new URLSearchParams(location.search);
+  const isAiQuery = queryParams.get("ai") === "true";
+  const computedIsAiMode = isAiMode || isAiQuery || plannerType === "ai";
+
+  const generateDayKeys = (start, end) => {
+    if (!start || !end) {
+      return [];
+    }
+    const days = differenceInCalendarDays(new Date(end), new Date(start)) + 1;
+    return Array.from({ length: days }, (_, i) =>
+      format(new Date(new Date(start).setDate(new Date(start).getDate() + i)), "yyyy-MM-dd")
+    );
   };
 
-  const currentLevel = levelInfo[userInfo.level] || levelInfo.BEGINNER;
-  const percent = Math.floor(
-    ((userInfo.levelExp - currentLevel.min) /
-      (currentLevel.max - currentLevel.min + 1)) *
-      100
-  );
+  const dayKeys = generateDayKeys(startDate, endDate);
+
+  const cityNames = {
+    bangkok: "방콕",
+    fukuoka: "후쿠오카",
+    jeju: "제주",
+    osaka: "오사카",
+    paris: "파리",
+    rome: "로마",
+    singapore: "싱가포르",
+    tokyo: "도쿄",
+    venice: "베니스",
+  };
+
+  const cityCoords = {
+    bangkok: { lat: 13.7563, lng: 100.5018 },
+    fukuoka: { lat: 33.5902, lng: 130.4017 },
+    jeju: { lat: 33.4890, lng: 126.4983 },
+    osaka: { lat: 34.6937, lng: 135.5023 },
+    paris: { lat: 48.8566, lng: 2.3522 },
+    rome: { lat: 41.9028, lng: 12.4964 },
+    singapore: { lat: 1.3521, lng: 103.8198 },
+    tokyo: { lat: 35.6762, lng: 139.6503 },
+    venice: { lat: 45.4408, lng: 12.3155 },
+  };
+
+  const countryMap = {
+    bangkok: "태국",
+    fukuoka: "일본",
+    jeju: "한국",
+    osaka: "일본",
+    paris: "프랑스",
+    rome: "이탈리아",
+    singapore: "싱가포르",
+    tokyo: "일본",
+    venice: "이탈리아",
+  };
+
+  const mapCenter = cityCoords[destination.toLowerCase()] || { lat: 0, lng: 0 };
+
+  const attractionsData = {
+    bangkok: {
+      attractions: [
+        {
+          id: "grand-palace",
+          name: "왕궁",
+          position: { lat: 13.75, lng: 100.4914 },
+          description: "방콕의 대표적인 왕궁",
+          address: "Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
+        },
+        {
+          id: "wat-arun",
+          name: "왓 아룬",
+          position: { lat: 13.7437, lng: 100.4888 },
+          description: "아름다운 사원",
+          address: "158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand",
+        },
+        {
+          id: "chatuchak-market",
+          name: "차투착 주말 시장",
+          position: { lat: 13.7999, lng: 100.5502 },
+          description: "활기찬 주말 시장",
+          address: "Kamphaeng Phet 2 Rd, Chatuchak, Bangkok 10900, Thailand",
+        },
+        {
+          id: "wat-pho",
+          name: "왓 포",
+          position: { lat: 13.7465, lng: 100.493 },
+          description: "거대한 와불상이 있는 사원",
+          address: "2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand",
+        },
+        {
+          id: "khao-san-road",
+          name: "카오산 로드",
+          position: { lat: 13.7582, lng: 100.4971 },
+          description: "배낭여행자의 거리",
+          address: "Khao San Road, Talat Yot, Phra Nakhon, Bangkok 10200, Thailand",
+        },
+      ],
+    },
+    fukuoka: {
+      attractions: [
+        {
+          id: "canal-city",
+          name: "캐널시티 하카타",
+          position: { lat: 33.5898, lng: 130.4108 },
+          description: "대형 쇼핑몰",
+          address: "1 Chome-2 Sumiyoshi, Hakata Ward, Fukuoka, 812-0018",
+        },
+        {
+          id: "ohori-park",
+          name: "오호리 공원",
+          position: { lat: 33.5861, lng: 130.3797 },
+          description: "평화로운 공원",
+          address: "1 Chome-2 Ohorikoen, Chuo Ward, Fukuoka, 810-0051",
+        },
+        {
+          id: "fukuoka-tower",
+          name: "후쿠오카 타워",
+          position: { lat: 33.5944, lng: 130.3514 },
+          description: "후쿠오카의 랜드마크",
+          address: "2 Chome-3-26 Momochihama, Sawara Ward, Fukuoka, 814-0001",
+        },
+        {
+          id: "dazaifu",
+          name: "다자이후 텐만구",
+          position: { lat: 33.5196, lng: 130.5354 },
+          description: "학문의 신을 모시는 신사",
+          address: "4 Chome-7-1 Saifu, Dazaifu, Fukuoka 818-0117",
+        },
+        {
+          id: "nakasu",
+          name: "나카스",
+          position: { lat: 33.5938, lng: 130.4043 },
+          description: "야간 유흥의 중심지",
+          address: "Nakasu, Hakata Ward, Fukuoka, 810-0801",
+        },
+      ],
+    },
+    jeju: {
+      attractions: [
+        {
+          id: "hallasan",
+          name: "한라산",
+          position: { lat: 33.3617, lng: 126.5292 },
+          description: "제주의 대표적인 산",
+          address: "Hallasan National Park, Jeju Island, South Korea",
+        },
+        {
+          id: "seongsan",
+          name: "성산일출봉",
+          position: { lat: 33.4581, lng: 126.9425 },
+          description: "아름다운 일출 명소",
+          address: "Seongsan Ilchulbong, Seogwipo, Jeju, South Korea",
+        },
+        {
+          id: "udo",
+          name: "우도",
+          position: { lat: 33.5050, lng: 126.9540 },
+          description: "작고 아름다운 섬",
+          address: "Udo Island, Jeju, South Korea",
+        },
+        {
+          id: "manjanggul",
+          name: "만장굴",
+          position: { lat: 33.5283, lng: 126.7716 },
+          description: "화산 동굴 탐험",
+          address: "Manjanggul Cave, Jeju, South Korea",
+        },
+        {
+          id: "jeju-folk-village",
+          name: "제주 민속촌",
+          position: { lat: 33.3227, lng: 126.8418 },
+          description: "제주의 전통 문화를 체험",
+          address: "Jeju Folk Village, Seogwipo, Jeju, South Korea",
+        },
+      ],
+    },
+    osaka: {
+      attractions: [
+        {
+          id: "dotonbori",
+          name: "도톤보리",
+          position: { lat: 34.6687, lng: 135.5031 },
+          description: "오사카의 활기찬 먹거리 거리",
+          address: "Dotonbori, Chuo Ward, Osaka, 542-0071",
+        },
+        {
+          id: "osaka-castle",
+          name: "오사카 성",
+          position: { lat: 34.6873, lng: 135.5262 },
+          description: "역사적인 성곽",
+          address: "1-1 Osakajo, Chuo Ward, Osaka, 540-0002",
+        },
+        {
+          id: "universal-studios",
+          name: "유니버설 스튜디오 재팬",
+          position: { lat: 34.6654, lng: 135.4323 },
+          description: "인기 있는 테마파크",
+          address: "2-chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031",
+        },
+        {
+          id: "umeda-wheel",
+          name: "우메다 공중정원",
+          position: { lat: 34.7052, lng: 135.4957 },
+          description: "오사카의 전경을 볼 수 있는 전망대",
+          address: "Japan, 〒531-6039 Osaka, Kita Ward, Oyodonaka, 1 Chome−1−88",
+        },
+        {
+          id: "namba",
+          name: "난바",
+          position: { lat: 34.6659, lng: 135.5013 },
+          description: "쇼핑과 엔터테인먼트의 중심지",
+          address: "Namba, Chuo Ward, Osaka, 542-0076",
+        },
+      ],
+    },
+    paris: {
+      attractions: [
+        {
+          id: "eiffel-tower",
+          name: "에펠탑",
+          position: { lat: 48.8584, lng: 2.2945 },
+          description: "파리의 상징",
+          address: "Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France",
+        },
+        {
+          id: "louvre-museum",
+          name: "루브르 박물관",
+          position: { lat: 48.8606, lng: 2.3376 },
+          description: "세계적인 박물관",
+          address: "Rue de Rivoli, 75001 Paris, France",
+        },
+        {
+          id: "notre-dame",
+          name: "노트르담 대성당",
+          position: { lat: 48.853, lng: 2.3499 },
+          description: "고딕 양식의 대성당",
+          address: "6 Parvis Notre-Dame - Pl. Jean-Paul II, 75004 Paris, France",
+        },
+        {
+          id: "arc-de-triomphe",
+          name: "개선문",
+          position: { lat: 48.8738, lng: 2.295 },
+          description: "나폴레옹의 승리를 기념",
+          address: "Place Charles de Gaulle, 75008 Paris, France",
+        },
+        {
+          id: "montmartre",
+          name: "몽마르트",
+          position: { lat: 48.8867, lng: 2.3431 },
+          description: "예술가의 동네",
+          address: "Montmartre, 75018 Paris, France",
+        },
+      ],
+    },
+    rome: {
+      attractions: [
+        {
+          id: "colosseum",
+          name: "콜로세움",
+          position: { lat: 41.8902, lng: 12.4922 },
+          description: "고대 로마의 원형 경기장",
+          address: "Piazza del Colosseo, 1, 00184 Roma RM, Italy",
+        },
+        {
+          id: "vatican-museums",
+          name: "바티칸 박물관",
+          position: { lat: 41.9065, lng: 12.4534 },
+          description: "시스티나 성당 포함",
+          address: "Viale Vaticano, 00165 Roma RM, Italy",
+        },
+        {
+          id: "trevi-fountain",
+          name: "트레비 분수",
+          position: { lat: 41.9009, lng: 12.4833 },
+          description: "동전을 던져 소원을 빌어보세요",
+          address: "Piazza di Trevi, 00187 Roma RM, Italy",
+        },
+        {
+          id: "pantheon",
+          name: "판테온",
+          position: { lat: 41.8986, lng: 12.4769 },
+          description: "로마의 역사적인 건축물",
+          address: "Piazza della Rotonda, 00186 Roma RM, Italy",
+        },
+        {
+          id: "roman-forum",
+          name: "로마 포럼",
+          position: { lat: 41.8925, lng: 12.4853 },
+          description: "고대 로마의 중심지",
+          address: "Via della Salara Vecchia, 5/6, 00186 Roma RM, Italy",
+        },
+      ],
+    },
+    singapore: {
+      attractions: [
+        {
+          id: "marina-bay-sands",
+          name: "마리나 베이 샌즈",
+          position: { lat: 1.2834, lng: 103.8607 },
+          description: "럭셔리 호텔과 전망대",
+          address: "10 Bayfront Avenue, Singapore 018956",
+        },
+        {
+          id: "gardens-by-the-bay",
+          name: "가든스 바이 더 베이",
+          position: { lat: 1.2815, lng: 103.8636 },
+          description: "미래적인 정원",
+          address: "18 Marina Gardens Drive, Singapore 018953",
+        },
+        {
+          id: "sentosa-island",
+          name: "센토사 섬",
+          position: { lat: 1.2494, lng: 103.8303 },
+          description: "해변과 놀이공원",
+          address: "Sentosa Island, Singapore",
+        },
+        {
+          id: "universal-studios",
+          name: "유니버설 스튜디오 싱가포르",
+          position: { lat: 1.254, lng: 103.8238 },
+          description: "테마파크",
+          address: "8 Sentosa Gateway, Singapore 098269",
+        },
+        {
+          id: "merlion-park",
+          name: "머라이언 파크",
+          position: { lat: 1.2868, lng: 103.8545 },
+          description: "싱가포르의 상징",
+          address: "1 Fullerton Road, Singapore 049213",
+        },
+      ],
+    },
+    tokyo: {
+      attractions: [
+        {
+          id: "tokyo-tower",
+          name: "도쿄 타워",
+          position: { lat: 35.6586, lng: 139.7454 },
+          description: "도쿄의 랜드마크",
+          address: "4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011",
+        },
+        {
+          id: "shibuya-crossing",
+          name: "시부야 스크램블 교차로",
+          position: { lat: 35.6595, lng: 139.7004 },
+          description: "세계적으로 유명한 교차로",
+          address: "2 Chome-2-1 Dogenzaka, Shibuya City, Tokyo 150-0043",
+        },
+        {
+          id: "meiji-shrine",
+          name: "메이지 신궁",
+          position: { lat: 35.6763, lng: 139.6993 },
+          description: "평화로운 신사",
+          address: "1-1 Yoyogikamizonocho, Shibuya City, Tokyo 151-8557",
+        },
+        {
+          id: "senso-ji",
+          name: "센소지 사원",
+          position: { lat: 35.7147, lng: 139.7966 },
+          description: "도쿄의 오래된 사원",
+          address: "2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032",
+        },
+        {
+          id: "tokyo-skytree",
+          name: "도쿄 스카이트리",
+          position: { lat: 35.7101, lng: 139.8107 },
+          description: "세계에서 가장 높은 타워",
+          address: "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045",
+        },
+      ],
+    },
+    venice: {
+      attractions: [
+        {
+          id: "st-marks-square",
+          name: "산 마르코 광장",
+          position: { lat: 45.4341, lng: 12.3388 },
+          description: "베니스의 중심 광장",
+          address: "Piazza San Marco, 30100 Venezia VE, Italy",
+        },
+        {
+          id: "rialto-bridge",
+          name: "리알토 다리",
+          position: { lat: 45.4381, lng: 12.3358 },
+          description: "대운하 위의 유명한 다리",
+          address: "Sestiere San Polo, 30125 Venezia VE, Italy",
+        },
+        {
+          id: "doges-palace",
+          name: "도지의 궁전",
+          position: { lat: 45.4337, lng: 12.3401 },
+          description: "베니스의 역사적인 궁전",
+          address: "P.za San Marco, 1, 30124 Venezia VE, Italy",
+        },
+        {
+          id: "grand-canal",
+          name: "대운하",
+          position: { lat: 45.4408, lng: 12.3325 },
+          description: "베니스의 주요 운하",
+          address: "Grand Canal, Venice, Italy",
+        },
+        {
+          id: "burano",
+          name: "부라노 섬",
+          position: { lat: 45.4853, lng: 12.4167 },
+          description: "화려한 색상의 섬",
+          address: "Burano, 30142 Venice, Italy",
+        },
+      ],
+    },
+  };
+
+  const hotelsData = {
+    bangkok: [
+      { id: "hotel1", name: "방콕 호텔 A", position: { lat: 13.756, lng: 100.502 } },
+      { id: "hotel2", name: "방콕 호텔 B", position: { lat: 13.757, lng: 100.503 } },
+    ],
+    fukuoka: [
+      { id: "hotel1", name: "후쿠오카 호텔 A", position: { lat: 33.59, lng: 130.402 } },
+      { id: "hotel2", name: "후쿠오카 호텔 B", position: { lat: 33.591, lng: 130.403 } },
+    ],
+    jeju: [
+      { id: "hotel1", name: "제주 호텔 A", position: { lat: 33.4895, lng: 126.4985 } },
+      { id: "hotel2", name: "제주 호텔 B", position: { lat: 33.4900, lng: 126.4990 } },
+    ],
+    osaka: [
+      { id: "hotel1", name: "오사카 호텔 A", position: { lat: 34.694, lng: 135.503 } },
+      { id: "hotel2", name: "오사카 호텔 B", position: { lat: 34.695, lng: 135.504 } },
+    ],
+    paris: [
+      { id: "hotel1", name: "파리 호텔 A", position: { lat: 48.857, lng: 2.353 } },
+      { id: "hotel2", name: "파리 호텔 B", position: { lat: 48.858, lng: 2.354 } },
+    ],
+    rome: [
+      { id: "hotel1", name: "로마 호텔 A", position: { lat: 41.903, lng: 12.497 } },
+      { id: "hotel2", name: "로마 호텔 B", position: { lat: 41.904, lng: 12.498 } },
+    ],
+    singapore: [
+      { id: "hotel1", name: "싱가포르 호텔 A", position: { lat: 1.353, lng: 103.82 } },
+      { id: "hotel2", name: "싱가포르 호텔 B", position: { lat: 1.354, lng: 103.821 } },
+    ],
+    tokyo: [
+      { id: "tokyo-hotel1", name: "도쿄 호텔 A", position: { lat: 35.677, lng: 139.651 } },
+      { id: "hotel2", name: "도쿄 호텔 B", position: { lat: 35.678, lng: 139.652 } },
+    ],
+    venice: [
+      { id: "hotel1", name: "베니스 호텔 A", position: { lat: 45.441, lng: 12.316 } },
+      { id: "hotel2", name: "베니스 호텔 B", position: { lat: 45.442, lng: 12.317 } },
+    ],
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 회원 정보
-        const userResponse = await axiosInstance.get('/api/accounts/mypage');
-        console.log('회원정보', userResponse.data);
-        setUserInfo({
-          email: userResponse.data.email,
-          nickname: userResponse.data.nickname,
-          imgUrl: userResponse.data.imgUrl,
-          level: userResponse.data.level,
-          levelExp: userResponse.data.levelExp,
+    console.log("ItineraryGeneration initialized with:", {
+      destination,
+      startDate,
+      endDate,
+      computedIsAiMode,
+      plannerType,
+      isAiQuery,
+    });
+
+    if (!destination || !startDate || !endDate) {
+      toast.error("필수 정보가 누락되었습니다: " + (!destination ? "목적지" : !startDate ? "시작 날짜" : "종료 날짜"));
+      navigate(`/travel-planner/${destination || "fukuoka"}`);
+      return;
+    }
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
+    const initializeItinerary = async () => {
+  setIsLoading(true);
+  try {
+    let newItinerary = {};
+    if (computedIsAiMode) {
+      let aiItinerary = JSON.parse(localStorage.getItem("aiItinerary") || "[]");
+      if (!aiItinerary.length) {
+        // 백엔드에서 AI 일정 가져오기
+        const response = await axiosInstance.post("/api/aiplan/generate", {
+          destination: destination.toLowerCase(),
+          start_date: startDate,
+          end_date: endDate,
+          user_id: localStorage.getItem("userId") || "default_user",
         });
-
-        // 예약 목록
-        const bookingsResponse = await axiosInstance.get('/api/flights/my-bookings');
-        console.log('예약 목록:', bookingsResponse.data);
-        if (bookingsResponse.data.success) {
-          setBookings(bookingsResponse.data.data);
-        }
-
-        // AI 일정
-        const aiPlansResponse = await axiosInstance.get('/api/aiplan/my-plans');
-        console.log('AI 일정 목록:', aiPlansResponse.data);
-        const aiTrips = aiPlansResponse.data.map(plan => ({
-          id: plan.id,
-          title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
-          date: `${plan.startDate} - ${plan.endDate}`,
-          status: plan.status,
-          planType: plan.planType,
-          image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
-          color: getColorForDestination(plan.destination),
-        }));
-
-        // 수동 일정
-        const manualPlansResponse = await axiosInstance.get('/api/travel-plans/my-plans');
-        console.log('수동 일정 목록:', manualPlansResponse.data);
-        const manualTrips = manualPlansResponse.data.map(plan => ({
-          id: plan.id,
-          title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
-          date: `${plan.startDate} - ${plan.endDate}`,
-          status: plan.status,
-          planType: plan.planType,
-          image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
-          color: getColorForDestination(plan.destination),
-        }));
-
-        // AI와 수동 일정 통합
-        setMyTrips([...aiTrips, ...manualTrips]);
-      } catch (error) {
-        console.error('데이터 요청 실패:', error);
-        toast.error('데이터를 불러오는 중 오류가 발생했습니다.');
+        aiItinerary = response.data.itinerary || [];
+        localStorage.setItem("aiItinerary", JSON.stringify(aiItinerary));
+        console.log("AI itinerary fetched from backend:", aiItinerary);
       }
+      if (!aiItinerary.length) {
+        throw new Error("AI 일정 데이터가 없습니다.");
+      }
+      aiItinerary.forEach((dayData, index) => {
+        const dayKey = dayKeys[index];
+        if (dayKey) {
+          newItinerary[dayKey] = {
+            hotel: selectedHotels?.[dayKey] || "hotel1",
+            attractions: dayData.activities.map((act, idx) => {
+              const attr = attractionsData[destination.toLowerCase()]?.attractions.find(a => a.name === act.activity) || {
+                id: `custom-${act.activity}-${index}-${idx}`,
+                name: act.activity,
+                position: mapCenter,
+                description: act.description || "설명 없음",
+                address: "",
+              };
+              return {
+                id: attr.id,
+                name: attr.name,
+                position: attr.position,
+                description: attr.description,
+                address: attr.address,
+              };
+            }),
+            transportation: selectedTransportation || "car",
+            meals: [
+              { time: "08:00", type: "아침", name: "호텔 조식" },
+              { time: "12:00", type: "점심", name: "현지 식당" },
+              { time: "18:00", type: "저녁", name: "현지 식당" },
+            ],
+          };
+        }
+      });
+        } else {
+          dayKeys.forEach((day, index) => {
+            const dayKey = `day${index + 1}`;
+            const attractionsForDay = Array.isArray(selectedAttractions?.[dayKey])
+              ? selectedAttractions[dayKey].map((id) => {
+                  const attr = [
+                    ...(attractionsData[destination.toLowerCase()]?.attractions || []),
+                    ...customAttractions,
+                  ].find((a) => a.id === id);
+                  return attr || {
+                    id,
+                    name: "알 수 없는 장소",
+                    position: mapCenter,
+                    description: "설명 없음",
+                    address: "",
+                  };
+                })
+              : [];
+            newItinerary[day] = {
+              hotel: selectedHotels?.[dayKey] || "hotel1",
+              attractions: attractionsForDay,
+              transportation: selectedTransportation || "car",
+              meals: [
+                { time: "08:00", type: "아침", name: "호텔 조식" },
+                { time: "12:00", type: "점심", name: "현지 식당" },
+                { time: "18:00", type: "저녁", name: "현지 식당" },
+              ],
+            };
+          });
+        }
+        setItinerary(newItinerary);
+    console.log("Itinerary initialized:", newItinerary);
+  } catch (error) {
+    setErrorMessage("일정을 생성하는 데 문제가 발생했습니다: " + error.message);
+    toast.error("일정 생성에 실패했습니다: " + error.message);
+  } finally {
+    setIsLoading(false);
+  }
     };
 
-    fetchData();
-  }, []);
+    initializeItinerary();
+  }, [destination, startDate, endDate, computedIsAiMode, dayKeys, selectedAttractions, selectedHotels, selectedTransportation, customAttractions, navigate]);
 
-  const destinationMap = {
-    tokyo: '도쿄',
-    jeju: '제주도',
-    bangkok: '방콕',
-    paris: '파리',
-    rome: '로마',
-    venice: '베니스',
-    fukuoka: '후쿠오카',
-    singapore: '싱가포르',
-    osaka: '오사카',
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
   };
 
-  const getColorForDestination = (destination) => {
-    const colors = {
-      tokyo: '#ff6b6b',
-      jeju: '#51cf66',
-      bangkok: '#ffd43b',
-      paris: '#4dabf7',
-      rome: '#ff9a9e',
-      venice: '#93c5fd',
-      fukuoka: '#adb5bd',
-      singapore: '#f3d9fa',
-      osaka: '#ff922b',
-    };
-    return colors[destination.toLowerCase()] || '#4dabf7';
-  };
-
-  const savedItems = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      type: '명소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      type: '맛집',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '호텔 미라코스타',
-      type: '숙소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.14',
-      color: '#4dabf7',
-    },
-    {
-      id: 4,
-      title: '방콕 왕궁',
-      type: '명소',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ff6b6b',
-    },
-    {
-      id: 5,
-      title: '팟타이 맛집',
-      type: '맛집',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ffd43b',
-    },
-  ];
-
-  const myReviews = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      rating: 4.5,
-      date: '2025.03.20',
-      content:
-        '도쿄 전경을 한눈에 볼 수 있어서 좋았습니다. 입장료가 조금 비싸지만 볼만한 가치가 있어요.',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      rating: 5,
-      date: '2025.03.19',
-      content:
-        '정말 맛있었습니다! 줄이 길었지만 기다릴 만한 가치가 있었어요. 돈코츠 라멘의 진수를 맛볼 수 있습니다.',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '제주 협재해변',
-      rating: 4,
-      date: '2025.03.12',
-      content:
-        '물이 맑고 모래가 고운 해변이에요. 날씨가 좋으면 에메랄드빛 바다를 볼 수 있습니다.',
-      color: '#51cf66',
-    },
-  ];
-
-  const formatRelativeTime = (string) => {
-    const now = new Date();
-    now.setFullYear(2025);
-    const date = new Date(string);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) {
-      return '방금 전';
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes}분 전`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours}시간 전`;
-    } else if (diffInSeconds < 604800) {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `${days}일 전`;
-    } else if (diffInSeconds < 2592000) {
-      const weeks = Math.floor(diffInSeconds / 604800);
-      return `${weeks}주 전`;
-    } else if (diffInSeconds < 31536000) {
-      const months = Math.floor(diffInSeconds / 2592000);
-      return `${months}개월 전`;
+  const handleSaveChanges = async () => {
+  try {
+    if (computedIsAiMode) {
+      const aiItinerary = JSON.parse(localStorage.getItem("aiItinerary") || "[]");
+      const aiPlanRequest = {
+        destination: destination.toLowerCase(),
+        start_date: startDate,
+        end_date: endDate,
+        planType: "AI",
+        itinerary: aiItinerary,
+        user_id: localStorage.getItem("userId") || "default_user",
+      };
+      const response = await axiosInstance.post("/api/aiplan/save", aiPlanRequest);
+      toast.success("AI 일정이 저장되었습니다!");
+      navigate("/mypage");
     } else {
-      const years = Math.floor(diffInSeconds / 31536000);
-      return `${years}년 전`;
+      const places = [];
+      console.log("Selected attractions:", selectedAttractions);
+      Object.keys(selectedAttractions || {}).forEach((dayKey, index) => {
+        (selectedAttractions[dayKey] || []).forEach((attractionId) => {
+          const attraction = attractionData[attractionId];
+          if (attraction) {
+            places.push({
+              name: attraction.name,
+              address: attraction.address,
+              day: (index + 1).toString(),
+              category: attraction.category,
+              description: attraction.description,
+              latitude: attraction.latitude,
+              longitude: attraction.longitude,
+              time: attraction.time,
+            });
+          }
+        });
+      });
+
+      const accommodations = [];
+      console.log("Selected hotels:", selectedHotels);
+      Object.keys(selectedHotels || {}).forEach((dayKey, index) => {
+        const hotelId = selectedHotels[dayKey];
+        const hotel = hotelData[hotelId];
+        if (hotel) {
+          accommodations.push({
+            name: hotel.name,
+            address: hotel.address,
+            day: (index + 1).toString(),
+            description: hotel.description,
+            latitude: hotel.latitude,
+            longitude: hotel.longitude,
+            checkInDate: hotel.checkInDate,
+            checkOutDate: hotel.checkOutDate,
+          });
+        }
+      });
+
+      const transportations = selectedTransportation
+        ? Object.keys(selectedAttractions || {}).map((dayKey, index) => ({
+            type: selectedTransportation,
+            day: (index + 1).toString(),
+          }))
+        : [];
+      console.log("Transportations:", transportations);
+
+      const travelPlanRequest = {
+        city: destination.toLowerCase(),
+        country: getCountryByDestination(destination),
+        start_date: startDate,
+        end_date: endDate,
+        plan_type: "MY",
+        places,
+        accommodations,
+        transportations,
+        travelPlanId: localStorage.getItem("travelPlanId") || null,
+        a_id: localStorage.getItem("accountId") || null,
+      };
+
+      console.log("Travel plan request:", travelPlanRequest);
+      const response = await axiosInstance.post("/api/travel-plans", travelPlanRequest);
+      toast.success("수동 일정이 저장되었습니다!");
+      navigate("/mypage");
     }
+  } catch (error) {
+    console.error("Error saving itinerary:", error);
+    toast.error("일정 저장에 실패했습니다: " + (error.response?.data?.message || error.message));
+  }
+};
+
+  function getCountryByDestination(dest) {
+    return countryMap[dest?.toLowerCase()] || "알 수 없음";
+  }
+
+  const handleFlightSelect = () => {
+    setIsFlightModalOpen(true);
   };
 
-  const getStatusBadgeColor = (string) => {
-    switch (string) {
-      case 'RESERVED':
-        return 'bg-[#93c5fd] text-white';
-      case 'CANCELLED':
-        return 'bg-[#ff9a9e] text-white';
-      default:
-        return 'bg-[#93c5fd] text-white';
-    }
+  const handleDayChange = (dayIndex) => {
+    setSelectedDay(dayIndex + 1);
   };
 
-  const getAirportName = (code) => {
-    const airportMap = {
-      ICN: '인천',
-      NRT: '나리타',
-      HND: '하네다',
-      HKG: '홍콩',
-      CDG: '파리 샤를드골',
-      LHR: '런던 히드로',
-    };
-    return airportMap[code] || code;
-  };
+  const currentDayKey = dayKeys[selectedDay - 1];
+  const currentItinerary = itinerary[currentDayKey] || {};
+  const currentAttractions = currentItinerary.attractions || [];
+  const currentHotelId = currentItinerary.hotel || "hotel1";
+  const currentHotel = hotelsData[destination.toLowerCase()]?.find((h) => h.id === currentHotelId) || { name: "호텔 정보 없음", position: mapCenter };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('ko-KR', {
-      style: 'currency',
-      currency: 'KRW',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const mapMarkers = [
+    ...(currentAttractions.map((attr, idx) => ({
+      id: attr.id || `attr-${idx}`,
+      position: attr.position || mapCenter,
+      title: attr.name,
+      selected: true,
+    }))),
+    {
+      id: currentHotelId,
+      position: currentHotel.position || mapCenter,
+      title: currentHotel.name,
+      selected: true,
+    },
+  ];
+  console.log("Map markers:", mapMarkers);
+
+  if (isLoading) {
+    return <div className="p-4 text-traveling-text">일정을 준비 중입니다...</div>;
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="p-4 text-red-600">
+        {errorMessage}
+        <Button
+          className="mt-4 bg-traveling-purple text-white hover:bg-traveling-purple/90"
+          onClick={() => {
+            setErrorMessage("");
+            isInitialized.current = false;
+          }}
+        >
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-md">
-      <div className="mb-8 flex flex-col items-center justify-center md:flex-row md:items-start md:justify-start">
-        <Avatar className="h-24 w-24 border-4 border-[#4dabf7]">
-          <AvatarImage
-            src={userInfo?.imgUrl || '/placeholder.svg?height=96&width=96'}
-            alt="프로필 이미지"
-          />
-        </Avatar>
-
-        <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
-          <h2 className="text-2xl font-bold text-[#1e3a8a]">
-            {userInfo.nickname}
+    <div className="space-y-6">
+      <Card className="bg-white p-6 shadow-md">
+        <div className="mb-6">
+          <h2 className="mb-2 text-center text-2xl font-bold text-traveling-text">
+            {cityNames[destination.toLowerCase()] || "여행지 미지정"} 여행 일정
           </h2>
-          <p className="text-[#495057]">{userInfo.email}</p>
+          <p className="text-center text-sm text-traveling-text/70">
+            {startDate && endDate ? `${startDate} ~ ${endDate} (${dayKeys.length}일)` : "날짜 미지정"}
+          </p>
+        </div>
 
-          <div className="mt-2">
-            <div className="flex items-center">
-              <span className="text-sm text-[#495057]">
-                여행 레벨: {currentLevel.label}
-              </span>
-              <Badge
-                onClick={() => setShowLevelModal(true)}
-                className="ml-2 cursor-pointer bg-[#ffd43b] text-[#1e3a8a]"
-              >
-                {Math.floor(userInfo.levelExp / 100) + 1 >= 7
-                  ? '🏆 MAX'
-                  : `Lv.${Math.floor(userInfo.levelExp / 100) + 1}`}
-              </Badge>
-            </div>
-            <div className="mt-1 flex items-center">
-              <div className="h-2 w-32 bg-[#e7f5ff]">
-                <div
-                  className="h-full bg-[#4dabf7]"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-              <span
-                className="ml-2 text-xs text-[#495057] cursor-pointer hover:underline"
-                onClick={() => setShowExpModal(true)}
-              >
-                {percent}%
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 flex space-x-2">
-            <Link to="/settings">
+        <div className="sticky top-0 z-10 bg-white py-3 mb-4 border-b">
+          <div className="flex space-x-2 overflow-x-auto">
+            {dayKeys.map((day, idx) => (
               <Button
-                size="sm"
-                variant="outline"
-                className="border-traveling-blue text-traveling-text hover:bg-traveling-light-blue"
+                key={day}
+                onClick={() => handleDayChange(idx)}
+                className={
+                  selectedDay === idx + 1
+                    ? "bg-traveling-purple text-white"
+                    : "border border-traveling-text/30 text-traveling-text"
+                }
               >
-                <Settings className="mr-1 h-4 w-4" />
-                설정
+                {idx + 1}일차
               </Button>
-            </Link>
-
-            <Link to="/profile-edit">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-traveling-blue text-traveling-text hover:bg-traveling-light-blue"
-              >
-                <PenLine className="mr-1 h-4 w-4" />
-                프로필 수정
-              </Button>
-            </Link>
+            ))}
           </div>
         </div>
-      </div>
 
-      <Tabs
-        defaultValue="my-trips"
-        className="w-full"
-        onValueChange={setActiveTab}
-      >
-        <TabsList className="mb-6 grid w-full grid-cols-4 bg-[#e7f5ff]">
-          <TabsTrigger
-            value="my-trips"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-          >
-            내 여행
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="bookings"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-          >
-            내 예약
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="saved"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-          >
-            내 저장
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="reviews"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-          >
-            내 리뷰
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="my-trips">
-          <div className="grid gap-6 md:grid-cols-3">
-            {myTrips.length > 0 ? (
-              myTrips.map((trip) => (
-                <Card
-                  key={trip.id}
-                  className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
-                >
-                  <div className="relative h-40 w-full bg-[#e7f5ff]">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg viewBox="0 0 100 100" className="h-20 w-20">
-                        {trip.image === '도쿄' && (
-                          <>
-                            <path d="M50,80 L30,40 L70,40 Z" fill="#ff6b6b" />
-                            <rect
-                              x="45"
-                              y="20"
-                              width="10"
-                              height="20"
-                              fill="#ff6b6b"
-                            />
-                          </>
-                        )}
-                        {trip.image === '제주도' && (
-                          <>
-                            <path
-                              d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
-                              fill="#51cf66"
-                            />
-                            <path
-                              d="M50,30 L55,45 L70,45 L60,55 L65,70 L50,60 L35,70 L40,55 L30,45 L45,45 Z"
-                              fill="#ffd43b"
-                            />
-                          </>
-                        )}
-                        {trip.image === '방콕' && (
-                          <>
-                            <path
-                              d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
-                              fill="#ffd43b"
-                            />
-                            <path
-                              d="M40,65 L60,65 L55,80 L45,80 Z"
-                              fill="#ffd43b"
-                            />
-                          </>
-                        )}
-                        {trip.image === '파리' && (
-                          <>
-                            <path
-                              d="M50,80 L40,40 L60,40 Z"
-                              fill="#4dabf7"
-                            />
-                            <rect
-                              x="45"
-                              y="20"
-                              width="10"
-                              height="20"
-                              fill="#4dabf7"
-                            />
-                          </>
-                        )}
-                        {trip.image === '로마' && (
-                          <>
-                            <path
-                              d="M50,80 L30,40 L70,40 Z"
-                              fill="#ff9a9e"
-                            />
-                            <circle
-                              cx="50"
-                              cy="30"
-                              r="10"
-                              fill="#ff9a9e"
-                            />
-                          </>
-                        )}
-                        {trip.image === '베니스' && (
-                          <>
-                            <path
-                              d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
-                              fill="#93c5fd"
-                            />
-                            <path
-                              d="M50,30 L60,50 L50,70 L40,50 Z"
-                              fill="#ffffff"
-                            />
-                          </>
-                        )}
-                        {trip.image === '후쿠오카' && (
-                          <>
-                            <path
-                              d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
-                              fill="#adb5bd"
-                            />
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="10"
-                              fill="#adb5bd"
-                            />
-                          </>
-                        )}
-                        {trip.image === '싱가포르' && (
-                          <>
-                            <path
-                              d="M50,20 C70,20 80,40 80,50 C80,70 60,80 50,80 C30,80 20,70 20,50 C20,40 30,20 50,20 Z"
-                              fill="#f3d9fa"
-                            />
-                            <rect
-                              x="45"
-                              y="30"
-                              width="10"
-                              height="40"
-                              fill="#ffffff"
-                            />
-                          </>
-                        )}
-                        {trip.image === '오사카' && (
-                          <>
-                            <path
-                              d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
-                              fill="#ff922b"
-                            />
-                            <rect
-                              x="45"
-                              y="30"
-                              width="10"
-                              height="20"
-                              fill="#ffffff"
-                            />
-                          </>
-                        )}
-                      </svg>
-                    </div>
-                    <Badge
-                      className={`absolute right-2 top-2 ${
-                        trip.status === '예정' ? 'bg-[#4dabf7]' : 'bg-[#adb5bd]'
-                      } text-white`}
-                    >
-                      {trip.planType || 'AI'}
-                    </Badge>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-medium text-[#1e3a8a]">{trip.title}</h3>
-                    <div className="mt-2 flex items-center text-sm text-[#495057]">
-                      <Calendar className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                      <span>{trip.date}</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between bg-[#e7f5ff]/30 p-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                    >
-                      상세보기
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                    >
-                      수정하기
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-3 text-center py-8">
-                <p className="text-[#495057]">저장된 여행 일정이 없습니다.</p>
-                <Link to="/travel-planner">
-                  <Button
-                    size="sm"
-                    className="mt-4 border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                  >
-                    여행 계획 시작하기
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            <Link to="/travel-planner" className="block h-full">
-              <Card className="flex h-full min-h-[220px] items-center justify-center bg-[#f8f9fa]/50 border-dashed border-[#d0ebff] transition-transform duration-200 hover:scale-[1.02]">
-                <CardContent className="flex flex-col items-center p-6 text-center">
-                  <div className="mb-4 rounded-full bg-[#e7f5ff] p-3">
-                    <Plus className="h-6 w-6 text-[#4dabf7]" />
-                  </div>
-                  <h3 className="text-[#1e3a8a]">새 여행 만들기</h3>
-                  <p className="mt-1 text-sm text-[#495057]">
-                    새로운 여행 일정을 계획해보세요
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="bookings">
+        <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            {bookings.length > 0 ? (
-              bookings.map((booking) => (
-                <Card
-                  key={booking.id}
-                  className="overflow-hidden bg-[#f8f9fa] hover:bg-[#e0f2fe]/20"
-                >
-                  <div
-                    className="absolute left-0 top-0 h-full w-1"
-                    style={{ backgroundColor: '#93c5fd' }}
-                  ></div>
-                  <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-[#e0f2fe] p-2">
-                        <Plane className="h-5 w-5" style={{ color: '#93c5fd' }} />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg text-[#4338ca]">
-                          {getAirportName(booking.departureAirport)} →{' '}
-                          {getAirportName(booking.arrivalAirport)}
-                        </CardTitle>
-                        <div className="mt-1 space-y-1 text-sm text-[#495057]">
-                          <p>
-                            {booking.carrier} {booking.flightNumber}
-                          </p>
-                          <p>
-                            출발:{' '}
-                            {format(
-                              new Date(booking.departureTime),
-                              'yyyy.MM.dd HH:mm',
-                              { locale: ko }
-                            )}
-                          </p>
-                          <p>
-                            도착:{' '}
-                            {format(
-                              new Date(booking.arrivalTime),
-                              'yyyy.MM.dd HH:mm',
-                              { locale: ko }
-                            )}
-                          </p>
-                          <p>탑승객: {booking.passengerCount}명</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <Badge className={getStatusBadgeColor(booking.status)}>
-                        {booking.status === 'RESERVED' ? '예약 완료' : '취소됨'}
-                      </Badge>
-                      <p className="mt-2 font-medium text-[#4338ca]">
-                        {formatPrice(booking.totalPrice)}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-traveling-text">{selectedDay}일차 일정</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEditToggle}
+                    className="text-traveling-purple"
+                  >
+                    {isEditing ? "완료" : "편집"}
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Plane className="h-6 w-6 text-traveling-purple" />
+                    <div>
+                      <p className="font-medium text-traveling-text">
+                        {selectedDay === 1 ? "왕복 항공편" : "항공편 없음"}
                       </p>
-                    </div>
-                  </CardHeader>
-                  <CardFooter className="flex justify-end pb-4 pl-6 pt-2">
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-[#93c5fd] text-[#4338ca] hover:bg-[#e0f2fe]"
-                      >
-                        상세보기
-                      </Button>
-                      {booking.status === 'RESERVED' && (
+                      <p className="text-sm text-traveling-text/70">
+                        {selectedDay === 1
+                          ? "항공편을 선택하려면 아래 버튼을 클릭하세요"
+                          : "추가 이동 없음"}
+                      </p>
+                      {selectedDay === 1 && (
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="border-[#ff9a9e] text-[#ff9a9e] hover:bg-[#fce7f3]"
+                          className="mt-2 bg-traveling-purple text-white hover:bg-traveling-purple/90"
+                          onClick={handleFlightSelect}
                         >
-                          예약 취소
+                          항공편 선택
                         </Button>
                       )}
                     </div>
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-[#495057]">예약 내역이 없습니다.</p>
-                <Link to="/flight-search">
-                  <Button
-                    size="sm"
-                    className="mt-4 border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                  >
-                    항공권 검색하기
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </TabsContent>
+                  </div>
 
-        <TabsContent value="saved">
-          <div className="space-y-4">
-            {savedItems.map((item) => (
-              <Card
-                key={item.id}
-                className="overflow-hidden bg-[#f8f9fa] hover:bg-[#e7f5ff]/20"
-              >
-                <div
-                  className="absolute left-0 top-0 h-full w-1"
-                  style={{ backgroundColor: item.color }}
-                ></div>
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
-                  <div>
-                    <CardTitle className="text-lg text-[#1e3a8a]">
-                      {item.title}
-                    </CardTitle>
-                    <div className="mt-1 flex items-center text-sm text-[#495057]">
-                      <MapPin className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                      <span>{item.location}</span>
+                  <div className="flex items-start gap-3">
+                    <Hotel className="h-6 w-6 text-traveling-purple" />
+                    <div>
+                      <p className="font-medium text-traveling-text">{currentHotel.name}</p>
+                      <p className="text-sm text-traveling-text/70">숙소 확인 완료</p>
                     </div>
                   </div>
-                  <Badge
-                    className={`
-                    ${
-                      item.type === '명소'
-                        ? 'bg-[#ff6b6b]'
-                        : item.type === '맛집'
-                        ? 'bg-[#ffd43b]'
-                        : 'bg-[#4dabf7]'
-                    }
-                    text-white
-                    `}
-                  >
-                    {item.type}
-                  </Badge>
-                </CardHeader>
-                <CardFooter className="flex items-center justify-between pb-4 pl-6 pt-2 text-sm text-[#495057]">
-                  <div className="flex items-center">
-                    <Bookmark className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                    <span>저장일: {item.savedDate}</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      상세보기
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
 
-        <TabsContent value="reviews">
-          <div className="space-y-6">
-            {myReviews.map((review) => (
-              <Card key={review.id} className="overflow-hidden bg-[#f8f9fa]">
-                <div
-                  className="absolute left-0 top-0 h-full w-1"
-                  style={{ backgroundColor: review.color }}
-                ></div>
-                <CardHeader className="pb-2 pl-6 pt-4">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg text-[#1e3a8a]">
-                      {review.title}
-                    </CardTitle>
-                    <div className="flex items-center">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(review.rating)
-                              ? 'fill-[#ffd43b] text-[#ffd43b]'
-                              : i < review.rating
-                              ? 'fill-[#ffd43b] text-[#ffd43b] stroke-[#ffd43b]'
-                              : 'text-[#dee2e6]'
-                          }`}
-                        />
-                      ))}
-                      <span className="ml-1 text-sm font-medium text-[#1e3a8a]">
-                        {review.rating}
-                      </span>
+                  {currentItinerary.meals?.map((meal, idx) => (
+                    <div key={`meal-${idx}`} className="flex items-start gap-3">
+                      {meal.type === "아침" ? (
+                        <Coffee className="h-6 w-6 text-traveling-purple" />
+                      ) : (
+                        <Utensils className="h-6 w-6 text-traveling-purple" />
+                      )}
+                      <div>
+                        <p className="font-medium text-traveling-text">
+                          {meal.time} {meal.type}
+                        </p>
+                        <p className="text-sm text-traveling-text/70">{meal.name}</p>
+                      </div>
                     </div>
-                  </div>
-                  <p className="mt-1 text-sm text-[#495057]">
-                    작성일: {review.date}
-                  </p>
-                </CardHeader>
-                <CardContent className="py-2 pl-6">
-                  <p className="text-[#1e3a8a]">{review.content}</p>
-                </CardContent>
-                <CardFooter className="flex justify-end pb-4 pl-6 pt-2">
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      수정
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+                  ))}
 
-      {showLevelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-white p-6 w-[90%] max-w-md shadow-xl">
-            <h2 className="text-xl font-bold text-center mb-4 text-[#1e3a8a]">
-              🌟 여행 레벨 안내
-            </h2>
-            <ul className="space-y-2 text-sm text-[#495057]">
-              <li>
-                <strong>Lv.1</strong> 여행 새싹 (0~99 exp)
-              </li>
-              <li>
-                <strong>Lv.2</strong> 초보 여행자 (100~199 exp)
-              </li>
-              <li>
-                <strong>Lv.3</strong> 탐험가 (200~299 exp)
-              </li>
-              <li>
-                <strong>Lv.4</strong> 모험가 (300~399 exp)
-              </li>
-              <li>
-                <strong>Lv.5</strong> 세계 여행자 (400~499 exp)
-              </li>
-              <li>
-                <strong>Lv.6</strong> 여행 달인 (500~599 exp)
-              </li>
-              <li>
-                <strong>🏆</strong> 전설의 여행자 (600+ exp)
-              </li>
-            </ul>
-            <button
-              onClick={() => setShowLevelModal(false)}
-              className="mt-6 w-full rounded bg-[#4dabf7] py-2 text-white hover:bg-[#339af0]"
-            >
-              닫기
-            </button>
+                  {currentAttractions.map((attr, idx) => (
+                    <div key={attr.id || `attr-${idx}`} className="flex items-start gap-3">
+                      <Camera className="h-6 w-6 text-traveling-purple" />
+                      <div>
+                        <p className="font-medium text-traveling-text">{attr.name}</p>
+                        <p className="text-sm text-traveling-text/70">{attr.description}</p>
+                        <p className="text-sm text-traveling-text/70">{attr.address}</p>
+                      </div>
+                      {isEditing && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500"
+                          onClick={() => {
+                            setItinerary((prev) => ({
+                              ...prev,
+                              [currentDayKey]: {
+                                ...prev[currentDayKey],
+                                attractions: prev[currentDayKey].attractions.filter(
+                                  (a) => a.id !== attr.id
+                                ),
+                              },
+                            }));
+                          }}
+                        >
+                          삭제
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="h-[600px] rounded-lg overflow-hidden">
+            <MapComponent
+              center={mapCenter}
+              markers={mapMarkers}
+              height="100%"
+            />
           </div>
         </div>
-      )}
 
-      {showExpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-white p-6 w-[90%] max-w-md shadow-xl">
-            <h2 className="text-xl font-bold text-center mb-4 text-[#1e3a8a]">
-              💡 경험치(Exp)란?
-            </h2>
-            <p className="text-sm text-[#495057] leading-relaxed">
-              경험치는 여행 활동을 할 때마다 자동으로 쌓이는 점수입니다.
-              <br />
-              <br />
-              예를 들어:
-              <ul className="mt-2 list-disc pl-5 space-y-1 text-left">
-                <li>여행 일정 만들기 +20</li>
-                <li>명소 추가하기 +5</li>
-                <li>커뮤니티 글 작성 +15</li>
-                <li>리뷰 작성 +20</li>
-              </ul>
-              <br />
-              일정 경험치를 모으면 자동으로 다음 레벨로 올라갑니다!
-            </p>
-            <button
-              onClick={() => setShowExpModal(false)}
-              className="mt-6 w-full rounded bg-[#4dabf7] py-2 text-white hover:bg-[#339af0]"
-            >
-              닫기
-            </button>
-          </div>
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            className="border-traveling-purple text-traveling-purple hover:bg-traveling-purple/10"
+            onClick={() => navigate(`/travel-planner/${destination}/step2`)}
+          >
+            이전 단계
+          </Button>
+          <Button
+            className="bg-traveling-purple text-white hover:bg-traveling-purple/90"
+            onClick={handleSaveChanges}
+            disabled={isEditing}
+          >
+            일정 저장
+          </Button>
         </div>
+      </Card>
+
+      {isFlightModalOpen && (
+        <FlightModal
+          isOpen={isFlightModalOpen}
+          onClose={() => setIsFlightModalOpen(false)}
+          destination={destination}
+          startDate={startDate}
+          endDate={endDate}
+        />
       )}
     </div>
   );
 }
 
-export default MyPageContent;
-//--------------------------------------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//css 신호등 
-// import React, { useState, useEffect } from 'react';
-// import { Link } from 'react-router-dom';
-// import {
-//   Calendar,
-//   MapPin,
-//   Bookmark,
-//   Star,
-//   Settings,
-//   PenLine,
-//   Plus,
-//   Plane,
-//   Hotel,
-//   Bus,
-//   Train,
-//   ArrowRight,
-// } from 'lucide-react';
-// import { Button } from '../../modules/Button';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
-// import {
-//   Card,
-//   CardContent,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from '../../modules/Card';
-// import { Avatar, AvatarImage } from '../../modules/Avatar';
-// import { Progress } from '../../modules/Progress';
-// import { Badge } from '../../modules/Badge';
-// import axiosInstance from "../../api/axiosInstance";
-// import { format } from 'date-fns';
-// import { ko } from 'date-fns/locale';
-
-// function MyPageContent() {
-//   const [activeTab, setActiveTab] = useState('my-trips');
-//   const [userInfo, setUserInfo] = useState({
-//     email: '',
-//     nickname: '',
-//     imgUrl: '',
-//     level: '',
-//     levelExp: 0,
-//   });
-//   const [bookings, setBookings] = useState([]);
-//   const [showLevelModal, setShowLevelModal] = useState(false);
-//   const [showExpModal, setShowExpModal] = useState(false);
-
-//   const levelInfo = {
-//     BEGINNER: { label: '여행 새싹', min: 0, max: 99 },
-//     NOVICE: { label: '초보 여행자', min: 100, max: 199 },
-//     EXPLORER: { label: '탐험가', min: 200, max: 299 },
-//     ADVENTURER: { label: '모험가', min: 300, max: 399 },
-//     WORLD_TRAVELER: { label: '세계 여행자', min: 400, max: 499 },
-//     MASTER: { label: '여행 달인', min: 500, max: 599 },
-//     LEGEND: { label: '전설의 여행자', min: 600, max: 9999 },
-//   };
-
-//   const currentLevel = levelInfo[userInfo.level] || levelInfo.BEGINNER;
-//   const percent = Math.floor(
-//     ((userInfo.levelExp - currentLevel.min) /
-//       (currentLevel.max - currentLevel.min + 1)) * 100
-//   );
-
-//   useEffect(() => {
-//     const fetchUserInfo = async () => {
-//       try {
-//         const res = await axiosInstance.get('/api/accounts/mypage');
-//         console.log('회원정보', res.data);
-//         setUserInfo({
-//           email: res.data.email,
-//           nickname: res.data.nickname,
-//           imgUrl: res.data.imgUrl,
-//           level: res.data.level,
-//           levelExp: res.data.levelExp,
-//         });
-//       } catch (error) {
-//         console.error('회원정보 요청 실패:', error);
-//       }
-//     };
-
-//     const fetchBookings = async () => {
-//       try {
-//         const res = await axiosInstance.get('/api/flights/my-bookings');
-//         console.log('예약 목록:', res.data);
-//         if (res.data.success) {
-//           setBookings(res.data.data);
-//         }
-//       } catch (error) {
-//         console.error('예약 목록 요청 실패:', error);
-//       }
-//     };
-
-//     fetchUserInfo();
-//     fetchBookings();
-//   }, []);
-
-//   const myTrips = [
-//     {
-//       id: 1,
-//       title: '도쿄 3박 4일',
-//       date: '2025.05.15 - 2025.05.18',
-//       status: '예정',
-//       image: '도쿄',
-//       color: '#ff6b6b',
-//     },
-//     {
-//       id: 2,
-//       title: '제주도 가족여행',
-//       date: '2025.03.10 - 2025.03.13',
-//       status: '완료',
-//       image: '제주도',
-//       color: '#51cf66',
-//     },
-//     {
-//       id: 3,
-//       title: '방콕 5일',
-//       date: '2024.12.24 - 2024.12.28',
-//       status: '완료',
-//       image: '방콕',
-//       color: '#ffd43b',
-//     },
-//   ];
-
-//   const savedItems = [
-//     {
-//       id: 1,
-//       title: '도쿄 스카이트리',
-//       type: '명소',
-//       location: '도쿄, 일본',
-//       savedDate: '2025.04.15',
-//       color: '#ff6b6b',
-//     },
-//     {
-//       id: 2,
-//       title: '이치란 라멘',
-//       type: '맛집',
-//       location: '도쿄, 일본',
-//       savedDate: '2025.04.15',
-//       color: '#ffd43b',
-//     },
-//     {
-//       id: 3,
-//       title: '호텔 미라코스타',
-//       type: '숙소',
-//       location: '도쿄, 일본',
-//       savedDate: '2025.04.14',
-//       color: '#4dabf7',
-//     },
-//     {
-//       id: 4,
-//       title: '방콕 왕궁',
-//       type: '명소',
-//       location: '방콕, 태국',
-//       savedDate: '2025.04.10',
-//       color: '#ff6b6b',
-//     },
-//     {
-//       id: 5,
-//       title: '팟타이 맛집',
-//       type: '맛집',
-//       location: '방콕, 태국',
-//       savedDate: '2025.04.10',
-//       color: '#ffd43b',
-//     },
-//   ];
-
-//   const myReviews = [
-//     {
-//       id: 1,
-//       title: '도쿄 스카이트리',
-//       rating: 4.5,
-//       date: '2025.03.20',
-//       content:
-//         '도쿄 전경을 한눈에 볼 수 있어서 좋았습니다. 입장료가 조금 비싸지만 볼만한 가치가 있어요.',
-//       color: '#ff6b6b',
-//     },
-//     {
-//       id: 2,
-//       title: '이치란 라멘',
-//       rating: 5,
-//       date: '2025.03.19',
-//       content:
-//         '정말 맛있었습니다! 줄이 길었지만 기다릴 만한 가치가 있었어요. 돈코츠 라멘의 진수를 맛볼 수 있습니다.',
-//       color: '#ffd43b',
-//     },
-//     {
-//       id: 3,
-//       title: '제주 협재해변',
-//       rating: 4,
-//       date: '2025.03.12',
-//       content:
-//         '물이 맑고 모래가 고운 해변이에요. 날씨가 좋으면 에메랄드빛 바다를 볼 수 있습니다.',
-//       color: '#51cf66',
-//     },
-//   ];
-
-//   const formatRelativeTime = (string) => {
-//     const now = new Date();
-//     now.setFullYear(2025);
-//     const date = new Date(string);
-//     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-//     if (diffInSeconds < 60) {
-//       return '방금 전';
-//     } else if (diffInSeconds < 3600) {
-//       const minutes = Math.floor(diffInSeconds / 60);
-//       return `${minutes}분 전`;
-//     } else if (diffInSeconds < 86400) {
-//       const hours = Math.floor(diffInSeconds / 3600);
-//       return `${hours}시간 전`;
-//     } else if (diffInSeconds < 604800) {
-//       const days = Math.floor(diffInSeconds / 86400);
-//       return `${days}일 전`;
-//     } else if (diffInSeconds < 2592000) {
-//       const weeks = Math.floor(diffInSeconds / 604800);
-//       return `${weeks}주 전`;
-//     } else if (diffInSeconds < 31536000) {
-//       const months = Math.floor(diffInSeconds / 2592000);
-//       return `${months}개월 전`;
-//     } else {
-//       const years = Math.floor(diffInSeconds / 31536000);
-//       return `${years}년 전`;
-//     }
-//   };
-
-//   const getStatusBadgeColor = (string) => {
-//     switch (string) {
-//       case 'RESERVED':
-//         return 'bg-[#93c5fd] text-white';
-//       case 'CANCELLED':
-//         return 'bg-[#ff9a9e] text-white';
-//       default:
-//         return 'bg-[#93c5fd] text-white';
-//     }
-//   };
-
-//   const getAirportName = (code) => {
-//     const airportMap = {
-//       ICN: '인천',
-//       NRT: '나리타',
-//       HND: '하네다',
-//       HKG: '홍콩',
-//       CDG: '파리 샤를드골',
-//       LHR: '런던 히드로',
-//     };
-//     return airportMap[code] || code;
-//   };
-
-//   const formatPrice = (price) => {
-//     return new Intl.NumberFormat('ko-KR', {
-//       style: 'currency',
-//       currency: 'KRW',
-//       maximumFractionDigits: 0,
-//     }).format(price);
-//   };
-
-//   return (
-//     <div className="rounded-xl bg-white p-6 shadow-md">
-//       <div className="mb-8 flex flex-col items-center justify-center md:flex-row md:items-start md:justify-start">
-//         <Avatar className="h-24 w-24 border-4 border-[#4dabf7]">
-//           <AvatarImage
-//             src={userInfo?.imgUrl || '/placeholder.svg?height=96&width=96'}
-//             alt="프로필 이미지"
-//           />
-//         </Avatar>
-
-//         <div className="mt-4 text-center md:ml-6 md:mt-0 md:text-left">
-//           <h2 className="text-2xl font-bold text-[#1e3a8a]">
-//             {userInfo.nickname}
-//           </h2>
-//           <p className="text-[#495057]">{userInfo.email}</p>
-
-//           <div className="mt-2">
-//             <div className="flex items-center">
-//               <span className="text-sm text-[#495057]">
-//                 여행 레벨: {currentLevel.label}
-//               </span>
-//               <Badge
-//                 onClick={() => setShowLevelModal(true)}
-//                 className="ml-2 cursor-pointer bg-[#ffd43b] text-[#1e3a8a]"
-//               >
-//                 {Math.floor(userInfo.levelExp / 100) + 1 >= 7
-//                   ? '🏆 MAX'
-//                   : `Lv.${Math.floor(userInfo.levelExp / 100) + 1}`}
-//               </Badge>
-//             </div>
-//             <div className="mt-1 flex items-center">
-//               <Progress
-//                 value={percent}
-//                 className="h-2 w-32 bg-[#e7f5ff]"
-//                 indicatorClassName="bg-[#4dabf7]"
-//               />
-//               <span
-//                 className="ml-2 text-xs text-[#495057] cursor-pointer hover:underline"
-//                 onClick={() => setShowExpModal(true)}
-//               >
-//                 {percent}%
-//               </span>
-//             </div>
-//           </div>
-
-//           <div className="mt-4 flex space-x-2">
-//             <Link to="/settings">
-//               <Button
-//                 size="sm"
-//                 variant="outline"
-//                 className="border-[#4dabf7] text-[#1e3a8a] hover:bg-[#e7f5ff]"
-//               >
-//                 <Settings className="mr-1 h-4 w-4" />
-//                 설정
-//               </Button>
-//             </Link>
-
-//             <Link to="/profile-edit">
-//               <Button
-//                 size="sm"
-//                 variant="outline"
-//                 className="border-[#4dabf7] text-[#1e3a8a] hover:bg-[#e7f5ff]"
-//               >
-//                 <PenLine className="mr-1 h-4 w-4" />
-//                 프로필 수정
-//               </Button>
-//             </Link>
-//           </div>
-//         </div>
-//       </div>
-
-//       <Tabs
-//         defaultValue="my-trips"
-//         className="w-full"
-//         onValueChange={setActiveTab}
-//       >
-//         <TabsList className="mb-6 grid w-full grid-cols-4 bg-[#e7f5ff]">
-//           <TabsTrigger
-//             value="my-trips"
-//             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-//           >
-//             내 여행
-//           </TabsTrigger>
-//           <TabsTrigger
-//             value="my-bookings"
-//             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-//           >
-//             내 예약
-//           </TabsTrigger>
-//           <TabsTrigger
-//             value="saved"
-//             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-//           >
-//             내 저장
-//           </TabsTrigger>
-//           <TabsTrigger
-//             value="reviews"
-//             className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
-//           >
-//             내 리뷰
-//           </TabsTrigger>
-//         </TabsList>
-
-//         <TabsContent value="my-trips">
-//           <div className="grid gap-6 md:grid-cols-3">
-//             {myTrips.map((trip) => (
-//               <Card
-//                 key={trip.id}
-//                 className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
-//               >
-//                 <div
-//                   className="relative h-40 w-full"
-//                   style={{ backgroundColor: trip.color }}
-//                 >
-//                   <div className="absolute inset-0 flex items-center justify-center">
-//                     <span className="text-2xl font-bold text-white">
-//                       {trip.image}
-//                     </span>
-//                   </div>
-//                 </div>
-//                 <CardHeader>
-//                   <CardTitle className="text-lg font-bold text-[#1e3a8a]">
-//                     {trip.title}
-//                   </CardTitle>
-//                 </CardHeader>
-//                 <CardContent>
-//                   <div className="flex items-center text-[#495057]">
-//                     <Calendar className="mr-2 h-4 w-4" />
-//                     <span>{trip.date}</span>
-//                   </div>
-//                   <div className="mt-2">
-//                     <Badge
-//                       className={
-//                         trip.status === '예정'
-//                           ? 'bg-[#93c5fd] text-white'
-//                           : 'bg-[#51cf66] text-white'
-//                       }
-//                     >
-//                       {trip.status}
-//                     </Badge>
-//                   </div>
-//                 </CardContent>
-//                 <CardFooter>
-//                   <Button
-//                     size="sm"
-//                     className="w-full bg-[#4dabf7] text-white hover:bg-[#3b82f6]"
-//                   >
-//                     상세 보기
-//                   </Button>
-//                 </CardFooter>
-//               </Card>
-//             ))}
-//           </div>
-//         </TabsContent>
-
-//         <TabsContent value="my-bookings">
-//           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-//             {bookings.length > 0 ? (
-//               bookings.map((booking) => (
-//                 <Card
-//                   key={booking.id}
-//                   className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
-//                 >
-//                   <CardHeader>
-//                     <div className="flex items-center justify-between">
-//                       <CardTitle className="text-lg font-bold text-[#1e3a8a]">
-//                         {booking.carrier} {booking.flightNumber}
-//                       </CardTitle>
-//                       <Badge className={getStatusBadgeColor(booking.status)}>
-//                         {booking.status === 'RESERVED' ? '예약 완료' : '취소됨'}
-//                       </Badge>
-//                     </div>
-//                   </CardHeader>
-//                   <CardContent>
-//                     <div className="space-y-2">
-//                       <div className="flex items-center text-[#495057]">
-//                         <Plane className="mr-2 h-4 w-4" />
-//                         <span>
-//                           {getAirportName(booking.departureAirport)} →{' '}
-//                           {getAirportName(booking.arrivalAirport)}
-//                         </span>
-//                       </div>
-//                       <div className="flex items-center text-[#495057]">
-//                         <Calendar className="mr-2 h-4 w-4" />
-//                         <span>
-//                           {format(
-//                             new Date(booking.departureTime),
-//                             'yyyy.MM.dd HH:mm',
-//                             { locale: ko }
-//                           )}{' '}
-//                           ~{' '}
-//                           {format(new Date(booking.arrivalTime), 'HH:mm', {
-//                             locale: ko,
-//                           })}
-//                         </span>
-//                       </div>
-//                       {booking.returnDepartureTime && (
-//                         <>
-//                           <div className="flex items-center text-[#495057]">
-//                             <Plane className="mr-2 h-4 w-4" />
-//                             <span>
-//                               {getAirportName(booking.returnDepartureAirport)} →{' '}
-//                               {getAirportName(booking.returnArrivalAirport)}
-//                             </span>
-//                           </div>
-//                           <div className="flex items-center text-[#495057]">
-//                             <Calendar className="mr-2 h-4 w-4" />
-//                             <span>
-//                               {format(
-//                                 new Date(booking.returnDepartureTime),
-//                                 'yyyy.MM.dd HH:mm',
-//                                 { locale: ko }
-//                               )}{' '}
-//                               ~{' '}
-//                               {format(
-//                                 new Date(booking.returnArrivalTime),
-//                                 'HH:mm',
-//                                 { locale: ko }
-//                               )}
-//                             </span>
-//                           </div>
-//                         </>
-//                       )}
-//                       <div className="flex items-center text-[#495057]">
-//                         <span>탑승객: {booking.passengerCount}명</span>
-//                       </div>
-//                       <div className="flex items-center text-[#495057]">
-//                         <span>좌석: {booking.selectedSeats.join(', ')}</span>
-//                       </div>
-//                       <div className="flex items-center text-[#495057]">
-//                         <span>총 요금: {formatPrice(booking.totalPrice)}</span>
-//                       </div>
-//                     </div>
-//                   </CardContent>
-//                   <CardFooter>
-//                     <Button
-//                       size="sm"
-//                       className="w-full bg-[#4dabf7] text-white hover:bg-[#3b82f6]"
-//                     >
-//                       예약 상세
-//                     </Button>
-//                   </CardFooter>
-//                 </Card>
-//               ))
-//             ) : (
-//               <div className="col-span-full text-center py-8">
-//                 <p className="text-[#495057]">예약 내역이 없습니다.</p>
-//                 <Link to="/flight-search">
-//                   <Button className="mt-4 bg-[#4dabf7] text-white hover:bg-[#3b82f6]">
-//                     항공권 검색하기
-//                     <ArrowRight className="ml-2 h-4 w-4" />
-//                   </Button>
-//                 </Link>
-//               </div>
-//             )}
-//           </div>
-//         </TabsContent>
-
-//         <TabsContent value="saved">
-//           <div className="grid gap-6 md:grid-cols-3">
-//             {savedItems.map((item) => (
-//               <Card
-//                 key={item.id}
-//                 className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
-//               >
-//                 <CardHeader>
-//                   <CardTitle className="text-lg font-bold text-[#1e3a8a]">
-//                     {item.title}
-//                   </CardTitle>
-//                 </CardHeader>
-//                 <CardContent>
-//                   <div className="flex items-center text-[#495057]">
-//                     <Bookmark className="mr-2 h-4 w-4" />
-//                     <span>{item.type}</span>
-//                   </div>
-//                   <div className="flex items-center text-[#495057] mt-2">
-//                     <MapPin className="mr-2 h-4 w-4" />
-//                     <span>{item.location}</span>
-//                   </div>
-//                   <div className="flex items-center text-[#495057] mt-2">
-//                     <Calendar className="mr-2 h-4 w-4" />
-//                     <span>{formatRelativeTime(item.savedDate)}</span>
-//                   </div>
-//                 </CardContent>
-//                 <CardFooter>
-//                   <Button
-//                     size="sm"
-//                     className="w-full bg-[#4dabf7] text-white hover:bg-[#3b82f6]"
-//                   >
-//                     상세 보기
-//                   </Button>
-//                 </CardFooter>
-//               </Card>
-//             ))}
-//           </div>
-//         </TabsContent>
-
-//         <TabsContent value="reviews">
-//           <div className="grid gap-6 md:grid-cols-3">
-//             {myReviews.map((review) => (
-//               <Card
-//                 key={review.id}
-//                 className="overflow-hidden bg-[#f8f9fa] transition-transform hover:scale-105"
-//               >
-//                 <CardHeader>
-//                   <CardTitle className="text-lg font-bold text-[#1e3a8a]">
-//                     {review.title}
-//                   </CardTitle>
-//                 </CardHeader>
-//                 <CardContent>
-//                   <div className="flex items-center text-[#495057]">
-//                     <Star className="mr-2 h-4 w-4 text-[#ffd43b]" />
-//                     <span>{review.rating}</span>
-//                   </div>
-//                   <div className="flex items-center text-[#495057] mt-2">
-//                     <Calendar className="mr-2 h-4 w-4" />
-//                     <span>{formatRelativeTime(review.date)}</span>
-//                   </div>
-//                   <p className="mt-2 text-[#495057] line-clamp-3">
-//                     {review.content}
-//                   </p>
-//                 </CardContent>
-//                 <CardFooter>
-//                   <Button
-//                     size="sm"
-//                     className="w-full bg-[#4dabf7] text-white hover:bg-[#3b82f6]"
-//                   >
-//                     리뷰 보기
-//                   </Button>
-//                 </CardFooter>
-//               </Card>
-//             ))}
-//           </div>
-//         </TabsContent>
-//       </Tabs>
-
-//       {showLevelModal && (
-//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-//           <Card className="bg-white p-6 max-w-md w-full">
-//             <CardHeader>
-//               <CardTitle>여행 레벨 안내</CardTitle>
-//             </CardHeader>
-//             <CardContent>
-//               <ul className="space-y-2">
-//                 {Object.entries(levelInfo).map(([key, { label, min, max }]) => (
-//                   <li key={key} className="text-[#495057]">
-//                     {label}: {min} ~ {max} EXP
-//                   </li>
-//                 ))}
-//               </ul>
-//             </CardContent>
-//             <CardFooter>
-//               <Button
-//                 onClick={() => setShowLevelModal(false)}
-//                 className="w-full bg-[#4dabf7] text-white hover:bg-[#3b82f6]"
-//               >
-//                 닫기
-//               </Button>
-//             </CardFooter>
-//           </Card>
-//         </div>
-//       )}
-
-//       {showExpModal && (
-//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-//           <Card className="bg-white p-6 max-w-md w-full">
-//             <CardHeader>
-//               <CardTitle>경험치 안내</CardTitle>
-//             </CardHeader>
-//             <CardContent>
-//               <p className="text-[#495057]">
-//                 현재 경험치: {userInfo.levelExp} EXP
-//               </p>
-//               <p className="text-[#495057] mt-2">
-//                 다음 레벨까지: {currentLevel.max - userInfo.levelExp + 1} EXP
-//               </p>
-//             </CardContent>
-//             <CardFooter>
-//               <Button
-//                 onClick={() => setShowExpModal(false)}
-//                 className="w-full bg-[#4dabf7] text-white hover:bg-[#3b82f6]"
-//               >
-//                 닫기
-//               </Button>
-//             </CardFooter>
-//           </Card>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default MyPageContent;
+export default ItineraryGeneration;

@@ -8,7 +8,7 @@ import Step1 from './pages/travel-planner/destination/Step1';
 import Step2Page from './pages/travel-planner/destination/Step2';
 import Step3 from './pages/travel-planner/destination/Step3';
 import Step4 from './pages/travel-planner/destination/Step4';
-import Step5 from './pages/travel-planner/destination/Step5';
+import ItineraryGeneration from "./components/travel-planner/Itinerary-generation.jsx";
 import MyPage from './pages/mypage/MyPage';
 import AttractionsPage from './pages/attractions/Attractions';
 import CommunityPage from './pages/community/Community';
@@ -24,15 +24,13 @@ import FlightSearchContent from './components/flight-search/Flight-search-conten
 import FlightSearchHero from './components/flight-search/Flight-search-hero';
 import FlightSearchResultsPage from './pages/flight-search/results/Page.jsx';
 import AIPlannerPage from './pages/travel-planner/destination/AIPlannerPage';
-import { AIPlannerContent } from './components/travel-planner/AIPlannerContent';
 import { PrivateRoute } from './components/PrivateRoute';
 import { SettingsContent } from './modules/Settings-content';
 import AttractionsContent from './modules/Attractions-content.jsx';
 import PlaceDetail from './modules/Place-detail.jsx';
-import Layout from './Layout';
+import AttractionDetailPage from './modules/AttractionDetailPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AttractionDetailPage from './modules/AttractionDetailPage';
 
 function PlaceDetailWrapper() {
   const { placeId } = useParams();
@@ -45,7 +43,6 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-
           <Route
             path="/admin"
             element={
@@ -54,7 +51,6 @@ function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/mypage"
             element={
@@ -71,7 +67,6 @@ function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/profile-edit"
             element={
@@ -80,57 +75,36 @@ function App() {
               </PrivateRoute>
             }
           />
-
           <Route path="/place/:id" element={<AttractionDetailPage />} />
           <Route path="/attraction-content" element={<AttractionsPage />} />
           <Route path="/flight-search" element={<FlightSearchPage />} />
           <Route path="/flight-detail/:id" element={<FlightDetailPage />} />
-          <Route
-            path="/flight-search/content"
-            element={<FlightSearchContent />}
-          />
+          <Route path="/flight-search/content" element={<FlightSearchContent />} />
           <Route path="/flight-search/hero" element={<FlightSearchHero />} />
-          <Route
-            path="/flight-search/results"
-            element={<FlightSearchResultsPage />}
-          />
-
+          <Route path="/flight-search/results" element={<FlightSearchResultsPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/community/write" element={<WritePage />} />
           <Route path="/community/write/:postId" element={<WritePage />} />
           <Route path="/community/post/:id" element={<CommunityPostPage />} />
-
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
-
-          <Route
-            path="/travel-planner/:destination/step1"
-            element={<Step1 />}
-          />
-          <Route
-            path="/travel-planner/:destination/step2"
-            element={<Step2Page />}
-          />
-          <Route
-            path="/travel-planner/:destination/step3"
-            element={<Step3 />}
-          />
-          <Route
-            path="/travel-planner/:destination/step4"
-            element={<Step4 />}
-          />
+          <Route path="/travel-planner/:destination/step1" element={<Step1 />} />
+          <Route path="/travel-planner/:destination/step2" element={<Step2Page />} />
+          <Route path="/travel-planner/:destination/step3" element={<Step3 />} />
+          <Route path="/travel-planner/:destination/step4" element={<Step4 />} />
           <Route
             path="/travel-planner/:destination/step5"
-            element={<Step5 />}
+            element={<ItineraryGeneration />}
+          />
+          <Route
+            path="/travel-planner/:destination/ai-planner"
+            element={<ItineraryGeneration isAiMode={true} />}
           />
           <Route path="/ai-planner/:destination" element={<AIPlannerPage />} />
-
           <Route path="/attractions" element={<AttractionsContent />} />
-
           <Route path="/not-found" element={<div>404 Not Found</div>} />
         </Routes>
-
         <ToastContainer position="top-center" autoClose={2000} />
       </BrowserRouter>
     </Provider>
