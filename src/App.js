@@ -24,6 +24,7 @@ import FlightSearchContent from './components/flight-search/Flight-search-conten
 import FlightSearchHero from './components/flight-search/Flight-search-hero';
 import FlightSearchResultsPage from './pages/flight-search/results/Page.jsx';
 import AIPlannerPage from './pages/travel-planner/destination/AIPlannerPage';
+import ItineraryGeneration from "./components/travel-planner/Itinerary-generation.jsx";
 import { AIPlannerContent } from './components/travel-planner/AIPlannerContent';
 import { PrivateRoute } from './components/PrivateRoute';
 import { SettingsContent } from './modules/Settings-content';
@@ -124,7 +125,7 @@ function App() {
           />
           <Route
             path="/travel-planner/:destination/step5"
-            element={<Step5 />}
+            element={<ItineraryGeneration isAiMode={true} />}
           />
           <Route path="/ai-planner/:destination" element={<AIPlannerPage />} />
 

@@ -55,20 +55,11 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
   }, [startDate, endDate]);
 
   const [selectedAttractions, setSelectedAttractions] = useState(() => {
-    const saved = getFromLocalStorage("travelPlan")?.selectedAttractions || {};
+    // 새 일정 시작 시 selectedAttractions를 빈 배열로 초기화
     const initial = {};
     dayKeys.forEach((key) => {
-      initial[key] = Array.isArray(saved[key]) ? saved[key] : [];
+      initial[key] = [];
     });
-
-    // 레거시 키 처리
-    const legacyKeys = ["day1", "day2", "day3"];
-    legacyKeys.forEach((legacyKey, index) => {
-      if (Array.isArray(saved[legacyKey]) && saved[legacyKey].length > 0 && dayKeys[index]) {
-        initial[dayKeys[index]] = [...(initial[dayKeys[index]] || []), ...saved[legacyKey]];
-      }
-    });
-
     return initial;
   });
 
@@ -94,6 +85,22 @@ const AttractionSelection = ({ destination, startDate, endDate }) => {
       setActiveDay(dayKeys[0] || null);
     }
   }, [dayKeys, activeDay]);
+
+  // 컴포넌트 마운트 시 travelPlan.selectedAttractions 초기화
+  useEffect(() => {
+    // localStorage의 travelPlan에서 selectedAttractions를 빈 객체로 재설정
+    saveToLocalStorage("travelPlan", {
+      ...getFromLocalStorage("travelPlan"),
+      selectedAttractions: dayKeys.reduce((acc, key) => {
+        acc[key] = [];
+        return acc;
+      }, {}),
+      customAttractions,
+      startDate,
+      endDate,
+      destination: destination.toLowerCase(),
+    });
+  }, [dayKeys, startDate, endDate, destination, customAttractions]);
 
   if (!startDate || !endDate) {
     return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;

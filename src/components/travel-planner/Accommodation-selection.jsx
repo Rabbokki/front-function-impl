@@ -25,7 +25,6 @@ export default function AccommodationSelection({ destination }) {
   const [activeDay, setActiveDay] = useState("day1");
   const [hoveredHotel, setHoveredHotel] = useState(null);
 
-
   if (!startDate || !endDate) {
     return <div className="text-red-600 p-4">여행 날짜가 선택되지 않았습니다. Step 1로 돌아가세요.</div>;
   }
