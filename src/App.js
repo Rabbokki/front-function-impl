@@ -33,6 +33,7 @@ import Layout from './Layout';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AttractionDetailPage from './modules/AttractionDetailPage';
+import OAuthCallback from './components/join/OAuthCallback';
 
 function PlaceDetailWrapper() {
   const { placeId } = useParams();
@@ -102,6 +103,7 @@ function App() {
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/callback" element={<OAuthCallback />} />
           <Route path="/travel-planner" element={<TravelPlannerPage />} />
 
           <Route
