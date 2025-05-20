@@ -114,41 +114,38 @@ export function SettingsContent() {
   };
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-[#e7f5ff]">
+    <div className="space-y-6 bg-[#e7f5ff] min-h-screen py-10 px-4">
+      <Tabs defaultValue="account" className="max-w-3xl mx-auto w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-[#cbe4f9] rounded-xl">
           <TabsTrigger
             value="account"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white rounded-xl"
           >
             계정
           </TabsTrigger>
           <TabsTrigger
             value="notifications"
-            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white rounded-xl"
           >
             알림
           </TabsTrigger>
         </TabsList>
 
-        {/* 계정 설정 */}
         <TabsContent value="account">
-          <Card className="bg-white">
+          <Card className="bg-white rounded-2xl shadow-md">
             <CardHeader>
-              <CardTitle className="text-xl text-[#1e3a8a]">
+              <CardTitle className="text-xl text-[#1e3a8a] font-bold">
                 계정 설정
               </CardTitle>
-              <CardDescription>
-                계정 정보 및 비밀번호를 관리하세요.
-              </CardDescription>
+              <CardDescription>비밀번호를 안전하게 변경하세요.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-[#1e3a8a]">
+                <h3 className="text-lg font-semibold text-[#1e3a8a]">
                   비밀번호 변경
                 </h3>
                 <div className="space-y-3">
-                  <div className="relative">
+                  <div>
                     <Label
                       htmlFor="current-password"
                       className="text-[#1e3a8a]"
@@ -159,19 +156,19 @@ export function SettingsContent() {
                       <Input
                         id="current-password"
                         type={showPassword ? 'text' : 'password'}
-                        className="bg-[#e7f5ff]/30 pr-10"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="bg-white border border-[#d0ebff] rounded-xl px-4 py-2 pr-10 text-[#1e3a8a]"
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#495057]"
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-4 w-4 text-gray-500" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 text-gray-500" />
                         )}
                       </button>
                     </div>
@@ -184,9 +181,9 @@ export function SettingsContent() {
                     <Input
                       id="new-password"
                       type={showPassword ? 'text' : 'password'}
-                      className="bg-[#e7f5ff]/30"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      className="bg-white border border-[#d0ebff] rounded-xl px-4 py-2 text-[#1e3a8a]"
                     />
                   </div>
 
@@ -200,35 +197,36 @@ export function SettingsContent() {
                     <Input
                       id="confirm-password"
                       type={showPassword ? 'text' : 'password'}
-                      className="bg-[#e7f5ff]/30"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-white border border-[#d0ebff] rounded-xl px-4 py-2 text-[#1e3a8a]"
                     />
                   </div>
                 </div>
 
                 <Button
                   onClick={handlePasswordChange}
-                  className="mt-2 bg-[#4dabf7] text-white hover:bg-[#339af0]"
+                  className="bg-white border border-[#4dabf7] text-[#1e3a8a] hover:bg-[#d0ebff] rounded-xl px-5 py-2"
                 >
                   <Lock className="mr-2 h-4 w-4" />
                   비밀번호 변경
                 </Button>
               </div>
 
-              <Separator className="my-4" />
+              <Separator className="my-6" />
 
               <div>
-                <h3 className="text-lg font-medium text-[#1e3a8a]">
+                <h3 className="text-lg font-semibold text-[#1e3a8a]">
                   계정 삭제
                 </h3>
                 <p className="mt-1 text-sm text-[#495057]">
-                  계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다. 이 작업은
-                  되돌릴 수 없습니다.
+                  삭제 시 모든 데이터가 영구적으로 제거됩니다. 이 작업은 되돌릴
+                  수 없습니다.
                 </p>
                 <Button
                   onClick={handleDeleteAccount}
-                  className="mt-3 bg-red-600 text-white hover:bg-red-700"
+                  className="mt-3 border border-red-300 text-red-500 hover:bg-red-50 rounded-xl px-5 py-2"
+                  variant="outline"
                 >
                   계정 삭제
                 </Button>
@@ -239,20 +237,21 @@ export function SettingsContent() {
 
         {/* 알림 설정 */}
         <TabsContent value="notifications">
-          <Card className="bg-white">
-            <CardHeader>
-              <CardTitle className="text-xl text-[#1e3a8a]">
-                알림 설정
+          <Card className="bg-white rounded-2xl shadow-md p-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-semibold text-[#1e3a8a]">
+                📬 알림 설정
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm text-[#495057]">
                 알림 수신 방법과 종류를 설정하세요.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base text-[#1e3a8a]">
+              <div className="space-y-6">
+                {/* 이메일 알림 */}
+                <div className="flex items-center justify-between border-b pb-4 border-[#e9ecef]">
+                  <div className="space-y-1.5">
+                    <Label className="text-base font-medium text-[#1e3a8a]">
                       이메일 알림
                     </Label>
                     <p className="text-sm text-[#495057]">
@@ -266,11 +265,10 @@ export function SettingsContent() {
                   />
                 </div>
 
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base text-[#1e3a8a]">
+                {/* 소셜 알림 */}
+                <div className="flex items-center justify-between border-b pb-4 border-[#e9ecef]">
+                  <div className="space-y-1.5">
+                    <Label className="text-base font-medium text-[#1e3a8a]">
                       소셜 알림
                     </Label>
                     <p className="text-sm text-[#495057]">
@@ -284,11 +282,10 @@ export function SettingsContent() {
                   />
                 </div>
 
-                <Separator />
-
+                {/* 서비스 업데이트 */}
                 <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base text-[#1e3a8a]">
+                  <div className="space-y-1.5">
+                    <Label className="text-base font-medium text-[#1e3a8a]">
                       서비스 업데이트
                     </Label>
                     <p className="text-sm text-[#495057]">
@@ -304,12 +301,18 @@ export function SettingsContent() {
               </div>
             </CardContent>
           </Card>
-          <div className="flex justify-end space-x-4">
-            <Button variant="outline" onClick={() => navigate('/mypage')}>
+
+          {/* 저장 버튼 영역 */}
+          <div className="flex justify-end space-x-4 pt-4">
+            <Button
+              variant="outline"
+              className="border-[#ced4da] text-[#495057] rounded-xl hover:bg-[#f1f3f5]"
+              onClick={() => navigate('/mypage')}
+            >
               취소
             </Button>
             <Button
-              className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]"
+              className="bg-[#ffd43b] text-[#1e3a8a] font-semibold px-6 py-2 rounded-xl hover:bg-[#fcc419] transition-transform hover:scale-105"
               onClick={handleSaveSettings}
             >
               <Save className="mr-2 h-4 w-4" />

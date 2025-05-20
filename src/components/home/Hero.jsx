@@ -1,15 +1,20 @@
 export function Hero() {
   return (
     <section className="relative w-full py-8 sky-bg">
-      
-    <div className="mt-8 text-center px-4">
-      <h1 className="mb-0 text-5xl font-bold text-traveling-text">세상 모든 여행을 한눈에</h1>
-      <p className="mb-0 text-3xl text-traveling-pink">트래블링과 함께 떠나보세요!</p>
-    </div>
-    
+      <div className="mt-8 text-center px-4">
+        <h1 className="mb-2 text-5xl font-bold text-[#1e3a8a] tracking-tight">
+          세상 모든 여행을 한눈에
+        </h1>
+        <p className="text-2xl text-[#ff6b81] font-semibold">
+          트래블링과 함께 떠나보세요!
+        </p>
+      </div>
+
       {/* Responsive crop container */}
-      <div className="relative w-full overflow-hidden border-traveling-pink"
-           style={{ aspectRatio: '1 / 1' }}>
+      <div
+        className="relative w-full overflow-hidden border-traveling-pink"
+        style={{ aspectRatio: '1 / 1' }}
+      >
         <img
           src="/world.png"
           alt="Hero Banner"

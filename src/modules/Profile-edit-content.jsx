@@ -7,7 +7,13 @@ import { Input } from '../modules/Input';
 import { Label } from '../modules/Label';
 import { Textarea } from '../modules/Textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../modules/Avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../modules/Select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../modules/Select';
 import { Separator } from '../modules/Separator';
 import { toast } from '../hooks/Use-toast';
 import axiosInstance from '../api/axiosInstance';
@@ -114,18 +120,29 @@ export function ProfileEditContent() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#e0f2fe] to-white px-4 py-10">
+      <div className="max-w-3xl mx-auto space-y-8"></div>
+      <Card className="rounded-3xl shadow-xl bg-white p-8">
         <CardHeader>
-          <CardTitle className="text-xl text-[#1e3a8a]">기본 정보</CardTitle>
+          <CardTitle className="text-2xl font-bold text-[#1e3a8a] border-b border-[#d0ebff] pb-2 flex items-center gap-2">
+            ✏️ 기본 정보
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 프로필 이미지 */}
           <div className="flex flex-col items-center sm:flex-row sm:items-start sm:space-x-6 space-y-4 sm:space-y-0">
             <div className="relative">
-              <Avatar className="h-32 w-32 border-4 border-[#4dabf7] cursor-pointer" onClick={triggerFileInput}>
-                <AvatarImage src={profileData.imgUrl || '/placeholder.svg'} alt="프로필 이미지" />
-                <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a] text-2xl">여행자</AvatarFallback>
+              <Avatar
+                className="h-32 w-32 border-4 border-[#4dabf7] cursor-pointer"
+                onClick={triggerFileInput}
+              >
+                <AvatarImage
+                  src={profileData.imgUrl || '/placeholder.svg'}
+                  alt="프로필 이미지"
+                />
+                <AvatarFallback className="bg-[#e7f5ff] text-[#1e3a8a] text-2xl">
+                  여행자
+                </AvatarFallback>
               </Avatar>
               <input
                 type="file"
@@ -144,16 +161,28 @@ export function ProfileEditContent() {
             </div>
 
             <div className="space-y-2 text-center sm:text-left">
-              <h3 className="text-lg font-medium text-[#1e3a8a]">프로필 이미지</h3>
+              <h3 className="text-lg font-medium text-[#1e3a8a]">
+                프로필 이미지
+              </h3>
               <p className="text-sm text-[#495057]">
                 JPG, PNG 또는 GIF 형식의 이미지를 업로드하세요. <br />
                 최대 파일 크기: 5MB
               </p>
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                <Button variant="outline" size="sm" className="border-[#4dabf7] text-[#1c7ed6]" onClick={triggerFileInput}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full px-4 py-2 text-sm text-[#1c7ed6] border border-[#4dabf7] bg-white hover:bg-[#e7f5ff]"
+                  onClick={triggerFileInput}
+                >
                   이미지 업로드
                 </Button>
-                <Button variant="outline" size="sm" className="border-[#ff6b6b] text-[#ff6b6b]" onClick={handleImageDelete}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full px-4 py-2 text-sm text-[#ff6b6b] border border-[#ff6b6b] hover:bg-[#ffe3e3]"
+                  onClick={handleImageDelete}
+                >
                   <X className="mr-1 h-3 w-3" />
                   삭제
                 </Button>
@@ -165,22 +194,63 @@ export function ProfileEditContent() {
 
           {/* 프로필 입력 필드 */}
           <div className="grid gap-4 md:grid-cols-2">
+            {/* 닉네임 */}
             <div className="space-y-2">
-              <Label htmlFor="nickname" className="text-[#1e3a8a]">닉네임</Label>
-              <Input id="nickname" name="nickname" value={profileData.nickname} onChange={handleProfileChange} className="bg-[#e7f5ff]/30" />
+              <Label htmlFor="nickname" className="text-[#1e3a8a] font-medium">
+                닉네임
+              </Label>
+              <Input
+                id="nickname"
+                name="nickname"
+                value={profileData.nickname}
+                onChange={handleProfileChange}
+                className="w-full h-[42px] rounded-xl bg-[#f8fafc] border border-[#d0ebff] px-4 py-2 focus:ring-2 focus:ring-[#4dabf7]"
+              />
             </div>
+
+            {/* 이메일 */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#1e3a8a]">이메일</Label>
-              <Input id="email" name="email" value={profileData.email} onChange={handleProfileChange} className="bg-[#e7f5ff]/30" />
+              <Label htmlFor="email" className="text-[#1e3a8a] font-medium">
+                이메일
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                value={profileData.email}
+                onChange={handleProfileChange}
+                className="w-full h-[42px] rounded-xl bg-[#f8fafc] border border-[#d0ebff] px-4 py-2 focus:ring-2 focus:ring-[#4dabf7]"
+              />
             </div>
+
+            {/* 자기소개 */}
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="bio" className="text-[#1e3a8a]">자기소개</Label>
-              <Textarea id="bio" name="bio" value={profileData.bio} onChange={handleProfileChange} className="min-h-[100px] bg-[#e7f5ff]/30" />
+              <Label htmlFor="bio" className="text-[#1e3a8a] font-medium">
+                자기소개
+              </Label>
+              <Textarea
+                id="bio"
+                name="bio"
+                value={profileData.bio}
+                onChange={handleProfileChange}
+                className="min-h-[100px] rounded-xl bg-[#f8fafc] border border-[#d0ebff] px-4 py-2 focus:ring-2 focus:ring-[#4dabf7]"
+              />
             </div>
+
+            {/* 성별 */}
             <div className="space-y-2">
-              <Label htmlFor="gender" className="text-[#1e3a8a]">성별</Label>
-              <Select value={profileData.gender} onValueChange={(value) => setProfileData({ ...profileData, gender: value })}>
-                <SelectTrigger id="gender" className="bg-[#e7f5ff]/30">
+              <Label htmlFor="gender" className="text-[#1e3a8a] font-medium">
+                성별
+              </Label>
+              <Select
+                value={profileData.gender}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, gender: value })
+                }
+              >
+                <SelectTrigger
+                  id="gender"
+                  className="w-full h-[42px] rounded-xl bg-[#f8fafc] border border-[#d0ebff] px-4 py-2 focus:ring-2 focus:ring-[#4dabf7]"
+                >
                   <SelectValue placeholder="성별 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -191,23 +261,23 @@ export function ProfileEditContent() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* 생년월일 */}
             <div className="space-y-2">
-              <Label htmlFor="birthday" className="text-[#1e3a8a]">생년월일</Label>
-              <DatePicker
+              <Label htmlFor="birthday" className="text-[#1e3a8a] font-medium">
+                생년월일
+              </Label>
+              <input
+                type="date"
                 id="birthday"
-                selected={profileData.birthday ? new Date(profileData.birthday) : null}
-                onChange={(date) =>
+                value={profileData.birthday}
+                onChange={(e) =>
                   setProfileData({
                     ...profileData,
-                    birthday: date ? date.toISOString().split('T')[0] : '',
+                    birthday: e.target.value,
                   })
                 }
-                dateFormat="yyyy-MM-dd"
-                placeholderText="생년월일을 선택하세요"
-                showYearDropdown
-                showMonthDropdown
-                dropdownMode="select"
-                className="w-full rounded-md border border-[#cbd5e1] bg-[#e7f5ff]/30 p-2 outline-none"
+                className="w-full h-[42px] rounded-xl bg-[#f8fafc] border border-[#d0ebff] px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#4dabf7]"
               />
             </div>
           </div>
@@ -215,11 +285,18 @@ export function ProfileEditContent() {
       </Card>
 
       <div className="flex justify-end space-x-4 pt-4">
-        <Button variant="outline" className="border-[#adb5bd] text-[#495057]" onClick={() => navigate('/mypage')}>
-          취소
-        </Button>
-        <Button className="bg-[#ffd43b] text-[#1e3a8a] hover:bg-[#fcc419]" onClick={handleSaveProfile}>
+        <Button
+          onClick={handleSaveProfile}
+          className="bg-[#ffd43b] text-[#1e3a8a] font-semibold px-6 py-2 rounded-xl hover:bg-[#fcc419] transition-transform hover:scale-105"
+        >
           저장하기
+        </Button>
+        <Button
+          onClick={() => navigate('/mypage')}
+          variant="outline"
+          className="text-[#495057] border-[#dee2e6] hover:bg-[#f1f3f5] rounded-xl"
+        >
+          취소
         </Button>
       </div>
     </div>

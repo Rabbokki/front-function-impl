@@ -9,7 +9,11 @@ import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginAccount, getAccountDetails } from '../../hooks/reducer/account/accountThunk';
+import {
+  loginAccount,
+  getAccountDetails,
+} from '../../hooks/reducer/account/accountThunk';
+import { toast } from 'react-toastify';
 
 function LoginForm() {
   const dispatch = useDispatch();
@@ -19,22 +23,31 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  
+
+  const handleGoogleLogin = () => {
+    // 백엔드의 Google OAuth 인증 URL로 리디렉션
+    const backendUrl = 'http://localhost:8080/oauth2/authorization/google';
+    const redirectUri = 'http://localhost:3000/callback'; // 프론트엔드 콜백 경로
+    // Google OAuth 인증 페이지로 이동 (백엔드에서 처리)
+    window.location.href = `${backendUrl}?redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const loginData = {
       email,
       password,
     };
-  
+
     try {
       const resultAction = await dispatch(loginAccount(loginData)).unwrap();
       console.log('로그인 성공:', resultAction);
-  
+
       const { accessToken, refreshToken } = resultAction;
-  
+
       if (rememberMe) {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
@@ -42,29 +55,26 @@ function LoginForm() {
         sessionStorage.setItem('accessToken', accessToken);
         sessionStorage.setItem('refreshToken', refreshToken);
       }
-  
-      
+
       const token = rememberMe
-        ? localStorage.getItem("accessToken")
-        : sessionStorage.getItem("accessToken");
-  
+        ? localStorage.getItem('accessToken')
+        : sessionStorage.getItem('accessToken');
+
       const user = await dispatch(getAccountDetails()).unwrap();
-  
+
       if (rememberMe) {
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(user));
       } else {
-        sessionStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem('user', JSON.stringify(user));
       }
-  
-      alert("로그인 성공!");
-      navigate("/"); // ✅ 이후 이동
+
+      toast.success('로그인 성공! 🎉');
+      navigate('/'); // ✅ 이후 이동
     } catch (error) {
-      console.error("로그인 실패:", error);
-      alert("로그인 실패: " + (error?.message || "서버 오류"));
+      console.error('로그인 실패:', error);
+      toast.error('로그인 실패: ' + (error?.message || '서버 오류'));
     }
   };
-  
-
   return (
     <div className="mx-auto max-w-md">
       <div className="mb-8 text-center">
@@ -107,12 +117,6 @@ function LoginForm() {
               <Label htmlFor="password" className="text-traveling-text">
                 비밀번호
               </Label>
-              <Link
-                to="/forgot-password"
-                className="text-xs text-traveling-purple hover:underline"
-              >
-                비밀번호를 잊으셨나요?
-              </Link>
             </div>
             <div className="relative">
               <Input
@@ -160,28 +164,40 @@ function LoginForm() {
             로그인
           </Button>
 
-          <div className="mt-6 flex items-center">
-            <Separator className="flex-1" />
-            <span className="mx-4 text-xs text-traveling-text/50">또는</span>
-            <Separator className="flex-1" />
-          </div>
-
           <div className="mt-6 grid grid-cols-2 gap-4">
+            {/* 네이버 로그인 버튼 */}
             <Button
               type="button"
               variant="outline"
               className="flex items-center justify-center border-traveling-text/30 bg-white"
+              onClick={() => {
+                const naverOAuthUrl =
+                  'http://localhost:8080/oauth2/authorization/naver';
+                const redirectUri = 'http://localhost:3000/callback';
+                window.location.href = `${naverOAuthUrl}?redirect_uri=${encodeURIComponent(
+                  redirectUri
+                )}`;
+              }}
             >
-              <svg className="mr-2 h-5 w-5" fill="#1877F2" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              <svg
+                className="mr-2 h-5 w-5"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+              >
+                {/* 초록 배경 사각형 */}
+                <rect width="24" height="24" rx="4" fill="#03C75A" />
+                {/* 흰색 N 글자 경로 */}
+                <path fill="#FFFFFF" d="M7 18V6h3l6 6-6 6H7z" />
               </svg>
-              Facebook
+              Naver
             </Button>
 
             <Button
               type="button"
               variant="outline"
               className="flex items-center justify-center border-traveling-text/30 bg-white"
+              onClick={handleGoogleLogin}
             >
               <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                 <path
