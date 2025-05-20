@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 
-import { getPostById, deletePost, viewPost } from '../hooks/reducer/post/postThunk';
+import { ReportUserForm } from "./Report-user-form";
 
+import { getPostById, deletePost, viewPost, reportPost } from '../hooks/reducer/post/postThunk';
 import { addLike,
          removeLike,
          getLikeStatus,
          addCommentLike,
          removeCommentLike,
          getCommentLikeStatus } from '../hooks/reducer/like/likeThunk';
-
 import { getCommentsByPostId, createComment, deleteComment } from '../hooks/reducer/comment/commentThunk';
 
 import {
@@ -36,6 +36,8 @@ export function CommunityPostDetail({ postId }) {
   }, [comments]);
   const isOwner = currentUser && post && post.userId === currentUser.id;
 
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [localPost, setLocalPost] = useState(null);
   const [liked, setLiked] = useState(false);
   const [commentLiked, setCommentLiked] = useState(false);
@@ -155,8 +157,24 @@ export function CommunityPostDetail({ postId }) {
   };
 
   //신고 처리
-  const handleReport = () => {
-    console.log("Hey hombre! I'm deporting you!")
+  const openReportModal = (id) => {
+    setSelectedUserId(id);
+    setIsReportModalOpen(true);
+
+    if (!window.confirm('정말 신고 하겠습니가?')) return;
+
+    dispatch(reportPost(postId))
+      .then((res) => {
+        if (res.meta.requestStatus === 'fulfilled') {
+          console.log("신고 성공 했습니다.");
+          navigate("/community");
+        } else {
+          console.error("신고 실패 했습니다");
+        }
+      })
+      .catch((error) => {
+        console.error("신고 실패:", error);
+      });
   }
 
   // 거맨트 좋아요 처리
@@ -262,7 +280,7 @@ export function CommunityPostDetail({ postId }) {
                   variant="outline"
                   size="sm"
                   className="bg-[#ff6060]"
-                  onClick={handleReport}>
+                  onClick={() => openReportModal(post.userId)}>
                     <ShieldAlert className="mr-1 h-4 w-4" />
                     신고
                 </Button>
@@ -381,6 +399,16 @@ export function CommunityPostDetail({ postId }) {
           ))}
         </div>
       </div>
+
+      {selectedUserId && (
+        <ReportUserForm
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          reportingUserId={currentUser.id}
+          reportedUserId={selectedUserId}
+          onReportSubmitted={() => dispatch(getPostById())}
+        />
+      )}
     </div>
   );
 }

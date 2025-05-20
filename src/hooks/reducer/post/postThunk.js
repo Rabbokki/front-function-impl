@@ -82,6 +82,17 @@ export const deletePost = createAsyncThunk('post/delete', async (id, thunkAPI) =
   }
 });
 
+// 신고 처리
+export const reportPost = createAsyncThunk("post/reportPost", async (postId) => {
+  try {
+    const response = await axiosInstance.put(`${API_BASE_URL}/${postId}/reportAdd`);
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data || '뷰 처리 실패';
+    return errorMessage;
+  }
+});
+
 // 뷰 처리
 export const viewPost = createAsyncThunk("posts/viewPost", async (postId) => {
   try {
