@@ -165,3 +165,39 @@ body {
 .login-button:hover {
   background-color: #8b5cf6;
 }
+
+/* 🌸 예쁜 Toast 디자인 (react-toastify 커스터마이징) */
+.Toastify__toast {
+  border-radius: 14px;
+  padding: 16px 20px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--traveling-purple);
+  background-color: white;
+  color: var(--traveling-text);
+}
+
+.Toastify__toast--success {
+  border-color: var(--traveling-purple);
+  background-color: var(--traveling-light-pink);
+  color: var(--traveling-text);
+}
+
+.Toastify__toast--error {
+  border-color: #f87171;
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.Toastify__toast-icon {
+  margin-right: 10px;
+}
+
+.Toastify__progress-bar {
+  background: var(--traveling-purple);
+  height: 4px;
+  border-radius: 2px;
+}
+

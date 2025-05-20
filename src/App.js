@@ -131,7 +131,15 @@ function App() {
           <Route path="/not-found" element={<div>404 Not Found</div>} />
         </Routes>
 
-        <ToastContainer position="top-center" autoClose={2000} />
+        <ToastContainer
+          position="top-center"
+          autoClose={2000}
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="light"
+        />
       </BrowserRouter>
     </Provider>
   );

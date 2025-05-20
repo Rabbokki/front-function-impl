@@ -10,10 +10,10 @@ import {
   PenLine,
   Plus,
   Plane,
-  Hotel, 
+  Hotel,
   Bus,
   Train,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '../../modules/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../modules/Tabs';
@@ -31,6 +31,7 @@ import axiosInstance from '../../api/axiosInstance';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 function MyPageContent() {
   const [activeTab, setActiveTab] = useState('my-trips');
@@ -45,6 +46,9 @@ function MyPageContent() {
   const [myTrips, setMyTrips] = useState([]);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showExpModal, setShowExpModal] = useState(false);
+  const [savedItems, setSavedItems] = useState([]);
+  const navigate = useNavigate();
+  const [myReviews, setMyReviews] = useState([]);
 
   const levelInfo = {
     BEGINNER: { label: '여행 새싹', min: 0, max: 99 },
@@ -64,6 +68,101 @@ function MyPageContent() {
   );
 
   useEffect(() => {
+    const accessToken = localStorage.getItem('Access_Token');
+
+    async function fetchMyReviews() {
+      try {
+        const res = await axiosInstance.get('/api/reviews/me', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        console.log('✅ 내 리뷰 응답:', res.data);
+
+        setMyReviews(Array.isArray(res.data.data) ? res.data.data : []);
+      } catch (err) {
+        console.error('❌ 내 리뷰 요청 실패:', err);
+      }
+    }
+
+    fetchMyReviews();
+  }, []);
+
+  const handleReviewDelete = async (reviewId) => {
+    const accessToken = localStorage.getItem('Access_Token');
+    const confirm = window.confirm('리뷰를 삭제하시겠습니까?');
+    if (!confirm) return;
+
+    try {
+      const res = await axiosInstance.delete('/api/reviews', {
+        params: { reviewId },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.data.success) {
+        alert('리뷰가 삭제되었습니다!');
+        // 상태에서 삭제된 리뷰 제거
+        setMyReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      } else {
+        alert(res.data.message || '삭제에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('❌ 리뷰 삭제 실패:', err);
+      alert('리뷰 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('Access_Token');
+
+    async function fetchSavedPlaces() {
+      try {
+        const res = await axiosInstance.get('/api/saved-places', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        console.log('✅ 저장 목록 응답:', res.data);
+        setSavedItems(Array.isArray(res.data.data) ? res.data.data : []);
+      } catch (err) {
+        console.error('❌ 저장 목록 요청 실패:', err);
+      }
+    }
+
+    fetchSavedPlaces();
+  }, []);
+
+  const handleDelete = async (placeId) => {
+    const accessToken = localStorage.getItem('Access_Token');
+
+    try {
+      const res = await axiosInstance.delete(`/api/saved-places/${placeId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      console.log('✅ 삭제 응답:', res.data);
+
+      if (res.data.success) {
+        // ✅ 여기서 alert 추가!
+        alert('삭제 성공!');
+
+        setSavedItems((prev) =>
+          prev.filter((item) => item.placeId !== placeId)
+        );
+      } else {
+        alert(res.data.message || '삭제 실패');
+      }
+    } catch (err) {
+      console.error('❌ 삭제 요청 실패:', err);
+      alert('삭제 중 오류 발생');
+    }
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         // 회원 정보
@@ -78,7 +177,9 @@ function MyPageContent() {
         });
 
         // 예약 목록
-        const bookingsResponse = await axiosInstance.get('/api/flights/my-bookings');
+        const bookingsResponse = await axiosInstance.get(
+          '/api/flights/my-bookings'
+        );
         console.log('예약 목록:', bookingsResponse.data);
         if (bookingsResponse.data.success) {
           setBookings(bookingsResponse.data.data);
@@ -87,26 +188,34 @@ function MyPageContent() {
         // AI 일정
         const aiPlansResponse = await axiosInstance.get('/api/aiplan/my-plans');
         console.log('AI 일정 목록:', aiPlansResponse.data);
-        const aiTrips = aiPlansResponse.data.map(plan => ({
+        const aiTrips = aiPlansResponse.data.map((plan) => ({
           id: plan.id,
-          title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
+          title: `${
+            destinationMap[plan.destination.toLowerCase()] || plan.destination
+          } 여행`,
           date: `${plan.startDate} - ${plan.endDate}`,
           status: plan.status,
           planType: plan.planType,
-          image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
+          image:
+            destinationMap[plan.destination.toLowerCase()] || plan.destination,
           color: getColorForDestination(plan.destination),
         }));
 
         // 수동 일정
-        const manualPlansResponse = await axiosInstance.get('/api/travel-plans/my-plans');
+        const manualPlansResponse = await axiosInstance.get(
+          '/api/travel-plans/my-plans'
+        );
         console.log('수동 일정 목록:', manualPlansResponse.data);
-        const manualTrips = manualPlansResponse.data.map(plan => ({
+        const manualTrips = manualPlansResponse.data.map((plan) => ({
           id: plan.id,
-          title: `${destinationMap[plan.destination.toLowerCase()] || plan.destination} 여행`,
+          title: `${
+            destinationMap[plan.destination.toLowerCase()] || plan.destination
+          } 여행`,
           date: `${plan.startDate} - ${plan.endDate}`,
           status: plan.status,
           planType: plan.planType,
-          image: destinationMap[plan.destination.toLowerCase()] || plan.destination,
+          image:
+            destinationMap[plan.destination.toLowerCase()] || plan.destination,
           color: getColorForDestination(plan.destination),
         }));
 
@@ -147,79 +256,6 @@ function MyPageContent() {
     };
     return colors[destination.toLowerCase()] || '#4dabf7';
   };
-
-  const savedItems = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      type: '명소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      type: '맛집',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.15',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '호텔 미라코스타',
-      type: '숙소',
-      location: '도쿄, 일본',
-      savedDate: '2025.04.14',
-      color: '#4dabf7',
-    },
-    {
-      id: 4,
-      title: '방콕 왕궁',
-      type: '명소',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ff6b6b',
-    },
-    {
-      id: 5,
-      title: '팟타이 맛집',
-      type: '맛집',
-      location: '방콕, 태국',
-      savedDate: '2025.04.10',
-      color: '#ffd43b',
-    },
-  ];
-
-  const myReviews = [
-    {
-      id: 1,
-      title: '도쿄 스카이트리',
-      rating: 4.5,
-      date: '2025.03.20',
-      content:
-        '도쿄 전경을 한눈에 볼 수 있어서 좋았습니다. 입장료가 조금 비싸지만 볼만한 가치가 있어요.',
-      color: '#ff6b6b',
-    },
-    {
-      id: 2,
-      title: '이치란 라멘',
-      rating: 5,
-      date: '2025.03.19',
-      content:
-        '정말 맛있었습니다! 줄이 길었지만 기다릴 만한 가치가 있었어요. 돈코츠 라멘의 진수를 맛볼 수 있습니다.',
-      color: '#ffd43b',
-    },
-    {
-      id: 3,
-      title: '제주 협재해변',
-      rating: 4,
-      date: '2025.03.12',
-      content:
-        '물이 맑고 모래가 고운 해변이에요. 날씨가 좋으면 에메랄드빛 바다를 볼 수 있습니다.',
-      color: '#51cf66',
-    },
-  ];
 
   const formatRelativeTime = (string) => {
     const now = new Date();
@@ -437,10 +473,7 @@ function MyPageContent() {
                         )}
                         {trip.image === '파리' && (
                           <>
-                            <path
-                              d="M50,80 L40,40 L60,40 Z"
-                              fill="#4dabf7"
-                            />
+                            <path d="M50,80 L40,40 L60,40 Z" fill="#4dabf7" />
                             <rect
                               x="45"
                               y="20"
@@ -452,16 +485,8 @@ function MyPageContent() {
                         )}
                         {trip.image === '로마' && (
                           <>
-                            <path
-                              d="M50,80 L30,40 L70,40 Z"
-                              fill="#ff9a9e"
-                            />
-                            <circle
-                              cx="50"
-                              cy="30"
-                              r="10"
-                              fill="#ff9a9e"
-                            />
+                            <path d="M50,80 L30,40 L70,40 Z" fill="#ff9a9e" />
+                            <circle cx="50" cy="30" r="10" fill="#ff9a9e" />
                           </>
                         )}
                         {trip.image === '베니스' && (
@@ -482,12 +507,7 @@ function MyPageContent() {
                               d="M50,20 L65,40 L60,65 L40,65 L35,40 Z"
                               fill="#adb5bd"
                             />
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="10"
-                              fill="#adb5bd"
-                            />
+                            <circle cx="50" cy="50" r="10" fill="#adb5bd" />
                           </>
                         )}
                         {trip.image === '싱가포르' && (
@@ -601,7 +621,10 @@ function MyPageContent() {
                   <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
                     <div className="flex items-start">
                       <div className="mr-3 rounded-full bg-[#e0f2fe] p-2">
-                        <Plane className="h-5 w-5" style={{ color: '#93c5fd' }} />
+                        <Plane
+                          className="h-5 w-5"
+                          style={{ color: '#93c5fd' }}
+                        />
                       </div>
                       <div>
                         <CardTitle className="text-lg text-[#4338ca]">
@@ -681,64 +704,57 @@ function MyPageContent() {
         </TabsContent>
 
         <TabsContent value="saved">
-          <div className="space-y-4">
+          <div className="space-y-6">
             {savedItems.map((item) => (
-              <Card
-                key={item.id}
-                className="overflow-hidden bg-[#f8f9fa] hover:bg-[#e7f5ff]/20"
+              <div
+                key={item.placeId}
+                className="rounded-2xl bg-white p-6 shadow-md border border-gray-100 min-h-[160px] flex flex-col justify-between"
               >
-                <div
-                  className="absolute left-0 top-0 h-full w-1"
-                  style={{ backgroundColor: item.color }}
-                ></div>
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pl-6 pt-4">
-                  <div>
-                    <CardTitle className="text-lg text-[#1e3a8a]">
-                      {item.title}
-                    </CardTitle>
-                    <div className="mt-1 flex items-center text-sm text-[#495057]">
-                      <MapPin className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                      <span>{item.location}</span>
+                {/* 상단 정보 */}
+                <div className="flex justify-between">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-[#1e3a8a]">
+                      {item.name}
+                    </h3>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="mr-1 h-4 w-4 text-traveling-text" />
+                      {item.city}
+                      {item.country ? `, ${item.country}` : ''}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="mr-1 h-4 w-4 text-traveling-text" />
+                      저장일: {item.createdAt?.slice(0, 10)}
                     </div>
                   </div>
-                  <Badge
-                    className={`
-                    ${
-                      item.type === '명소'
-                        ? 'bg-[#ff6b6b]'
-                        : item.type === '맛집'
-                        ? 'bg-[#ffd43b]'
-                        : 'bg-[#4dabf7]'
-                    }
-                    text-white
-                    `}
+
+                  {/* 카테고리 뱃지 */}
+                  <div className="text-right">
+                    <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                      {item.type || '기타'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 하단 버튼 */}
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-traveling-blue text-traveling-text hover:bg-traveling-light-blue"
+                    onClick={() => navigate(`/place/${item.placeId}`)}
                   >
-                    {item.type}
-                  </Badge>
-                </CardHeader>
-                <CardFooter className="flex items-center justify-between pb-4 pl-6 pt-2 text-sm text-[#495057]">
-                  <div className="flex items-center">
-                    <Bookmark className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                    <span>저장일: {item.savedDate}</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      상세보기
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
+                    상세보기
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-300 text-red-500 hover:bg-red-50"
+                    onClick={() => handleDelete(item.placeId)}
+                  >
+                    삭제
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         </TabsContent>
@@ -746,59 +762,52 @@ function MyPageContent() {
         <TabsContent value="reviews">
           <div className="space-y-6">
             {myReviews.map((review) => (
-              <Card key={review.id} className="overflow-hidden bg-[#f8f9fa]">
-                <div
-                  className="absolute left-0 top-0 h-full w-1"
-                  style={{ backgroundColor: review.color }}
-                ></div>
-                <CardHeader className="pb-2 pl-6 pt-4">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg text-[#1e3a8a]">
-                      {review.title}
-                    </CardTitle>
-                    <div className="flex items-center">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(review.rating)
-                              ? 'fill-[#ffd43b] text-[#ffd43b]'
-                              : i < review.rating
-                              ? 'fill-[#ffd43b] text-[#ffd43b] stroke-[#ffd43b]'
-                              : 'text-[#dee2e6]'
-                          }`}
-                        />
-                      ))}
-                      <span className="ml-1 text-sm font-medium text-[#1e3a8a]">
-                        {review.rating}
-                      </span>
+              <Card
+                key={review.id}
+                className="rounded-2xl bg-white p-6 shadow-md border border-gray-100 min-h-[160px]"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-[#1e3a8a]">
+                      {review.title || '명소'}
+                    </h3>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="mr-1 h-4 w-4 text-traveling-text" />
+                      작성일: {review.createdAt?.slice(0, 10) || '날짜 없음'}
                     </div>
                   </div>
-                  <p className="mt-1 text-sm text-[#495057]">
-                    작성일: {review.date}
-                  </p>
-                </CardHeader>
-                <CardContent className="py-2 pl-6">
-                  <p className="text-[#1e3a8a]">{review.content}</p>
-                </CardContent>
-                <CardFooter className="flex justify-end pb-4 pl-6 pt-2">
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      수정
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-[#495057] hover:bg-[#e7f5ff] hover:text-[#1e3a8a]"
-                    >
-                      삭제
-                    </Button>
+
+                  <div className="flex items-center">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < Math.floor(review.rating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                    <span className="ml-1 text-sm font-medium text-yellow-500">
+                      {review.rating}
+                    </span>
                   </div>
-                </CardFooter>
+                </div>
+
+                <div className="mt-4 text-sm text-gray-700">
+                  {review.content}
+                </div>
+
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-500 border-red-300 hover:bg-red-50"
+                    onClick={() => handleReviewDelete(review.id)}
+                  >
+                    삭제
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
@@ -882,8 +891,7 @@ export default MyPageContent;
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------------
 
-
-//css 신호등 
+//css 신호등
 // import React, { useState, useEffect } from 'react';
 // import { Link } from 'react-router-dom';
 // import {

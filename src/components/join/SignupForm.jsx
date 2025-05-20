@@ -13,6 +13,7 @@ import '../../styles/traveling-datepicker.css';
 import { useDispatch } from 'react-redux';
 import { registerAccount } from '../../hooks/reducer/account/accountThunk';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import {
   Select,
@@ -41,9 +42,7 @@ export function SignupForm() {
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
-
-
-   const handleImageChange = (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setProfileImage(file);
@@ -117,12 +116,12 @@ export function SignupForm() {
 
     try {
       await dispatch(registerAccount(signupData)).unwrap();
-      alert('회원가입 성공!');
+      toast.success('회원가입이 완료되었습니다! 🎉');
       navigate('/login');
     } catch (error) {
       console.error('회원가입 실패:', error);
       const message = error?.response?.data?.message || '서버 오류';
-      alert('회원가입 실패: ' + message);
+      toast('회원가입 실패: ' + message);
     }
   };
 

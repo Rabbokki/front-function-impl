@@ -9,7 +9,11 @@ import { Card } from '../../modules/Card';
 import { Separator } from '../../modules/Separator';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginAccount, getAccountDetails } from '../../hooks/reducer/account/accountThunk';
+import {
+  loginAccount,
+  getAccountDetails,
+} from '../../hooks/reducer/account/accountThunk';
+import { toast } from 'react-toastify';
 
 function LoginForm() {
   const dispatch = useDispatch();
@@ -19,52 +23,48 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    const loginData = {
-      email,
-      password,
-    };
-  
-    try {
-      const resultAction = await dispatch(loginAccount(loginData)).unwrap();
-      console.log('로그인 성공:', resultAction);
-  
-      const { accessToken, refreshToken } = resultAction;
-  
-      if (rememberMe) {
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-      } else {
-        sessionStorage.setItem('accessToken', accessToken);
-        sessionStorage.setItem('refreshToken', refreshToken);
-      }
-  
-      
-      const token = rememberMe
-        ? localStorage.getItem("accessToken")
-        : sessionStorage.getItem("accessToken");
-  
-      const user = await dispatch(getAccountDetails()).unwrap();
-  
-      if (rememberMe) {
-        localStorage.setItem("user", JSON.stringify(user));
-      } else {
-        sessionStorage.setItem("user", JSON.stringify(user));
-      }
-  
-      alert("로그인 성공!");
-      navigate("/"); // ✅ 이후 이동
-    } catch (error) {
-      console.error("로그인 실패:", error);
-      alert("로그인 실패: " + (error?.message || "서버 오류"));
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const loginData = {
+    email,
+    password,
   };
-  
 
+  try {
+    const resultAction = await dispatch(loginAccount(loginData)).unwrap();
+    console.log('로그인 성공:', resultAction);
+
+    const { accessToken, refreshToken } = resultAction;
+
+    if (rememberMe) {
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+    } else {
+      sessionStorage.setItem('accessToken', accessToken);
+      sessionStorage.setItem('refreshToken', refreshToken);
+    }
+
+    const token = rememberMe
+      ? localStorage.getItem('accessToken')
+      : sessionStorage.getItem('accessToken');
+
+    const user = await dispatch(getAccountDetails()).unwrap();
+
+    if (rememberMe) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      sessionStorage.setItem('user', JSON.stringify(user));
+    }
+
+    toast.success('로그인 성공! 🎉');
+    navigate('/'); // ✅ 이후 이동
+  } catch (error) {
+    console.error('로그인 실패:', error);
+    toast.error('로그인 실패: ' + (error?.message || '서버 오류'));
+  }
+};
   return (
     <div className="mx-auto max-w-md">
       <div className="mb-8 text-center">
@@ -107,12 +107,6 @@ function LoginForm() {
               <Label htmlFor="password" className="text-traveling-text">
                 비밀번호
               </Label>
-              <Link
-                to="/forgot-password"
-                className="text-xs text-traveling-purple hover:underline"
-              >
-                비밀번호를 잊으셨나요?
-              </Link>
             </div>
             <div className="relative">
               <Input
