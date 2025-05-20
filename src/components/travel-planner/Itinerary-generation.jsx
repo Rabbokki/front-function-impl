@@ -697,7 +697,7 @@ import { FlightModal } from "./flight-modal";
 import MapComponent from "../travel-planner/Map-component";
 import { differenceInCalendarDays, format } from "date-fns";
 import axiosInstance from "../../api/axiosInstance";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { getFromLocalStorage } from "../../utils";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -789,7 +789,7 @@ const hotelData = {
   }
 };
 
-function ItineraryGeneration({ destination, isAiMode = false, startDate: propStartDate, endDate: propEndDate, plannerType }) {
+function ItineraryGeneration({ isAiMode: propIsAiMode = false }) {
   const [selectedDay, setSelectedDay] = useState(1);
   const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -801,11 +801,19 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   const isInitialized = useRef(false);
   const [itinerary, setItinerary] = useState({});
 
+  // location.state 또는 localStorage에서 데이터 가져오기
+  const { itinerary: stateItinerary, destination: stateDestination, startDate: stateStartDate, endDate: stateEndDate, plannerType: statePlannerType } = location.state || {};
   const travelPlan = getFromLocalStorage("travelPlan") || {};
-  const { startDate: localStartDate, endDate: localEndDate, selectedAttractions, selectedHotels, selectedTransportation, customAttractions = [] } = travelPlan;
+  const { selectedAttractions, selectedHotels, selectedTransportation, customAttractions = [] } = travelPlan;
 
-  const startDate = localStartDate || propStartDate;
-  const endDate = localEndDate || propEndDate;
+  // destination, startDate, endDate, plannerType 설정
+  const destination = stateDestination || travelPlan.destination || "rome";
+  const startDate = stateStartDate || travelPlan.startDate;
+  const endDate = stateEndDate || travelPlan.endDate;
+  const plannerType = statePlannerType || travelPlan.plannerType || "manual";
+  // isAiMode를 plannerType에 따라 명확히 설정
+  const isAiMode = plannerType === "ai";
+  console.log("isAiMode:", isAiMode, "plannerType:", plannerType);
 
   const generateDayKeys = (start, end) => {
     if (!start || !end) {
@@ -1074,7 +1082,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
           id: "trevi-fountain",
           name: "트레비 분수",
           position: { lat: 41.9009, lng: 12.4833 },
-          description: "동전을 던져 소원을 빌어보세요",
+          description: "동전 to throw your coin and make a wish",
           address: "Piazza di Trevi, 00187 Roma RM, Italy",
         },
         {
@@ -1252,12 +1260,19 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   };
 
   useEffect(() => {
-    console.log("Itinerary-generation useEffect:", { startDate, endDate, destination, isAiMode, plannerType });
-    if (isInitialized.current || !startDate || !endDate || !destination) {
-      if (!startDate || !endDate || !destination) {
-        toast.error("필수 정보가 누락되었습니다.");
-        navigate(`/travel-planner/${destination || 'fukuoka'}`);
-      }
+    console.log("Itinerary-generation useEffect:", { startDate, endDate, destination, isAiMode, plannerType, selectedAttractions, selectedHotels, selectedTransportation });
+
+    // 입력값 유효성 검사
+    if (!destination || !startDate || !endDate) {
+      console.error("Missing required data:", { destination, startDate, endDate });
+      setErrorMessage("필수 정보(목적지 또는 날짜)가 누락되었습니다. Step 1부터 다시 시작해 주세요.");
+      toast.error("필수 정보가 누락되었습니다.");
+      navigate(`/travel-planner/${destination || 'rome'}/step1`);
+      setIsLoading(false);
+      return;
+    }
+
+    if (isInitialized.current) {
       return;
     }
     isInitialized.current = true;
@@ -1266,85 +1281,221 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
       setIsLoading(true);
       try {
         let newItinerary = {};
+
         if (isAiMode) {
-          // AI 모드: localStorage에서 aiItinerary 사용
-          const aiItinerary = JSON.parse(localStorage.getItem("aiItinerary") || "[]");
-          console.log("AI itinerary from localStorage:", aiItinerary);
-          aiItinerary.forEach((dayData, index) => {
-            const dayKey = dayKeys[index];
-            if (dayKey) {
-              newItinerary[dayKey] = {
-                hotel: selectedHotels?.[dayKey] || "hotel1",
-                attractions: dayData.activities.map((act, idx) => {
-                  const attr = attractionsData[destination.toLowerCase()]?.attractions.find(a => a.name === act.activity) || {
+          // localStorage에서 aiItinerary 확인
+          const aiItinerary = stateItinerary || JSON.parse(localStorage.getItem("aiItinerary") || "[]");
+          console.log("Retrieved aiItinerary from localStorage:", aiItinerary);
+
+          if (aiItinerary.length > 0) {
+            // aiItinerary를 사용하여 일정 구성
+            aiItinerary.forEach((dayData, index) => {
+              const date = dayKeys[index];
+              if (!date) return;
+
+              newItinerary[date] = [
+                // 호텔 추가 (기본값)
+                {
+                  id: selectedHotels?.[`day${index + 1}`] || "hotel1",
+                  time: "14:00",
+                  type: "hotel",
+                  name: hotelData[selectedHotels?.[`day${index + 1}`]]?.name || "로마 호텔 A",
+                  address: hotelData[selectedHotels?.[`day${index + 1}`]]?.address || "로마 호텔 주소",
+                  description: hotelData[selectedHotels?.[`day${index + 1}`]]?.description || "기본 호텔",
+                  position: {
+                    lat: hotelData[selectedHotels?.[`day${index + 1}`]]?.latitude || mapCenter.lat,
+                    lng: hotelData[selectedHotels?.[`day${index + 1}`]]?.longitude || mapCenter.lng,
+                  },
+                },
+                // 활동 추가
+                ...dayData.activities.map((act, idx) => {
+                  const attr = attractionsData[destination.toLowerCase()]?.attractions.find(
+                    (a) => a.name === act.activity
+                  ) || {
                     id: `${act.activity}-${index}-${idx}`,
                     name: act.activity,
+                    address: act.address || "주소 정보 없음",
+                    description: act.description || "활동에 대한 설명이 없습니다.",
                     position: mapCenter,
-                    description: act.description || "No description available",
-                    address: "",
                   };
                   return {
                     id: attr.id,
+                    time: act.time === "morning" ? "09:00" : act.time === "afternoon" ? "14:00" : act.time === "evening" ? "18:00" : act.time || "10:00",
+                    type: "attraction",
                     name: attr.name,
-                    position: attr.position,
-                    description: attr.description,
                     address: attr.address,
+                    description: attr.description,
+                    position: attr.position,
                   };
                 }),
-                transportation: selectedTransportation || "car",
-                meals: [
-                  { time: "08:00", type: "아침", name: "호텔 조식" },
-                  { time: "12:00", type: "점심", name: "현지 식당" },
-                  { time: "18:00", type: "저녁", name: "현지 식당" },
-                ],
-              };
+                // 식사 추가
+                {
+                  id: `breakfast-${date}`,
+                  time: "08:00",
+                  type: "meal",
+                  name: "호텔 조식",
+                  address: "호텔 내",
+                  description: "호텔에서 제공하는 아침 식사",
+                  position: mapCenter,
+                },
+                {
+                  id: `lunch-${date}`,
+                  time: "12:00",
+                  type: "meal",
+                  name: "점심 식사",
+                  address: "미정",
+                  description: "현지 레스토랑에서 식사",
+                  position: mapCenter,
+                },
+                {
+                  id: `dinner-${date}`,
+                  time: "18:00",
+                  type: "meal",
+                  name: "저녁 식사",
+                  address: "미정",
+                  description: "현지 레스토랑에서 식사",
+                  position: mapCenter,
+                },
+              ];
+            });
+          } else {
+            // localStorage에 aiItinerary가 없으면 서버 호출
+            try {
+              const response = await axiosInstance.get(`/api/travel-plans/ai/${destination.toLowerCase()}`, {
+                params: {
+                  start_date: startDate,
+                  end_date: endDate,
+                },
+              });
+              console.log("AI itinerary from server:", response.data);
+              if (!response.data || response.data.length === 0) {
+                throw new Error("AI 일정 데이터가 없습니다.");
+              }
+              newItinerary = response.data.reduce((acc, item) => {
+                const date = item.date;
+                if (!acc[date]) acc[date] = [];
+                acc[date].push({
+                  id: item.id,
+                  time: item.time,
+                  type: item.type,
+                  name: item.name,
+                  address: item.address,
+                  description: item.description,
+                  position: { lat: item.latitude, lng: item.longitude },
+                });
+                return acc;
+              }, {});
+            } catch (serverError) {
+              console.error("Server API call failed:", serverError);
+              throw new Error("AI 일정 데이터를 가져오지 못했습니다. 저장된 일정이 없습니다.");
             }
-          });
+          }
         } else {
-          // 수동 모드: selectedAttractions 사용
-          console.log("selectedAttractions:", selectedAttractions);
-          dayKeys.forEach((day, index) => {
-            const dayKey = `day${index + 1}`;
-            const attractionsForDay = Array.isArray(selectedAttractions?.[dayKey])
-              ? selectedAttractions[dayKey].map((id) => {
-                  const attr = [
-                    ...(attractionsData[destination.toLowerCase()]?.attractions || []),
-                    ...customAttractions,
-                  ].find((a) => a.id === id);
-                  return attr || {
-                    id,
-                    name: "알 수 없는 장소",
-                    position: mapCenter,
-                    description: "No description available",
-                    address: "",
-                  };
-                })
-              : [];
-            newItinerary[day] = {
-              hotel: selectedHotels?.[dayKey] || "hotel1",
-              attractions: attractionsForDay,
-              transportation: selectedTransportation || "car",
-              meals: [
-                { time: "08:00", type: "아침", name: "호텔 조식" },
-                { time: "12:00", type: "점심", name: "현지 식당" },
-                { time: "18:00", type: "저녁", name: "현지 식당" },
-              ],
-            };
+          // 수동 모드: selectedAttractions, selectedHotels, selectedTransportation 사용
+          if (!selectedAttractions || !selectedHotels || !selectedTransportation) {
+            throw new Error("선택된 명소, 숙소, 또는 교통 수단 데이터가 없습니다.");
+          }
+
+          dayKeys.forEach((date, index) => {
+            const day = `day${index + 1}`;
+            newItinerary[date] = [];
+
+            // 호텔 추가
+            const hotelId = selectedHotels[day];
+            if (hotelId && hotelData[hotelId]) {
+              newItinerary[date].push({
+                id: hotelId,
+                time: "14:00",
+                type: "hotel",
+                name: hotelData[hotelId].name,
+                address: hotelData[hotelId].address,
+                description: hotelData[hotelId].description,
+                position: {
+                  lat: hotelData[hotelId].latitude,
+                  lng: hotelData[hotelId].longitude,
+                },
+              });
+            }
+
+            // 명소 추가
+            const attractions = selectedAttractions[day] || [];
+            attractions.forEach((attractionId) => {
+              const attraction =
+                attractionData[attractionId] ||
+                attractionsData[destination.toLowerCase()]?.attractions.find(
+                  (a) => a.id === attractionId
+                ) ||
+                customAttractions.find((a) => a.id === attractionId);
+              if (attraction) {
+                newItinerary[date].push({
+                  id: attractionId,
+                  time: attraction.time || "10:00",
+                  type: "attraction",
+                  name: attraction.name,
+                  address: attraction.address,
+                  description: attraction.description,
+                  position: {
+                    lat: attraction.latitude || attraction.position?.lat || mapCenter.lat,
+                    lng: attraction.longitude || attraction.position?.lng || mapCenter.lng,
+                  },
+                });
+              }
+            });
+
+            // 기본 식사 및 휴식 추가
+            newItinerary[date].push(
+              {
+                id: `breakfast-${date}`,
+                time: "08:00",
+                type: "meal",
+                name: "호텔 조식",
+                address: "호텔 내",
+                description: "호텔에서 제공하는 아침 식사",
+                position: mapCenter,
+              },
+              {
+                id: `lunch-${date}`,
+                time: "12:00",
+                type: "meal",
+                name: "점심 식사",
+                address: "미정",
+                description: "현지 레스토랑에서 식사",
+                position: mapCenter,
+              },
+              {
+                id: `dinner-${date}`,
+                time: "18:00",
+                type: "meal",
+                name: "저녁 식사",
+                address: "미정",
+                description: "현지 레스토랑에서 식사",
+                position: mapCenter,
+              }
+            );
           });
         }
+
         console.log("Generated itinerary:", newItinerary);
         setItinerary(newItinerary);
       } catch (error) {
         console.error("일정 생성 실패:", error);
-        setErrorMessage("일정을 생성하는 데 문제가 발생했습니다. 다시 시도해 주세요.");
-        toast.error("일정 생성에 실패했습니다. 다시 시도해 주세요.");
+        setErrorMessage(
+          isAiMode
+            ? `AI 일정 생성에 실패했습니다: ${error.message}`
+            : "수동 일정 생성에 실패했습니다. 선택된 데이터를 확인해주세요."
+        );
+        toast.error(
+          isAiMode
+            ? `AI 일정 생성에 실패했습니다: ${error.message}`
+            : "수동 일정 생성에 실패했습니다."
+        );
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeItinerary();
-  }, [startDate, endDate, destination, isAiMode, plannerType, dayKeys, selectedAttractions, selectedHotels, selectedTransportation, customAttractions, navigate]);
+  }, [startDate, endDate, destination, isAiMode, plannerType, dayKeys, selectedAttractions, selectedHotels, selectedTransportation, customAttractions, navigate, stateItinerary]);
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
@@ -1356,14 +1507,25 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
     try {
       if (isAiMode) {
         // AI 일정 저장
-        const aiItinerary = JSON.parse(localStorage.getItem("aiItinerary") || "[]");
         const aiPlanRequest = {
           destination: destination.toLowerCase(),
           start_date: startDate,
           end_date: endDate,
           planType: "AI",
-          itinerary: aiItinerary,
-          user_id: localStorage.getItem("userId") || "default_user",
+          itinerary: Object.keys(itinerary).map((date) => ({
+            date,
+            activities: itinerary[date].map((item) => ({
+              id: item.id,
+              time: item.time,
+              type: item.type,
+              name: item.name,
+              address: item.address,
+              description: item.description,
+              latitude: item.position.lat,
+              longitude: item.position.lng,
+            })),
+          })),
+          userId: localStorage.getItem("userId") || "default_user",
         };
         console.log("Saving AI itinerary:", aiPlanRequest);
         const response = await axiosInstance.post("/api/aiplan/save", aiPlanRequest);
@@ -1373,52 +1535,64 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
       } else {
         // 수동 일정 저장
         const places = [];
-        Object.keys(selectedAttractions).forEach((dayKey, index) => {
-          selectedAttractions[dayKey].forEach(attractionId => {
-            const attraction = attractionData[attractionId];
+        const accommodations = [];
+        const transportations = [];
+
+        dayKeys.forEach((date, index) => {
+          const dayKey = `day${index + 1}`;
+          // 명소
+          const attractions = selectedAttractions[dayKey] || [];
+          attractions.forEach((attractionId) => {
+            const attraction =
+              attractionData[attractionId] ||
+              attractionsData[destination.toLowerCase()]?.attractions.find(
+                (a) => a.id === attractionId
+              ) ||
+              customAttractions.find((a) => a.id === attractionId);
             if (attraction) {
               places.push({
                 name: attraction.name,
                 address: attraction.address,
                 day: (index + 1).toString(),
-                category: attraction.category,
+                category: attraction.category || "Attraction",
                 description: attraction.description,
-                latitude: attraction.latitude,
-                longitude: attraction.longitude,
-                time: attraction.time,
+                latitude: attraction.latitude || attraction.position?.lat,
+                longitude: attraction.longitude || attraction.position?.lng,
+                time: attraction.time || "10:00",
               });
             }
           });
-        });
 
-        const accommodations = [];
-        Object.keys(selectedHotels).forEach((dayKey, index) => {
+          // 숙소
           const hotelId = selectedHotels[dayKey];
-          const hotel = hotelData[hotelId];
+          const hotel =
+            hotelData[hotelId] ||
+            hotelsData[destination.toLowerCase()]?.find((h) => h.id === hotelId);
           if (hotel) {
             accommodations.push({
               name: hotel.name,
               address: hotel.address,
               day: (index + 1).toString(),
-              description: hotel.description,
-              latitude: hotel.latitude,
-              longitude: hotel.longitude,
-              checkInDate: hotel.checkInDate,
-              checkOutDate: hotel.checkOutDate,
+              description: hotel.description || "Hotel",
+              latitude: hotel.latitude || hotel.position?.lat,
+              longitude: hotel.longitude || hotel.position?.lng,
+              checkInDate: hotel.checkInDate || startDate + "T14:00:00",
+              checkOutDate: hotel.checkOutDate || endDate + "T12:00:00",
+            });
+          }
+
+          // 교통 수단
+          if (selectedTransportation) {
+            transportations.push({
+              type: selectedTransportation,
+              day: (index + 1).toString(),
             });
           }
         });
 
-        const transportations = selectedTransportation
-          ? Object.keys(selectedAttractions).map((dayKey, index) => ({
-              type: selectedTransportation,
-              day: (index + 1).toString(),
-            }))
-          : [];
-
         const travelPlanRequest = {
           city: destination.toLowerCase(),
-          country: getCountryByDestination(destination),
+          country: countryMap[destination.toLowerCase()] || "알 수 없음",
           start_date: startDate,
           end_date: endDate,
           plan_type: "MY",
@@ -1441,21 +1615,6 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
     }
   };
 
-  function getCountryByDestination(destination) {
-    const countryMap = {
-      jeju: "한국",
-      bangkok: "태국",
-      fukuoka: "일본",
-      osaka: "일본",
-      paris: "프랑스",
-      rome: "이탈리아",
-      singapore: "싱가포르",
-      tokyo: "일본",
-      venice: "이탈리아",
-    };
-    return countryMap[destination.toLowerCase()] || "알 수 없음";
-  }
-
   const handleFlightSelect = () => {
     setIsFlightModalOpen(true);
   };
@@ -1465,20 +1624,24 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
   };
 
   const currentDayKey = dayKeys[selectedDay - 1];
-  const currentItinerary = itinerary[currentDayKey] || {};
-  const currentAttractions = currentItinerary.attractions || [];
-  const currentHotelId = currentItinerary.hotel || "hotel1";
-  const currentHotel = hotelsData[destination.toLowerCase()]?.find((h) => h.id === currentHotelId) || { name: "호텔 정보 없음", position: mapCenter };
+  const currentItinerary = itinerary[currentDayKey] || [];
+  const currentAttractions = currentItinerary.filter((item) => item.type === "attraction") || [];
+  const currentHotel = currentItinerary.find((item) => item.type === "hotel") || {
+    id: "hotel1",
+    name: "호텔 정보 없음",
+    position: mapCenter,
+  };
+  const currentMeals = currentItinerary.filter((item) => item.type === "meal") || [];
 
   const mapMarkers = [
-    ...(currentAttractions.map((attr, idx) => ({
+    ...currentAttractions.map((attr, idx) => ({
       id: attr.id || `attr-${idx}`,
       position: attr.position || mapCenter,
       title: attr.name,
       selected: true,
-    }))),
+    })),
     {
-      id: currentHotelId,
+      id: currentHotel.id,
       position: currentHotel.position || mapCenter,
       title: currentHotel.name,
       selected: true,
@@ -1511,7 +1674,7 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
       <Card className="bg-white p-6 shadow-md">
         <div className="mb-6">
           <h2 className="mb-2 text-center text-2xl font-bold text-traveling-text">
-            {cityNames[destination.toLowerCase()]} 여행 일정
+            {cityNames[destination?.toLowerCase()] || "여행지"} 여행 일정
           </h2>
           <p className="text-center text-sm text-traveling-text/70">
             {startDate} ~ {endDate} ({dayKeys.length}일)
@@ -1585,18 +1748,18 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
                     </div>
                   </div>
 
-                  {currentItinerary.meals?.map((meal, idx) => (
+                  {currentMeals.map((meal, idx) => (
                     <div key={idx} className="flex items-start gap-3">
-                      {meal.type === "아침" ? (
+                      {meal.type === "meal" && meal.name.includes("아침") ? (
                         <Coffee className="h-6 w-6 text-traveling-purple" />
                       ) : (
                         <Utensils className="h-6 w-6 text-traveling-purple" />
                       )}
                       <div>
                         <p className="font-medium text-traveling-text">
-                          {meal.time} {meal.type}
+                          {meal.time} {meal.name}
                         </p>
-                        <p className="text-sm text-traveling-text/70">{meal.name}</p>
+                        <p className="text-sm text-traveling-text/70">{meal.description}</p>
                       </div>
                     </div>
                   ))}
@@ -1608,6 +1771,9 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
                         <p className="font-medium text-traveling-text">{attr.name}</p>
                         <p className="text-sm text-traveling-text/70">{attr.description}</p>
                         <p className="text-sm text-traveling-text/70">{attr.address}</p>
+                        {attr.time && (
+                          <p className="text-sm text-traveling-text/70">시간: {attr.time}</p>
+                        )}
                       </div>
                       {isEditing && (
                         <Button
@@ -1617,12 +1783,9 @@ function ItineraryGeneration({ destination, isAiMode = false, startDate: propSta
                           onClick={() => {
                             setItinerary((prev) => ({
                               ...prev,
-                              [currentDayKey]: {
-                                ...prev[currentDayKey],
-                                attractions: prev[currentDayKey].attractions.filter(
-                                  (a) => a.id !== attr.id
-                                ),
-                              },
+                              [currentDayKey]: prev[currentDayKey].filter(
+                                (a) => a.id !== attr.id
+                              ),
                             }));
                           }}
                         >

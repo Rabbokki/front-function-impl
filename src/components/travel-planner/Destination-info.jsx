@@ -157,7 +157,7 @@ const cityData = {
 };
 
 export function DestinationInfo({ destination }) {
-  const [selectedDates, setSelectedDates] = useState(getFromLocalStorage("travelPlan")?.selectedDates || []);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(4);
   const [currentYear, setCurrentYear] = useState(2025);
   const [plannerType, setPlannerType] = useState(getFromLocalStorage("travelPlan")?.plannerType || "manual");
@@ -262,102 +262,103 @@ export function DestinationInfo({ destination }) {
   };
 
   const handleNext = async () => {
-  console.log('handleNext called with:', { selectedDates, plannerType, destination });
+    console.log('handleNext called with:', { selectedDates, plannerType, destination });
 
-  // 입력 검증
-  if (!destination) {
-    toast.error('목적지를 선택해 주세요.');
-    return;
-  }
-  if (!selectedDates || selectedDates.length === 0) {
-    toast.error('여행 날짜를 선택해 주세요.');
-    return;
-  }
-
-  const sorted = [...selectedDates].sort();
-  const startDate = sorted[0];
-  const endDate = sorted[sorted.length - 1];
-
-  console.log('startDate:', startDate, 'endDate:', endDate);
-  if (!startDate || !endDate) {
-    toast.error('시작 날짜 또는 종료 날짜가 유효하지 않습니다.');
-    return;
-  }
-
-  // 날짜 포맷 확인 (YYYY-MM-DD)
-  const formattedStartDate = format(new Date(startDate), 'yyyy-MM-dd');
-  const formattedEndDate = format(new Date(endDate), 'yyyy-MM-dd');
-
-  // localStorage에 날짜 및 목적지 저장
-  localStorage.setItem('startDate', formattedStartDate);
-  localStorage.setItem('endDate', formattedEndDate);
-  localStorage.setItem('destination', destination);
-  localStorage.setItem('plannerType', plannerType);
-
-  // selectedAttractions, selectedHotels 초기화
-  const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
-  const newSelectedAttractions = {};
-  const newSelectedHotels = {};
-  for (let i = 0; i < daysCount; i++) {
-    const dayKey = format(
-      new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)),
-      'yyyy-MM-dd'
-    );
-    newSelectedAttractions[dayKey] = selectedAttractions[dayKey] || [];
-    newSelectedHotels[dayKey] = selectedHotels[dayKey] || 'hotel1';
-  }
-
-  setSelectedAttractions(newSelectedAttractions);
-  setSelectedHotels(newSelectedHotels);
-
-  try {
-    if (plannerType === 'ai') {
-      // AI 일정 생성 요청
-      const aiPlanRequest = {
-        destination: destination.toLowerCase(),
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        preferences: JSON.stringify({ attractions: [], hotels: [], transportation: 'car' }),
-        budget: 0,
-        pace: 0,
-      };
-      console.log('Sending AI plan request:', JSON.stringify(aiPlanRequest, null, 2));
-      const response = await axiosInstance.post('/api/aiplan/generate', aiPlanRequest, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // 인증 토큰
-        },
-      });
-      console.log('AI plan response:', JSON.stringify(response.data, null, 2));
-
-      // AI 일정 데이터를 localStorage에 저장
-      localStorage.setItem('aiItinerary', JSON.stringify(response.data.itinerary));
-      toast.success('AI 일정이 생성되었습니다!');
-      navigate(`/ai-planner/${destination}`);
-    } else {
-      // 수동 일정: travel_plans에 기본 정보 저장
-      const travelPlanRequest = {
-        city: destination.toLowerCase(),
-        country: getCountryByDestination(destination),
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-        plan_type: 'MY',
-      };
-      console.log('Sending travel plan request:', JSON.stringify(travelPlanRequest, null, 2));
-      const response = await axiosInstance.post('/api/travel-plans', travelPlanRequest);
-      console.log('Travel plan response:', JSON.stringify(response.data, null, 2));
-      localStorage.setItem('travelPlanId', response.data.id); // travelPlanId 저장
-      toast.success('여행 계획이 저장되었습니다!');
-      navigate(`/travel-planner/${destination}/step2`);
+    // 입력 검증
+    if (!destination || !cityData[destination.toLowerCase()]) {
+      toast.error('유효한 목적지를 선택해 주세요.');
+      console.error('Invalid destination:', destination);
+      return;
     }
-  } catch (error) {
-    const errorMessage =
-      error.response?.data?.error?.message ||
-      error.response?.data?.message ||
-      'AI 일정 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.';
-    toast.error(errorMessage);
-    console.error('handleNext error:', JSON.stringify(error.response?.data || error, null, 2));
-  }
-};
+    if (!selectedDates || selectedDates.length === 0) {
+      toast.error('여행 날짜를 선택해 주세요.');
+      return;
+    }
+
+    const sorted = [...selectedDates].sort();
+    const startDate = sorted[0];
+    const endDate = sorted[sorted.length - 1];
+
+    console.log('startDate:', startDate, 'endDate:', endDate);
+    if (!startDate || !endDate) {
+      toast.error('시작 날짜 또는 종료 날짜가 유효하지 않습니다.');
+      return;
+    }
+
+    // 날짜 포맷 확인 (YYYY-MM-DD)
+    const formattedStartDate = format(new Date(startDate), 'yyyy-MM-dd');
+    const formattedEndDate = format(new Date(endDate), 'yyyy-MM-dd');
+
+    // localStorage에 날짜 및 목적지 저장
+    localStorage.setItem('startDate', formattedStartDate);
+    localStorage.setItem('endDate', formattedEndDate);
+    localStorage.setItem('destination', destination);
+    localStorage.setItem('plannerType', plannerType);
+
+    // travelPlan 업데이트
+    const travelPlan = getFromLocalStorage("travelPlan") || {};
+    const updatedTravelPlan = {
+      ...travelPlan,
+      destination: destination.toLowerCase(),
+      selectedDates,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+      plannerType,
+      selectedAttractions: selectedAttractions || {},
+      selectedHotels: selectedHotels || {},
+      selectedTransportation: selectedTransportation || "car",
+    };
+    console.log('Saving updated travelPlan to localStorage:', updatedTravelPlan);
+    saveToLocalStorage('travelPlan', updatedTravelPlan);
+
+    // selectedAttractions, selectedHotels 초기화
+    const daysCount = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
+    const newSelectedAttractions = {};
+    const newSelectedHotels = {};
+    for (let i = 0; i < daysCount; i++) {
+      const dayKey = format(
+        new Date(new Date(startDate).setDate(new Date(startDate).getDate() + i)),
+        'yyyy-MM-dd'
+      );
+      newSelectedAttractions[`day${i + 1}`] = selectedAttractions[`day${i + 1}`] || [];
+      newSelectedHotels[`day${i + 1}`] = selectedHotels[`day${i + 1}`] || 'hotel1';
+    }
+
+    setSelectedAttractions(newSelectedAttractions);
+    setSelectedHotels(newSelectedHotels);
+
+    try {
+      if (plannerType === 'ai') {
+        console.log('Navigating to AI planner:', `/ai-planner/${destination}`);
+        toast.success('AI 일정 설정으로 이동합니다.');
+        navigate(`/ai-planner/${destination}`, { replace: false });
+      } else {
+        // 수동 모드: aiItinerary 초기화
+        localStorage.removeItem('aiItinerary');
+        // travel_plans에 기본 정보 저장
+        const travelPlanRequest = {
+          city: destination.toLowerCase(),
+          country: getCountryByDestination(destination),
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+          plan_type: 'MY',
+        };
+        console.log('Sending travel plan request:', JSON.stringify(travelPlanRequest, null, 2));
+        const response = await axiosInstance.post('/api/travel-plans', travelPlanRequest);
+        console.log('Travel plan response:', JSON.stringify(response.data, null, 2));
+        localStorage.setItem('travelPlanId', response.data.id);
+        toast.success('여행 계획이 저장되었습니다!');
+        navigate(`/travel-planner/${destination}/step2`);
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        '여행 계획 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+      toast.error(errorMessage);
+      console.error('handleNext error:', JSON.stringify(error.response?.data || error, null, 2));
+    }
+  };
 
   const getCountryByDestination = (destination) => {
     const countryMap = {
@@ -426,7 +427,7 @@ export function DestinationInfo({ destination }) {
                     onClick={i === 0 ? handlePrevMonth : undefined}
                     className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}
                   >
-                    &lt;
+                    
                   </button>
                   <h3 className="text-lg font-bold text-traveling-text">
                     {i === 0 ? currentYear : currentMonth === 11 ? currentYear + 1 : currentYear}년{" "}
@@ -436,7 +437,7 @@ export function DestinationInfo({ destination }) {
                     onClick={i === 0 ? handleNextMonth : undefined}
                     className={i === 1 ? "invisible" : "text-traveling-text hover:text-traveling-purple"}
                   >
-                    &gt;
+                    
                   </button>
                 </div>
                 <div className="grid grid-cols-7">
