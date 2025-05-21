@@ -170,15 +170,11 @@ function LoginForm() {
               className="flex items-center justify-center border-traveling-text/30 bg-white"
               onClick={handleNaverLogin}
             >
-              <svg
+              <img
+                src="/images/naverLogo.png"
+                alt="Naver Logo"
                 className="mr-2 h-5 w-5"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-              >
-                <rect width="24" height="24" rx="4" fill="#03C75A" />
-                <path fill="#FFFFFF" d="M7 18V6h3l6 6-6 6H7z" />
-              </svg>
+              />
               Naver
             </Button>
 
