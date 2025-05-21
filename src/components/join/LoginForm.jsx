@@ -24,14 +24,12 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
+  const handleNaverLogin = () => {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/naver';
+  };
+
   const handleGoogleLogin = () => {
-    // 백엔드의 Google OAuth 인증 URL로 리디렉션
-    const backendUrl = 'http://localhost:8080/oauth2/authorization/google';
-    const redirectUri = 'http://localhost:3000/callback'; // 프론트엔드 콜백 경로
-    // Google OAuth 인증 페이지로 이동 (백엔드에서 처리)
-    window.location.href = `${backendUrl}?redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}`;
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
   };
 
   const handleSubmit = async (e) => {
@@ -170,14 +168,7 @@ function LoginForm() {
               type="button"
               variant="outline"
               className="flex items-center justify-center border-traveling-text/30 bg-white"
-              onClick={() => {
-                const naverOAuthUrl =
-                  'http://localhost:8080/oauth2/authorization/naver';
-                const redirectUri = 'http://localhost:3000/callback';
-                window.location.href = `${naverOAuthUrl}?redirect_uri=${encodeURIComponent(
-                  redirectUri
-                )}`;
-              }}
+              onClick={handleNaverLogin}
             >
               <svg
                 className="mr-2 h-5 w-5"
@@ -185,9 +176,7 @@ function LoginForm() {
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
               >
-                {/* 초록 배경 사각형 */}
                 <rect width="24" height="24" rx="4" fill="#03C75A" />
-                {/* 흰색 N 글자 경로 */}
                 <path fill="#FFFFFF" d="M7 18V6h3l6 6-6 6H7z" />
               </svg>
               Naver
