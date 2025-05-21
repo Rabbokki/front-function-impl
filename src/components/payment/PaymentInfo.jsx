@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { Button } from "../../modules/Button";
@@ -7,6 +7,7 @@ import { TabsContent } from "../../modules/Tabs";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 import PropTypes from "prop-types";
+import { QRCodeCanvas } from 'qrcode.react';
 
 function PaymentInfo({
   flight,
@@ -39,7 +40,7 @@ function PaymentInfo({
     parseFloat(flight.price) * passengerCount +
       parseFloat(flight.price) * passengerCount * 0.1 +
       selectedSeats.length * 20000
-  ); // 정수로 변환
+  );
 
   const handleCardChange = (field, value) => {
     setCardDetails((prev) => ({ ...prev, [field]: value }));
@@ -72,7 +73,7 @@ function PaymentInfo({
   };
 
   const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|net|org|edu|gov|co\.kr)$/;
     return email && emailRegex.test(email);
   };
 
@@ -90,7 +91,6 @@ function PaymentInfo({
       return;
     }
 
-    // contactData 검증 및 기본값 설정
     const validatedContact = {
       email: validateEmail(contactData.email)
         ? contactData.email
@@ -105,18 +105,19 @@ function PaymentInfo({
         flightId: flightId,
         passengerCount,
         selectedSeats,
-        totalPrice, // 정수로 전송
+        totalPrice,
         passengers: passengerData,
         contact: validatedContact,
+        itemName: `AirTicket_${passengerCount}`,
       };
       console.log("카카오페이 결제 요청 데이터:", JSON.stringify(bookingData, null, 2));
-      const response = await axiosInstance.post("/api/payments/kakaopay/ready", bookingData, {
+      const response = await axiosInstance.post("/api/payments/ready", bookingData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
-      console.log("카카오페이 결제 준비 응답:", response.data);
-      if (response.data.success) {
+      console.log("카카오페이 결제 준비 응답:", JSON.stringify(response.data, null, 2));
+      if (response.data.success && response.data.qrCodeUrl) {
         setQrCodeUrl(response.data.qrCodeUrl);
         setKakaoTid(response.data.tid);
         localStorage.setItem("kakaoTid", response.data.tid);
@@ -129,7 +130,46 @@ function PaymentInfo({
       }
     } catch (error) {
       console.error("카카오페이 결제 준비 실패:", error);
-      const errorMessage = error.response?.data?.message || error.message || "카카오페이 서버에 연결할 수 없습니다. 네트워크를 확인해주세요.";
+      const errorMessage = error.response?.data?.message || error.message || "카카오페이 서버에 연결할 수 없습니다.";
+      setPaymentError(errorMessage);
+      setIsKakaoModalOpen(true);
+    }
+  };
+
+  // 리다이렉트 처리
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tid = urlParams.get("tid");
+    const storedTid = localStorage.getItem("kakaoTid");
+
+    if (tid && tid === storedTid) {
+      console.log("결제 성공 리다이렉트 감지: tid=", tid);
+      handlePaymentSuccess(tid);
+    }
+  }, []);
+
+  const handlePaymentSuccess = async (tid) => {
+    try {
+      console.log("결제 상태 확인 요청, tid:", tid);
+      const response = await axiosInstance.get(`/api/payments/status/${tid}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      console.log("카카오페이 결제 상태 확인:", JSON.stringify(response.data, null, 2));
+      if (response.data.success && response.data.status === "SUCCESS") {
+        // 결제 성공 시 예약 처리
+        await handleBooking();
+        setIsKakaoModalOpen(false);
+        localStorage.removeItem("kakaoTid");
+        localStorage.removeItem("partnerOrderId");
+        localStorage.removeItem("partnerUserId");
+      } else {
+        throw new Error(response.data.message || "결제 상태 확인에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("결제 상태 확인 실패:", error);
+      const errorMessage = error.response?.data?.message || error.message || "결제 상태 확인 중 오류가 발생했습니다.";
       setPaymentError(errorMessage);
       setIsKakaoModalOpen(true);
     }
@@ -344,15 +384,35 @@ function PaymentInfo({
                         </p>
                         {qrCodeUrl ? (
                           <div className="mt-4 flex justify-center">
-                            <img src={qrCodeUrl} alt="카카오페이 QR 코드" className="h-48 w-48" />
+                            {console.log("Rendering QR Code with URL:", qrCodeUrl)}
+                            <QRCodeCanvas
+                              value={qrCodeUrl}
+                              size={256}
+                              level="H"
+                              style={{ margin: "auto" }}
+                            />
                           </div>
                         ) : (
-                          <p className="mt-4 text-sm text-red-500">QR 코드를 로드할 수 없습니다. 네트워크를 확인해주세요.</p>
+                          <p className="mt-4 text-sm text-red-500">QR 코드를 로드할 수 없습니다.</p>
+                        )}
+                        {qrCodeUrl && (
+                          <p className="mt-2 text-sm text-gray-500 text-center">
+                            또는{" "}
+                            <a
+                              href={qrCodeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-traveling-pink underline"
+                            >
+                              여기를 클릭
+                            </a>
+                            하여 결제 페이지로 이동하세요.
+                          </p>
                         )}
                       </>
                     )}
                   </div>
-                  <div className="mt-4 flex justify-end space-x-2">
+                  <div className="mt-4 flex justify-end">
                     <Button
                       variant="outline"
                       className="rounded-full border-gray-300 text-gray-700"
@@ -360,42 +420,6 @@ function PaymentInfo({
                     >
                       취소
                     </Button>
-                    {!paymentError && (
-                      <Button
-                        className="rounded-full bg-traveling-pink text-white"
-                        onClick={async () => {
-                          try {
-                            console.log("결제 상태 확인 요청, tid:", kakaoTid);
-                            const response = await axiosInstance.get(`/api/payments/kakaopay/status/${kakaoTid}`, {
-                              headers: {
-                                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                              },
-                            });
-                            console.log("카카오페이 결제 상태 확인:", response.data);
-                            if (response.data.success && response.data.status === "SUCCESS") {
-                              alert("결제가 완료되었습니다!");
-                              setIsKakaoModalOpen(false);
-                              // 로컬 스토리지 정리
-                              localStorage.removeItem("kakaoTid");
-                              localStorage.removeItem("partnerOrderId");
-                              localStorage.removeItem("partnerUserId");
-                              // 마이페이지로 이동
-                              window.location.href = "/mypage";
-                            } else {
-                              const errorMessage = response.data.message || "결제 상태 확인에 실패했습니다.";
-                              setPaymentError(errorMessage);
-                              console.error("결제 상태 확인 실패:", response.data);
-                            }
-                          } catch (error) {
-                            console.error("결제 상태 확인 중 오류:", error);
-                            const errorMessage = error.response?.data?.message || error.message || "결제 상태 확인 중 오류가 발생했습니다.";
-                            setPaymentError(errorMessage);
-                          }
-                        }}
-                      >
-                        결제 상태 확인
-                      </Button>
-                    )}
                   </div>
                 </DialogPanel>
               </Transition.Child>

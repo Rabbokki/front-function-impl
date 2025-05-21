@@ -36,6 +36,7 @@
     "hangul-js": "^0.2.6",
     "lucide-react": "^0.503.0",
     "prop-types": "^15.8.1",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
     "react-datepicker": "^8.3.0",
     "react-day-picker": "^9.6.7",
