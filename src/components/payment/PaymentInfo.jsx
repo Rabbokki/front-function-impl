@@ -1,8 +1,31 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import React, { useState } from "react";
+import { Dialog, DialogPanel, DialogTitle, Transition } from "@headlessui/react";
+import { Fragment } from "react";
+import { Button } from "../../modules/Button";
+import { Label } from "../../modules/Label";
+import { TabsContent } from "../../modules/Tabs";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
+import PropTypes from "prop-types";
 
-function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, contactData, formatPrice, handleBooking, setTabValue }) {
+function PaymentInfo({
+  flight,
+  passengerCount,
+  selectedSeats,
+  passengerData,
+  contactData,
+  formatPrice,
+  handleBooking,
+  setTabValue,
+  isKakaoModalOpen,
+  setIsKakaoModalOpen,
+  qrCodeUrl,
+  setQrCodeUrl,
+  kakaoTid,
+  setKakaoTid,
+  paymentError,
+  setPaymentError,
+}) {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [cardDetails, setCardDetails] = useState({
@@ -11,15 +34,12 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
     expiry: "",
     cvv: "",
   });
-  const [isKakaoModalOpen, setIsKakaoModalOpen] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [kakaoTid, setKakaoTid] = useState("");
-  const [paymentError, setPaymentError] = useState(null);
 
-  const totalPrice =
+  const totalPrice = Math.floor(
     parseFloat(flight.price) * passengerCount +
-    parseFloat(flight.price) * passengerCount * 0.1 +
-    selectedSeats.length * 20000;
+      parseFloat(flight.price) * passengerCount * 0.1 +
+      selectedSeats.length * 20000
+  ); // 정수로 변환
 
   const handleCardChange = (field, value) => {
     setCardDetails((prev) => ({ ...prev, [field]: value }));
@@ -51,46 +71,76 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
     return true;
   };
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return email && emailRegex.test(email);
+  };
+
   const handleKakaoPay = async () => {
     if (!termsAgreed) {
       alert("이용약관과 개인정보 처리방침에 동의해주세요.");
       return;
     }
+    console.log("handleKakaoPay 호출, flight 객체:", flight);
+    const flightId = flight.flightId || flight.id;
+    if (!flightId) {
+      console.error("flightId가 정의되지 않았습니다:", flight);
+      setPaymentError("항공편 ID가 없습니다. 다시 시도해주세요.");
+      setIsKakaoModalOpen(true);
+      return;
+    }
+
+    // contactData 검증 및 기본값 설정
+    const validatedContact = {
+      email: validateEmail(contactData.email)
+        ? contactData.email
+        : `user_${Date.now()}@example.com`,
+      phone: contactData.phone && contactData.phone.trim() !== ""
+        ? contactData.phone
+        : "01000000000",
+    };
+
     try {
       const bookingData = {
-        flightId: flight.id,
+        flightId: flightId,
         passengerCount,
         selectedSeats,
-        totalPrice,
+        totalPrice, // 정수로 전송
         passengers: passengerData,
-        contact: contactData,
+        contact: validatedContact,
       };
-      console.log("카카오페이 결제 요청 데이터:", bookingData);
+      console.log("카카오페이 결제 요청 데이터:", JSON.stringify(bookingData, null, 2));
       const response = await axiosInstance.post("/api/payments/kakaopay/ready", bookingData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
+      console.log("카카오페이 결제 준비 응답:", response.data);
       if (response.data.success) {
-        setQrCodeUrl(response.data.qr_code_url);
+        setQrCodeUrl(response.data.qrCodeUrl);
         setKakaoTid(response.data.tid);
-        setIsKakaoModalOpen(true);
+        localStorage.setItem("kakaoTid", response.data.tid);
+        localStorage.setItem("partnerOrderId", response.data.partnerOrderId);
+        localStorage.setItem("partnerUserId", response.data.partnerUserId);
         setPaymentError(null);
+        setIsKakaoModalOpen(true);
       } else {
         throw new Error(response.data.message || "카카오페이 결제 준비에 실패했습니다.");
       }
     } catch (error) {
       console.error("카카오페이 결제 준비 실패:", error);
-      setPaymentError(error.message || "카카오페이 결제 준비 중 오류가 발생했습니다.");
+      const errorMessage = error.response?.data?.message || error.message || "카카오페이 서버에 연결할 수 없습니다. 네트워크를 확인해주세요.";
+      setPaymentError(errorMessage);
+      setIsKakaoModalOpen(true);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (paymentMethod === "kakao") {
-      handleKakaoPay();
+      await handleKakaoPay();
     } else if (validatePayment()) {
       console.log("PaymentInfo: 예약 완료 버튼 클릭, 예약 처리");
-      handleBooking();
+      await handleBooking();
     }
   };
 
@@ -111,7 +161,7 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-traveling-text/70">항공권 요금 (성인 {passengerCount}명)</span>
-              <span className="font shoot-medium text-traveling-text">
+              <span className="font-medium text-traveling-text">
                 {formatPrice(parseFloat(flight.price) * passengerCount)}
               </span>
             </div>
@@ -255,8 +305,7 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
         </div>
       </div>
 
-      {/* 카카오페이 QR 코드 모달 */}
-      <Transition appear show={isKakaoModalOpen} as={Fragment}>
+      <Transition show={isKakaoModalOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={() => setIsKakaoModalOpen(false)}>
           <Transition.Child
             as={Fragment}
@@ -281,20 +330,26 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900">
                     카카오페이로 결제
-                  </Dialog.Title>
+                  </DialogTitle>
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      아래 QR 코드를 카카오페이 앱으로 스캔하여 결제를 완료해주세요.
-                    </p>
-                    {qrCodeUrl ? (
-                      <div className="mt-4 flex justify-center">
-                        <img src={qrCodeUrl} alt="카카오페이 QR 코드" className="h-48 w-48" />
-                      </div>
+                    {paymentError ? (
+                      <div className="rounded-md bg-red-100 p-4 text-red-700">{paymentError}</div>
                     ) : (
-                      <p className="mt-4 text-sm text-red-500">QR 코드를 로드할 수 없습니다.</p>
+                      <>
+                        <p className="text-sm text-gray-500">
+                          아래 QR 코드를 카카오페이 앱으로 스캔하여 결제를 완료해주세요.
+                        </p>
+                        {qrCodeUrl ? (
+                          <div className="mt-4 flex justify-center">
+                            <img src={qrCodeUrl} alt="카카오페이 QR 코드" className="h-48 w-48" />
+                          </div>
+                        ) : (
+                          <p className="mt-4 text-sm text-red-500">QR 코드를 로드할 수 없습니다. 네트워크를 확인해주세요.</p>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="mt-4 flex justify-end space-x-2">
@@ -305,30 +360,44 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
                     >
                       취소
                     </Button>
-                    <Button
-                      className="rounded-full bg-traveling-pink text-white"
-                      onClick={async () => {
-                        try {
-                          const response = await axiosInstance.get(`/api/payments/kakaopay/status/${kakaoTid}`, {
-                            headers: {
-                              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                            },
-                          });
-                          if (response.data.status === "SUCCESS") {
-                            setIsKakaoModalOpen(false);
-                            handleBooking();
-                          } else {
-                            setPaymentError("결제가 아직 완료되지 않았습니다. 다시 시도해주세요.");
+                    {!paymentError && (
+                      <Button
+                        className="rounded-full bg-traveling-pink text-white"
+                        onClick={async () => {
+                          try {
+                            console.log("결제 상태 확인 요청, tid:", kakaoTid);
+                            const response = await axiosInstance.get(`/api/payments/kakaopay/status/${kakaoTid}`, {
+                              headers: {
+                                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                              },
+                            });
+                            console.log("카카오페이 결제 상태 확인:", response.data);
+                            if (response.data.success && response.data.status === "SUCCESS") {
+                              alert("결제가 완료되었습니다!");
+                              setIsKakaoModalOpen(false);
+                              // 로컬 스토리지 정리
+                              localStorage.removeItem("kakaoTid");
+                              localStorage.removeItem("partnerOrderId");
+                              localStorage.removeItem("partnerUserId");
+                              // 마이페이지로 이동
+                              window.location.href = "/mypage";
+                            } else {
+                              const errorMessage = response.data.message || "결제 상태 확인에 실패했습니다.";
+                              setPaymentError(errorMessage);
+                              console.error("결제 상태 확인 실패:", response.data);
+                            }
+                          } catch (error) {
+                            console.error("결제 상태 확인 중 오류:", error);
+                            const errorMessage = error.response?.data?.message || error.message || "결제 상태 확인 중 오류가 발생했습니다.";
+                            setPaymentError(errorMessage);
                           }
-                        } catch (error) {
-                          setPaymentError("결제 상태 확인 중 오류가 발생했습니다.");
-                        }
-                      }}
-                    >
-                      결제 확인
-                    </Button>
+                        }}
+                      >
+                        결제 상태 확인
+                      </Button>
+                    )}
                   </div>
-                </Dialog.Panel>
+                </DialogPanel>
               </Transition.Child>
             </div>
           </div>
@@ -337,3 +406,24 @@ function PaymentInfo({ flight, passengerCount, selectedSeats, passengerData, con
     </TabsContent>
   );
 }
+
+PaymentInfo.propTypes = {
+  flight: PropTypes.object.isRequired,
+  passengerCount: PropTypes.number.isRequired,
+  selectedSeats: PropTypes.array.isRequired,
+  passengerData: PropTypes.array.isRequired,
+  contactData: PropTypes.object.isRequired,
+  formatPrice: PropTypes.func.isRequired,
+  handleBooking: PropTypes.func.isRequired,
+  setTabValue: PropTypes.func.isRequired,
+  isKakaoModalOpen: PropTypes.bool.isRequired,
+  setIsKakaoModalOpen: PropTypes.func.isRequired,
+  qrCodeUrl: PropTypes.string,
+  setQrCodeUrl: PropTypes.func.isRequired,
+  kakaoTid: PropTypes.string,
+  setKakaoTid: PropTypes.func.isRequired,
+  paymentError: PropTypes.string,
+  setPaymentError: PropTypes.func.isRequired,
+};
+
+export default PaymentInfo;

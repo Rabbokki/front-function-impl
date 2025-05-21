@@ -35,6 +35,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AttractionDetailPage from './modules/AttractionDetailPage';
 import OAuthCallback from './components/join/OAuthCallback';
+import PaymentSuccess from "./components/payment/PaymentSuccess.jsx";
 
 function PlaceDetailWrapper() {
   const { placeId } = useParams();
@@ -132,6 +133,9 @@ function App() {
           <Route path="/attractions" element={<AttractionsContent />} />
 
           <Route path="/not-found" element={<div>404 Not Found</div>} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<div>결제가 취소되었습니다.</div>} />
+          <Route path="/payment/fail" element={<div>결제에 실패했습니다.</div>} />
         </Routes>
 
         <ToastContainer
