@@ -16,7 +16,7 @@ import { NavBar } from '../components/Nav-bar';
 import { ReviewForm } from '../components/travel-planner/Review-form';
 import axiosInstance from '../api/axiosInstance';
 import { toast } from 'react-toastify';
-
+//테스트
 function AttractionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
