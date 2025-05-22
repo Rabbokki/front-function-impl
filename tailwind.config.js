@@ -1,10 +1,8 @@
-const plugin = require("tailwindcss/plugin")
+const plugin = require("tailwindcss/plugin");
 
 module.exports = {
   darkMode: "class",
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -49,8 +47,14 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
         traveling: {
-          bg: "#f7ecd9",
-          text: "#2d3436",
+          bg: "#ffffff",
+          homebg: "#cceeff",
+          text: "#ff9a9e",
+          pink: "#ff9a9e",
+          purple: "#a78bfa",
+          blue: "#93c5fd",
+          yellow: "#fcd34d",
+          mint: "#6ee7b7",
           green: "#8ca896",
           coral: "#e8b4a9",
           beige: "#f0e4c9",
@@ -76,13 +80,18 @@ module.exports = {
           "50%": { transform: "translateX(150px) translateY(-25px)" },
           "100%": { transform: "translateX(300px) translateY(-50px)" },
         },
+        "rotate360": {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(-360deg)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "plane-fly": "plane-fly 15s infinite alternate ease-in-out",
+        "spin-slow": 'rotate360 120s linear infinite',
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};
