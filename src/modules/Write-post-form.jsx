@@ -70,7 +70,7 @@ export function WritePostForm({ postId }) {
     // Ensure fields are blank if creating
     setPostTitle('');
     setPostContent('');
-    setPostCategory('tips');
+    setPostCategory('TIPS');
     setPostTags('');
     setImages([]);
   }

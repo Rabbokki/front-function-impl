@@ -9,7 +9,6 @@ export const createPost = createAsyncThunk(
   'post/create',
   async (formData, thunkAPI) => {
     try {
-      // Send the already built FormData directly to the backend
       const response = await axiosInstance.post(`${API_BASE_URL}/create`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
@@ -31,10 +30,10 @@ export const getAllPosts = createAsyncThunk('post/getAll', async ({ category, se
     const response = await axiosInstance.get(API_BASE_URL, {
       params: {category, search },
     });
-    return response.data; // 게시글 목록 반환
+    return response.data;
   } catch (error) {
     const errorMessage = error.response?.data || '게시글 조회 실패';
-    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+    return thunkAPI.rejectWithValue(errorMessage);
   }
 });
 
@@ -43,10 +42,10 @@ export const getPostById = createAsyncThunk('post/getById', async (id, thunkAPI)
   try {
     const response = await axiosInstance.get(`${API_BASE_URL}/find/${id}`);
     console.log("from postThunk, post is:", response.data)
-    return response.data; // 단일 게시글 반환
+    return response.data;
   } catch (error) {
     const errorMessage = error.response?.data || '게시글 상세 조회 실패';
-    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+    return thunkAPI.rejectWithValue(errorMessage);
   }
 });
 
@@ -63,10 +62,10 @@ export const updatePost = createAsyncThunk(
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
-      return response.data; // 수정된 게시글 데이터 반환
+      return response.data;
     } catch (error) {
       const errorMessage = error.response?.data || '게시글 수정 실패';
-      return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+      return thunkAPI.rejectWithValue(errorMessage);
     }
   }
 );
@@ -75,10 +74,10 @@ export const updatePost = createAsyncThunk(
 export const deletePost = createAsyncThunk('post/delete', async (id, thunkAPI) => {
   try {
     await axiosInstance.delete(`${API_BASE_URL}/delete/${id}`, { withCredentials: true });
-    return id; // 삭제된 게시글 ID 반환
+    return id;
   } catch (error) {
     const errorMessage = error.response?.data || '게시글 삭제 실패';
-    return thunkAPI.rejectWithValue(errorMessage); // 실패 시 에러 메시지 반환
+    return thunkAPI.rejectWithValue(errorMessage);
   }
 });
 
