@@ -6,7 +6,7 @@ import { Input } from '../modules/Input';
 import { Card, CardContent } from '../modules/Card';
 import { Badge } from '../modules/Badge';
 import { ReviewForm } from '../components/travel-planner/Review-form';
-
+//하나의 명소에 대한 상세정보 보여줌
 function AttractionsContent() {
   const [places, setPlaces] = useState([]);
   const [allPlaces, setAllPlaces] = useState([]);
@@ -30,7 +30,6 @@ function AttractionsContent() {
     id,
     name: meta.name,
   }));
-
 
   // 전체 도시 한 번에 불러오기
   useEffect(() => {
@@ -76,6 +75,16 @@ function AttractionsContent() {
             .toLowerCase()
             .includes(searchQuery.toLowerCase()))
     );
+
+    console.log(
+      '🧪 필터링된 명소:',
+      filtered.map((p) => ({
+        name: p.name,
+        city: p.city,
+        cityId: p.cityId,
+      }))
+    );
+
     setFilteredAttractions(filtered);
   }, [searchQuery, selectedCity, allPlaces]);
 
@@ -161,7 +170,7 @@ function AttractionsContent() {
                     {attraction.category || '관광지'}
                   </Badge>
                   <Badge className="bg-traveling-pink/20 text-traveling-pink">
-                    {attraction.city || '도시 미지정'}
+                    {cityMeta[attraction.cityId]?.name || '도시 미지정'}
                   </Badge>
                 </div>
                 <p className="text-sm text-traveling-text/70 flex items-center mb-4">
