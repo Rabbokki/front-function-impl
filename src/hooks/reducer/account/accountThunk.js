@@ -22,7 +22,8 @@ export const loginAccount = createAsyncThunk(
       const response = await axiosInstance.post('/api/accounts/login', loginData);
       return response.data; 
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      console.log("login error is: ", error)
+      return rejectWithValue(error.response.data.error.message);
     }
   }
 );
