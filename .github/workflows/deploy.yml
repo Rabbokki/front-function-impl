@@ -1,9 +1,8 @@
 name: 배포
-env:
-  REACT_APP_BASE_URL: "http://3.36.33.178:8081"  # 새 IP
+
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "main" ]
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,20 +23,20 @@ jobs:
           username: ${{ secrets.DOCKER_USER_NAME }}
           password: ${{ secrets.DOCKER_USER_PW }}
       - name: 이미지 빌드
-        run: docker build -t ${{ secrets.DOCKER_USER_NAME }}/dopaminx-fe-front .
+        run: docker build -t ${{ secrets.DOCKER_USER_NAME }}/-front .
       - name: 도커허브에 이미지 푸시
-        run: docker push ${{ secrets.DOCKER_USER_NAME }}/dopaminx-fe-front
+        run: docker push ${{ secrets.DOCKER_USER_NAME }}/-front
       - name: AWS EC2에 ssh 접속 후 배포
         uses: appleboy/ssh-action@master
         with:
-          host: 3.36.33.178  # 새 IP
+          host: ${{ secrets.AWS_IP }}
           port: 22
           username: ubuntu
           key: ${{ secrets.AWS_KEY }}
           script: |
             sudo timedatectl set-timezone Asia/Seoul
             echo "AWS 연결"
-            docker pull ${{ secrets.DOCKER_USER_NAME }}/dopaminx-fe-front
+            docker pull ${{ secrets.DOCKER_USER_NAME }}/-front
             docker-compose down
             docker volume prune -f
             docker-compose up -d --force-recreate
