@@ -109,12 +109,33 @@ const handleSavePlace = async () => {
     }
   };
 
-  // ✅ 명소 정보 불러오기
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('allPlaces')) || [];
-    const found = stored.find((p) => p.placeId === id);
+// ✅ 명소 정보 불러오기 (localStorage 없을 경우 fallback)
+useEffect(() => {
+  const stored = JSON.parse(localStorage.getItem('allPlaces')) || [];
+  const found = stored.find((p) => p.placeId === id);
+
+  if (found) {
     setBasicPlace(found);
-  }, [id]);
+  } else {
+    // 백엔드에서 단건 조회
+    fetch(`/api/places/detail?placeId=${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBasicPlace({
+          placeId: id,
+          name: data.name,
+          city: data.city || '',
+          country: data.country || '',
+          image: `/api/places/photo?photo_reference=${data.photos?.[0]?.photo_reference}`,
+          type: data.types?.[0] || '관광지',
+          address: data.formatted_address,
+        });
+        setDetail(data);
+      })
+      .catch((err) => console.error('❌ 상세 불러오기 실패:', err));
+  }
+}, [id]);
+
 
   // ✅ 리뷰 불러오기
   useEffect(() => {

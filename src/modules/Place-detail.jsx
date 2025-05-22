@@ -27,18 +27,18 @@ function PlaceDetail() {
   const [isAddToTripModalOpen, setIsAddToTripModalOpen] = useState(false);
   const [isDirectionsModalOpen, setIsDirectionsModalOpen] = useState(false);
 
-  useEffect(() => {
-    async function loadPlace() {
-      try {
-        const res = await fetch('/data/places.json');
-        const data = await res.json();
-        const found = data.find((item) => item.id === placeId);
-        setPlace(found || null);
-      } catch (err) {
-        console.error('명소 로딩 오류:', err);
-        setPlace(null);
-      }
+ useEffect(() => {
+  async function loadPlace() {
+    try {
+      const res = await fetch(`/api/places/detail?placeId=${placeId}`);
+      if (!res.ok) throw new Error('상세 정보 불러오기 실패');
+      const data = await res.json();
+      setPlace(data);
+    } catch (err) {
+      console.error('명소 로딩 오류:', err);
+      setPlace(null);
     }
+  }
 
     loadPlace();
   }, [placeId]);
