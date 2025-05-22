@@ -3,7 +3,7 @@ env:
   REACT_APP_BASE_URL: "http://3.36.33.178:8081"  # 새 IP
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "main" ]
 jobs:
   deploy:
     runs-on: ubuntu-latest
