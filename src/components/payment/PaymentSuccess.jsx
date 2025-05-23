@@ -1,16 +1,34 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
+import axiosInstance from "../../api/axiosInstance";
 
 function PaymentSuccess() {
+  const { state } = useLocation();
   const navigate = useNavigate();
+  const { saveReqDto, travelPlanId } = state || {};
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/');
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+      async function saveFlight() {
+        try {
+          await axiosInstance.post(
+            `/api/flights/save`,
+            saveReqDto,
+            { params: { travelPlanId } }
+          );
+        } catch (err) {
+          console.error('항공편 저장 오류', err);
+        }
+      }
+      if (saveReqDto && travelPlanId) {
+        saveFlight();
+      }
+
+      const timer = setTimeout(() => {
+        navigate('/');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }, [saveReqDto, travelPlanId, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-traveling-background p-4">

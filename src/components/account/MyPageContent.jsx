@@ -552,22 +552,6 @@ function MyPageContent() {
                       <span>{trip.date}</span>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between bg-[#e7f5ff]/30 p-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                    >
-                      상세보기
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-[#4dabf7] text-[#1c7ed6] hover:bg-[#e7f5ff]"
-                    >
-                      수정하기
-                    </Button>
-                  </CardFooter>
                 </Card>
               ))
             ) : (

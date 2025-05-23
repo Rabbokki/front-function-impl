@@ -26,6 +26,7 @@ function PaymentInfo({
   setKakaoTid,
   paymentError,
   setPaymentError,
+  travelPlanId,
 }) {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const navigate = useNavigate();
@@ -39,6 +40,13 @@ function PaymentInfo({
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|net|org|edu|gov|co\.kr)$/;
     return email && emailRegex.test(email);
+  };
+
+  const saveReqDto = {
+    origin: flight.origin,
+    destination: flight.destination,
+    departureDate: flight.departureDate,
+    realTime: flight.realTime || false,
   };
 
   const handleKakaoPay = async () => {
@@ -144,7 +152,12 @@ function PaymentInfo({
     await handleKakaoPay();
     // Start 15-second timer to redirect
     setTimeout(() => {
-      navigate("/payment/success");
+      navigate("/payment/success", {
+        state: {
+          saveReqDto,
+          travelPlanId,
+        }
+      });
     }, 15000);
   };
 

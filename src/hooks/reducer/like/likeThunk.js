@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../../api/axiosInstance';
 
-const LIKE_API_BASE_URL = '/like';
+const LIKE_API_BASE_URL = '/api/like';
 
 export const addLike = createAsyncThunk('like/add', async (postId, thunkAPI) => {
   try {
