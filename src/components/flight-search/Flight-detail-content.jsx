@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { Card, CardHeader, CardTitle, CardContent } from "../../modules/Card";
 import axios from "axios";
 import { Button } from "../../modules/Button";
@@ -14,6 +15,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import PropTypes from "prop-types";
 import PaymentInfo from "../../components/payment/PaymentInfo";
+import { fetchFlightDetail, bookFlight } from "../../hooks/reducer/flight/flightThunk";
 
 function FlightInfoSection({ flight, formatPrice, isRoundTrip, formattedTimes, setTabValue }) {
   const navigate = useNavigate();
@@ -648,6 +650,7 @@ PassengerInfo.propTypes = {
 export default function FlightDetailContent({ flightId }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [flight, setFlight] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [passengerCount, setPassengerCount] = useState(1);
@@ -662,87 +665,58 @@ export default function FlightDetailContent({ flightId }) {
   const [kakaoTid, setKakaoTid] = useState("");
   const [paymentError, setPaymentError] = useState(null);
 
-  useEffect(() => {
-    async function fetchFlight(id) {
-      if (!id || isNaN(parseInt(id))) {
-        console.error("유효하지 않은 flightId:", id);
-        setError(`유효하지 않은 항공편 ID입니다. URL 파라미터를 확인하세요: ${location.pathname}`);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        console.log("API 요청 시작: GET /api/flights/detail/by-travel-flight/", id);
-        const response = await axios.get(`http://localhost:8080/api/flights/detail/by-travel-flight/${id}`, {
-          headers: { "Content-Type": "application/json" },
-          timeout: 5000,
-        });
-        console.log("API 응답 수신:", response.data);
-
-        if (response.data && response.data.success && response.data.data) {
-          const flightInfo = response.data.data;
-          const normalizedFlight = {
-            ...flightInfo,
-            flightId: flightInfo.flightId || flightInfo.id,
-            id: flightInfo.id,
-            travelFlightId: flightInfo.travelFlightId,
-            departureAirport: flightInfo.departureAirport?.trim().toUpperCase(),
-            arrivalAirport: flightInfo.arrivalAirport?.trim().toUpperCase(),
-            returnDepartureAirport: flightInfo.returnDepartureAirport?.trim().toUpperCase(),
-            returnArrivalAirport: flightInfo.returnArrivalAirport?.trim().toUpperCase(),
-          };
-          console.log("정규화된 항공편 데이터:", normalizedFlight);
-          setFlight(normalizedFlight);
-          setIsRoundTrip(!!flightInfo.returnDepartureTime);
-          console.log("항공편 데이터 설정 완료:", normalizedFlight);
-        } else {
-          console.warn("항공편 데이터가 비어 있거나 유효하지 않음:", response.data);
-          setError("항공편 정보를 찾을 수 없습니다.");
-        }
-      } catch (err) {
-        console.error("API 요청 실패:", {
-          message: err.message,
-          status: err.response?.status,
-          data: err.response?.data,
-        });
-        let errorMessage = "항공편 정보를 가져오는 데 실패했습니다.";
-        if (err.response?.status === 404) {
-          errorMessage = `항공편을 찾을 수 없습니다: ID = ${id}`;
-        } else if (err.response?.status === 500) {
-          errorMessage = "서버 오류가 발생했습니다. 나중에 다시 시도해주세요.";
-        } else if (err.code === "ECONNREFUSED") {
-          errorMessage = "서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.";
-        }
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-        console.log("로딩 상태 해제, 현재 상태:", { loading: false, error, flight });
-      }
+useEffect(() => {
+    if (!flightId || isNaN(parseInt(flightId))) {
+      console.error("유효하지 않은 flightId:", flightId);
+      setError(`유효하지 않은 항공편 ID입니다. URL 파라미터를 확인하세요: ${location.pathname}`);
+      setLoading(false);
+      return;
     }
 
-    fetchFlight(flightId);
-  }, [flightId, location.pathname]);
+    dispatch(fetchFlightDetail(flightId))
+      .unwrap()
+      .then((flightInfo) => {
+        const normalizedFlight = {
+          ...flightInfo,
+          flightId: flightInfo.flightId || flightInfo.id,
+          id: flightInfo.id,
+          travelFlightId: flightInfo.travelFlightId,
+          departureAirport: flightInfo.departureAirport?.trim().toUpperCase(),
+          arrivalAirport: flightInfo.arrivalAirport?.trim().toUpperCase(),
+          returnDepartureAirport: flightInfo.returnDepartureAirport?.trim().toUpperCase(),
+          returnArrivalAirport: flightInfo.returnArrivalAirport?.trim().toUpperCase(),
+        };
+        setFlight(normalizedFlight);
+        setIsRoundTrip(!!flightInfo.returnDepartureTime);
+      })
+      .catch((errMsg) => {
+        console.error("fetchFlightDetail 실패:", errMsg);
+        setError(errMsg);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [dispatch, flightId, location.pathname]);
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("ko-KR", {
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("ko-KR", {
       style: "currency",
       currency: "KRW",
       maximumFractionDigits: 0,
     }).format(price);
-  };
 
   const formatDateTime = (dateString) => {
     if (!dateString) return null;
-    return new Date(dateString).toISOString().split('.')[0];
+    return new Date(dateString).toISOString().split(".")[0];
   };
 
   const handleBooking = async () => {
     console.log("예약 완료:", { flight, selectedSeats, passengerCount, passengerData, contactData });
 
-    const totalPrice =
-      parseFloat(flight.price) * passengerCount +
-      parseFloat(flight.price) * passengerCount * 0.1 +
-      selectedSeats.length * 20000;
+    const base = parseFloat(flight.price) * passengerCount;
+    const taxes = base * 0.1;
+    const seatFees = selectedSeats.length * 20000;
+    const totalPrice = base + taxes + seatFees;
 
     const bookingData = {
       flightId: flight.flightId || flight.id,
@@ -775,26 +749,12 @@ export default function FlightDetailContent({ flightId }) {
     };
 
     try {
-      console.log("예약 요청 데이터:", JSON.stringify(bookingData, null, 2));
-      const response = await axiosInstance.post("/api/flights/book", bookingData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-      console.log("예약 성공:", {
-        status: response.status,
-        data: response.data,
-      });
+      await dispatch(bookFlight(bookingData)).unwrap();
       alert("예약이 완료되었습니다!");
       navigate("/mypage");
-    } catch (error) {
-      console.error("예약 실패:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      const errorMessage = error.response?.data?.message || error.message || "알 수 없는 오류가 발생했습니다.";
-      alert(`예약 처리 중 오류가 발생했습니다: ${errorMessage}`);
+    } catch (errMsg) {
+      console.error("bookFlight 실패:", errMsg);
+      alert(`예약 처리 중 오류가 발생했습니다: ${errMsg}`);
     }
   };
 
@@ -806,7 +766,9 @@ export default function FlightDetailContent({ flightId }) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="text-2xl font-bold text-traveling-text">항공권을 찾을 수 없습니다</h2>
-        <p className="mt-2 text-traveling-text/70">{error || "요청하신 항공권 정보를 찾을 수 없습니다."}</p>
+        <p className="mt-2 text-traveling-text/70">
+          {error || "요청하신 항공권 정보를 찾을 수 없습니다."}
+        </p>
         <Button className="mt-6 rounded-full btn-flight" onClick={() => navigate("/flight-search")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           항공권 검색으로 돌아가기
