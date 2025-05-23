@@ -70,7 +70,7 @@ function LoginForm() {
       navigate('/'); // ✅ 이후 이동
     } catch (error) {
       console.error('로그인 실패:', error);
-      toast.error('로그인 실패: ' + (error?.message || '서버 오류'));
+      toast.error((error || '서버 오류'));
     }
   };
   return (

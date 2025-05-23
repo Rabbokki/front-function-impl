@@ -16,7 +16,7 @@ import { NavBar } from '../components/Nav-bar';
 import { ReviewForm } from '../components/travel-planner/Review-form';
 import axiosInstance from '../api/axiosInstance';
 import { toast } from 'react-toastify';
-
+//여러 도시의 추천 명소 리스트 보여줌
 function AttractionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,6 +27,16 @@ function AttractionDetailPage() {
 
   const [reviews, setReviews] = useState([]);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const cityMeta = {
+    all: { name: '전체', lat: null, lng: null },
+    tokyo: { name: '도쿄', lat: 35.6895, lng: 139.6917 },
+    osaka: { name: '오사카', lat: 34.6937, lng: 135.5023 },
+    fukuoka: { name: '후쿠오카', lat: 33.5902, lng: 130.4017 },
+    paris: { name: '파리', lat: 48.8566, lng: 2.3522 },
+    rome: { name: '로마', lat: 41.9028, lng: 12.4964 },
+    venice: { name: '베니스', lat: 45.4408, lng: 12.3155 },
+  };
 
   const storedUser =
     JSON.parse(localStorage.getItem('user')) ||
@@ -58,33 +68,33 @@ function AttractionDetailPage() {
 
   // ✅ 저장 핸들러
 
-const handleSavePlace = async () => {
-  try {
-    const res = await axiosInstance.post('/api/saved-places', {
-      placeId: basicPlace.placeId,
-      name: basicPlace.name,
-      city: basicPlace.city,
-      country: basicPlace.country,
-      image: basicPlace.image,
-      type: basicPlace.type,
-    });
+  const handleSavePlace = async () => {
+    try {
+      const res = await axiosInstance.post('/api/saved-places', {
+        placeId: basicPlace.placeId,
+        name: basicPlace.name,
+        city: basicPlace.city,
+        country: basicPlace.country,
+        image: basicPlace.image,
+        type: basicPlace.type,
+      });
 
-    if (res.data.success) {
-      setIsSaved(true);
-      toast.success('✨ 저장 완료!');
-    } else {
-      toast.error(res.data.message || '😢 저장에 실패했습니다.');
+      if (res.data.success) {
+        setIsSaved(true);
+        toast.success('✨ 저장 완료!');
+      } else {
+        toast.error(res.data.message || '😢 저장에 실패했습니다.');
+      }
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setIsSaved(true);
+        toast.info('📌 이미 저장된 명소입니다.');
+      } else {
+        console.error('❌ 저장 요청 오류:', err);
+        toast.error('🚨 오류가 발생했습니다. 다시 시도해주세요.');
+      }
     }
-  } catch (err) {
-    if (err.response?.status === 409) {
-      setIsSaved(true);
-      toast.info('📌 이미 저장된 명소입니다.');
-    } else {
-      console.error('❌ 저장 요청 오류:', err);
-      toast.error('🚨 오류가 발생했습니다. 다시 시도해주세요.');
-    }
-  }
-};
+  };
 
   // ✅ 리뷰 삭제
   const handleDelete = async (reviewId) => {
@@ -109,11 +119,31 @@ const handleSavePlace = async () => {
     }
   };
 
-  // ✅ 명소 정보 불러오기
+  // ✅ 명소 정보 불러오기 (localStorage 없을 경우 fallback)
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('allPlaces')) || [];
     const found = stored.find((p) => p.placeId === id);
-    setBasicPlace(found);
+
+    if (found) {
+      setBasicPlace(found);
+    } else {
+      // 백엔드에서 단건 조회
+      fetch(`/api/places/detail?placeId=${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setBasicPlace({
+            placeId: id,
+            name: data.name,
+            city: data.city || '',
+            country: data.country || '',
+            image: `/api/places/photo?photo_reference=${data.photos?.[0]?.photo_reference}`,
+            type: data.types?.[0] || '관광지',
+            address: data.formatted_address,
+          });
+          setDetail(data);
+        })
+        .catch((err) => console.error('❌ 상세 불러오기 실패:', err));
+    }
   }, [id]);
 
   // ✅ 리뷰 불러오기
@@ -177,7 +207,7 @@ const handleSavePlace = async () => {
                   {basicPlace.category || '관광지'}
                 </Badge>
                 <Badge className="bg-pink-100 text-pink-600 text-sm">
-                  {basicPlace.city || '도시 미지정'}
+                  {cityMeta[basicPlace.cityId]?.name || '도시 미지정'}
                 </Badge>
               </div>
             </div>
@@ -390,10 +420,9 @@ const handleSavePlace = async () => {
             isOpen={isReviewModalOpen}
             onClose={() => setIsReviewModalOpen(false)}
             placeId={basicPlace.placeId}
-            placeName={basicPlace.name} 
+            placeName={basicPlace.name}
             placeType={basicPlace.type}
             onSuccess={() => {
-            
               fetch(`/api/reviews?placeId=${basicPlace.placeId}`)
                 .then((res) => res.json())
                 .then((data) => {

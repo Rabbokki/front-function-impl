@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   MessageSquare,
@@ -16,6 +16,7 @@ import { Badge } from './Badge';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllPosts } from '../hooks/reducer/post/postThunk'; // Update the path as necessary
+import { usePagination } from '../hooks/Use-pagination';
 
 export function CommunityContent() {
   const [activeTab, setActiveTab] = useState('ALL');
@@ -27,18 +28,33 @@ export function CommunityContent() {
   const loading = useSelector((state) => state.posts.loading);
   const error = useSelector((state) => state.posts.error);
 
+  // Fetch posts whenever activeTab or searchTerm changes
   useEffect(() => {
     dispatch(getAllPosts({ category: activeTab, search: searchTerm }));
   }, [dispatch, activeTab, searchTerm]);
 
-  useEffect(() => {
-    console.log('posts is: ', posts)
-  }, [posts])
+  // Sort posts from latest to oldest based on createdAt
+  const sortedPosts = useMemo(() => {
+    if (!posts) return [];
+    return [...posts].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }, [posts]);
 
-  useEffect(() => {
-    console.log('activeTab now is: ', activeTab)
-  }, [activeTab])
+  // Pagination: display 10 items per page
+  const {
+    paginatedData,
+    currentPage,
+    isFirstPage,
+    isLastPage,
+    paginate,
+    resetPagination,
+  } = usePagination(sortedPosts, 10);
 
+  // Reset to first page whenever posts or activeTab or searchTerm changes
+  useEffect(() => {
+    resetPagination();
+  }, [sortedPosts, activeTab, searchTerm]);
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-md">
@@ -48,7 +64,7 @@ export function CommunityContent() {
             placeholder="검색어를 입력하세요"
             className="bg-[#f8f9fa] pl-10"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}  // 검색어 상태 업데이트
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4dabf7]" />
         </div>
@@ -60,17 +76,29 @@ export function CommunityContent() {
       </div>
 
       <Tabs defaultValue="ALL" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 grid w-full grid-cols-4 bg-[#e7f5ff]">
-          <TabsTrigger value="ALL" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+        <TabsList className="mb-4 grid w-full grid-cols-4 bg-[#e7f5ff]">
+          <TabsTrigger
+            value="ALL"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+          >
             전채 보기
           </TabsTrigger>
-          <TabsTrigger value="TIPS" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+          <TabsTrigger
+            value="TIPS"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+          >
             꿀팁 게시판
           </TabsTrigger>
-          <TabsTrigger value="FREE" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+          <TabsTrigger
+            value="FREE"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+          >
             자유게시판
           </TabsTrigger>
-          <TabsTrigger value="MATE" className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white">
+          <TabsTrigger
+            value="MATE"
+            className="data-[state=active]:bg-[#4dabf7] data-[state=active]:text-white"
+          >
             여행메이트
           </TabsTrigger>
         </TabsList>
@@ -82,7 +110,7 @@ export function CommunityContent() {
             ) : error ? (
               <div>{error}</div>
             ) : (
-              posts.map((post) => (
+              paginatedData.map((post) => (
                 <Link to={`/community/post/${post.id}`} key={post.id}>
                   <Card className="overflow-hidden bg-[#f8f9fa] transition-all duration-200 hover:bg-[#e7f5ff]/20 hover:shadow-md">
                     <CardHeader className="pb-2 pt-4">
@@ -92,7 +120,10 @@ export function CommunityContent() {
                         </CardTitle>
                         <div className="flex space-x-1">
                           {post.tags?.map((tag) => (
-                            <Badge key={tag} className="bg-[#e7f5ff] text-[#1c7ed6] hover:bg-[#d0ebff]">
+                            <Badge
+                              key={tag}
+                              className="bg-[#e7f5ff] text-[#1c7ed6] hover:bg-[#d0ebff]"
+                            >
                               {tag}
                             </Badge>
                           ))}
@@ -104,7 +135,9 @@ export function CommunityContent() {
                         <User className="mr-1 h-3 w-3 text-[#4dabf7]" />
                         <span className="mr-3">{post.userName}</span>
                         <Clock className="mr-1 h-3 w-3 text-[#4dabf7]" />
-                        <span>조회수: {post.views}</span>
+                        <span>
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center">
@@ -112,7 +145,7 @@ export function CommunityContent() {
                           <span>{post.views}</span>
                         </div>
                         <div className="flex items-center">
-                          {activeTab === 'mate' ? (
+                          {activeTab === 'MATE'.toLowerCase() ? (
                             <Users className="mr-1 h-3 w-3 text-[#4dabf7]" />
                           ) : (
                             <>
@@ -130,6 +163,29 @@ export function CommunityContent() {
               ))
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {!loading && !error && sortedPosts.length > 0 && (
+            <div className="mt-6 flex justify-center space-x-4">
+              <Button
+                onClick={() => paginate(-1)}
+                disabled={isFirstPage}
+                className="bg-[#4dabf7] text-white hover:bg-[#228be6] disabled:bg-[#dee2e6] disabled:text-[#868e96]"
+              >
+                이전
+              </Button>
+              <span className="flex items-center text-sm text-[#495057]">
+                {currentPage} / {Math.ceil(sortedPosts.length / 10)}
+              </span>
+              <Button
+                onClick={() => paginate(1)}
+                disabled={isLastPage}
+                className="bg-[#4dabf7] text-white hover:bg-[#228be6] disabled:bg-[#dee2e6] disabled:text-[#868e96]"
+              >
+                다음
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
