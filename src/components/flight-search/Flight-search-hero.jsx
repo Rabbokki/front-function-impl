@@ -12,7 +12,7 @@ import { Label } from "../../modules/Label";
 import { RadioGroup, RadioGroupItem } from "../../modules/Radio-group";
 import { Badge } from "../../modules/Badge";
 import { setSearchParams, clearError } from "../../hooks/reducer/flight/flightSlice";
-import { searchFlights } from "../../hooks/reducer/flight/flightThunk";
+import { searchFlights, fetchAirportSuggestions } from "../../hooks/reducer/flight/flightThunk";
 
 const FlightSearchHero = () => {
   const navigate = useNavigate();
@@ -46,37 +46,29 @@ const FlightSearchHero = () => {
   }, [dispatch]);
 
   const fetchSuggestions = async (query, field) => {
-  if (query.length < 2) {
-    field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-    setAutocompleteError(null);
-    return;
-  }
-  setIsLoading(true);
-  console.log("Sending autocomplete request with query:", query);
-  try {
-    const response = await axios.get("http://localhost:8080/api/flights/autocomplete", {
-      params: { term: query },
-    });
-    console.log("Autocomplete response:", response.data);
-    if (response.data.success) {
-      const suggestions = response.data.data.map((item) => ({
-        label: `${item.detailedName} (${item.iataCode})`,
-        value: item.iataCode,
-        isAirport: item.subType === "AIRPORT",
-      }));
-      field === "from" ? setFromSuggestions(suggestions) : setToSuggestions(suggestions);
-      setAutocompleteError(null);
-    } else {
+    if (query.length < 2) {
       field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-      setAutocompleteError("검색 결과가 없습니다. 영문 도시명(예: Paris) 또는 공항 코드(예: CDG)를 입력해주세요.");
+      setAutocompleteError(null);
+      return;
     }
-  } catch (err) {
-    console.error("Autocomplete error:", err.response?.data || err.message);
-    field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
-    setAutocompleteError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-  } finally {
-    setIsLoading(false);
-  }
+    setIsLoading(true);
+    try {
+      // dispatch thunk instead of axios.get
+      const list = await dispatch(fetchAirportSuggestions(query)).unwrap();
+
+      if (field === "from") {
+        setFromSuggestions(list);
+      } else {
+        setToSuggestions(list);
+      }
+      setAutocompleteError(null);
+    } catch (errMsg) {
+      console.error("Autocomplete thunk failed:", errMsg);
+      field === "from" ? setFromSuggestions([]) : setToSuggestions([]);
+      setAutocompleteError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
+    }
 };
 
   useEffect(() => {

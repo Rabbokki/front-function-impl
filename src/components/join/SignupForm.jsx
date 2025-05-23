@@ -139,87 +139,6 @@ export function SignupForm() {
         </p>
       </div>
 
-      {/* SVG 생략 없이 그대로 유지
-      <div className="relative mb-8 flex justify-center">
-        <div className="relative h-64 w-64">
-          <svg viewBox="0 0 200 200" className="h-full w-full">
-            <circle cx="100" cy="100" r="80" fill="#e7f5ff" />
-            <circle
-              cx="100"
-              cy="100"
-              r="40"
-              fill="#93c5fd"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <ellipse
-              cx="100"
-              cy="100"
-              rx="40"
-              ry="15"
-              fill="none"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <path d="M60,100 L140,100" stroke="#4338ca" strokeWidth="1" />
-            <path d="M100,60 L100,140" stroke="#4338ca" strokeWidth="1" />
-            <path
-              d="M150,70 L160,60 L165,65 L155,75 Z"
-              fill="#ff9a9e"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <path
-              d="M150,70 Q130,90 120,130"
-              fill="none"
-              stroke="#4338ca"
-              strokeWidth="1"
-              strokeDasharray="2,2"
-            />
-            <circle
-              cx="70"
-              cy="60"
-              r="10"
-              fill="#fcd34d"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <path
-              d="M65,70 Q70,90 70,100 L75,100 Q75,90 80,70 Z"
-              fill="#a78bfa"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <line
-              x1="70"
-              y1="80"
-              x2="60"
-              y2="90"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <line
-              x1="75"
-              y1="80"
-              x2="85"
-              y2="90"
-              stroke="#4338ca"
-              strokeWidth="1"
-            />
-            <rect
-              x="55"
-              y="90"
-              width="10"
-              height="8"
-              rx="2"
-              fill="#ff9a9e"
-              stroke="#4338ca"
-              strokeWidth="0.5"
-            />
-          </svg>
-        </div>
-      </div> */}
-
       <Card className="bg-white p-6 shadow-md">
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col items-center space-y-2 mb-6">
@@ -488,42 +407,6 @@ export function SignupForm() {
           >
             회원가입
           </Button>
-
-          {/* 구분선 */}
-          <div className="mt-6 flex items-center">
-            <Separator className="flex-1" />
-            <span className="mx-4 text-xs text-traveling-text/50">또는</span>
-            <Separator className="flex-1" />
-          </div>
-
-          {/* 소셜 로그인 */}
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            {/* 구글 */}
-            <Button
-              type="button"
-              variant="outline"
-              className="flex items-center justify-center border-traveling-text/30 bg-white"
-            >
-              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-                <path d="..." fill="#4285F4" />
-                <path d="..." fill="#34A853" />
-                <path d="..." fill="#FBBC05" />
-                <path d="..." fill="#EA4335" />
-              </svg>
-              Google
-            </Button>
-            {/* 페이스북 */}
-            <Button
-              type="button"
-              variant="outline"
-              className="flex items-center justify-center border-traveling-text/30 bg-white"
-            >
-              <svg className="mr-2 h-5 w-5" fill="#1877F2" viewBox="0 0 24 24">
-                <path d="..." />
-              </svg>
-              Facebook
-            </Button>
-          </div>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-traveling-text/70">

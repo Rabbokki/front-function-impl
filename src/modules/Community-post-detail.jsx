@@ -276,14 +276,14 @@ export function CommunityPostDetail({ postId }) {
                   <ThumbsUp className="mr-1 h-4 w-4" />
                   좋아요 {localPost.likeCount}
                 </Button>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
                   className="bg-[#ff6060]"
                   onClick={() => openReportModal(post.userId)}>
                     <ShieldAlert className="mr-1 h-4 w-4" />
                     신고
-                </Button>
+                </Button> */}
             </div>
           )}
         </div>
